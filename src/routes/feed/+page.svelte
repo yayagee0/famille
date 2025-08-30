@@ -74,18 +74,17 @@
 				}
 			}
 
-			// Create post document
+			// Create post document - exclude files property with File objects
+			const { files: _, ...postDataWithoutFiles } = postData;
 			const postDoc = {
-				...postData,
-				files: fileUrls,
+				...postDataWithoutFiles,
 				likes: [],
 				comments: [],
 				createdAt: new Date(),
 				timestamp: new Date()
 			};
 
-			// Remove the file objects before saving to Firestore
-			delete postDoc.files;
+			// Add file URLs if any
 			if (fileUrls.length > 0) {
 				if (postData.type === 'photo') {
 					postDoc.imageUrls = fileUrls;
