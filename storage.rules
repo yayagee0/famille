@@ -1,0 +1,33 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Function to check if user is in allowed email list
+    function isAllowedUser() {
+      return request.auth != null && 
+             request.auth.token.email in [
+               "nilezat@gmail.com",
+               "abdessamia.mariem@gmail.com",
+               "yazidgeemail@gmail.com", 
+               "yahyageemail@gmail.com"
+             ];
+    }
+    
+    // Avatar uploads - users can only upload their own avatars
+    match /avatars/{userId}/{allPaths=**} {
+      allow read: if isAllowedUser();
+      allow write: if isAllowedUser() && userId == request.auth.uid;
+    }
+    
+    // Post media uploads - users can upload to their own folder
+    match /posts/{userId}/{allPaths=**} {
+      allow read: if isAllowedUser();
+      allow write: if isAllowedUser() && userId == request.auth.uid;
+    }
+    
+    // Deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
