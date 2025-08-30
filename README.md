@@ -52,17 +52,7 @@ A private, secure family social platform built with SvelteKit 2, TypeScript, and
 3. **Configure environment variables**:
    The `.env` file is already configured with the following variables:
 
-   ```env
-   VITE_FB_API_KEY=AIzaSyD3Ornf-I5YtpS4fVQtwJs5fNxwJxSglg4
-   VITE_FB_AUTH_DOMAIN=familyg-719f2.firebaseapp.com
-   VITE_FB_PROJECT_ID=familyg-719f2
-   VITE_FB_STORAGE_BUCKET=familyg-719f2.appspot.com
-   VITE_FB_APP_ID=1:759733772159:web:6f3d295c9066dafcf0444a
-   VITE_FB_RETURN_URL=http://localhost:5173
 
-   VITE_FAMILY_ID=ghassan-family
-   VITE_ALLOWED_EMAILS=nilezat@gmail.com,abdessamia.mariem@gmail.com,yazidgeemail@gmail.com,yahyageemail@gmail.com
-   ```
 
 4. **Deploy Firebase rules** (optional for development):
 
@@ -97,10 +87,7 @@ A private, secure family social platform built with SvelteKit 2, TypeScript, and
 2. **Open your browser** and navigate to `http://localhost:5173`
 
 3. **Sign in** with one of the allowed Google accounts:
-   - nilezat@gmail.com
-   - abdessamia.mariem@gmail.com
-   - yazidgeemail@gmail.com
-   - yahyageemail@gmail.com
+
 
 ## 🏗 Building
 
