@@ -52,8 +52,6 @@ A private, secure family social platform built with SvelteKit 2, TypeScript, and
 3. **Configure environment variables**:
    The `.env` file is already configured with the following variables:
 
-
-
 4. **Deploy Firebase rules** (optional for development):
 
    ```bash
@@ -87,7 +85,6 @@ A private, secure family social platform built with SvelteKit 2, TypeScript, and
 2. **Open your browser** and navigate to `http://localhost:5173`
 
 3. **Sign in** with one of the allowed Google accounts:
-
 
 ## 🏗 Building
 
