@@ -192,7 +192,7 @@
 								</div>
 								<p class="mt-1 truncate text-sm text-gray-700">
 									{#if post.type === 'poll'}
-										Poll: {post.poll?.question}
+										Poll: {post.poll?.title}
 									{:else if post.type === 'youtube'}
 										Shared a YouTube video
 									{:else if post.type === 'photo'}

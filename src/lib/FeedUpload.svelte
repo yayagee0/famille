@@ -16,7 +16,7 @@
 	let textContent = $state('');
 	let selectedFiles: FileList | null = $state(null);
 	let youtubeUrl = $state('');
-	let pollQuestion = $state('');
+	let pollTitle = $state('');
 	let pollOptions = $state(['', '']);
 	let postType: 'text' | 'photo' | 'video' | 'youtube' | 'poll' = $state('text');
 	let isUploading = $state(false);
@@ -30,7 +30,7 @@
 		// Reset form when changing type
 		selectedFiles = null;
 		youtubeUrl = '';
-		pollQuestion = '';
+		pollTitle = '';
 		pollOptions = ['', ''];
 		previewUrls = [];
 		uploadProgress = '';
@@ -186,7 +186,7 @@
 
 		if (
 			postType === 'poll' &&
-			(!pollQuestion.trim() || pollOptions.filter((opt) => opt.trim()).length < 2)
+			(!pollTitle.trim() || pollOptions.filter((opt) => opt.trim()).length < 2)
 		) {
 			return; // No unreachable code after this - validation exit point
 		}
@@ -259,12 +259,12 @@
 				// Add poll data if present
 				...(postType === 'poll' && {
 					poll: {
-						question: pollQuestion.trim(),
+						title: pollTitle.trim(),
 						options: pollOptions
 							.filter((opt) => opt.trim())
 							.map((opt) => ({
 								text: opt.trim(),
-								votes: 0
+								votes: []
 							}))
 					}
 				})
@@ -284,7 +284,7 @@
 			textContent = '';
 			selectedFiles = null;
 			youtubeUrl = '';
-			pollQuestion = '';
+			pollTitle = '';
 			pollOptions = ['', ''];
 			previewUrls = [];
 			postType = 'text';
@@ -364,16 +364,16 @@
 	</div>
 
 	<!-- Content textarea -->
-	<div class="mb-4">
-		<textarea
-			bind:value={textContent}
-			placeholder={postType === 'poll'
-				? 'Add a description for your poll...'
-				: "What's on your mind?"}
-			class="w-full resize-none rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
-			rows="3"
-		></textarea>
-	</div>
+	{#if postType !== 'poll'}
+		<div class="mb-4">
+			<textarea
+				bind:value={textContent}
+				placeholder="What's on your mind?"
+				class="w-full resize-none rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+				rows="3"
+			></textarea>
+		</div>
+	{/if}
 
 	<!-- File upload for photos/videos -->
 	{#if postType === 'photo' || postType === 'video'}
@@ -431,8 +431,8 @@
 		<div class="mb-4 space-y-3">
 			<input
 				type="text"
-				bind:value={pollQuestion}
-				placeholder="Ask a question..."
+				bind:value={pollTitle}
+				placeholder="What's your poll question?"
 				class="w-full rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
 			/>
 

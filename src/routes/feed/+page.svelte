@@ -27,6 +27,8 @@
 	let posts = $state<any[]>([]);
 	let loading = $state(true);
 	let unsubscribePosts: (() => void) | null = null;
+	// Cache for user display names
+	let userCache = $state<Map<string, string>>(new Map());
 
 	onMount(() => {
 		const unsubAuth = auth.onAuthStateChanged(async (firebaseUser) => {
@@ -117,7 +119,7 @@
 				postDoc.videoPath = postData.videoPaths[0];
 			}
 			
-			if (postData.poll && postData.poll.question) postDoc.poll = postData.poll;
+			if (postData.poll && postData.poll.title) postDoc.poll = postData.poll;
 
 			await addDoc(collection(db, 'posts'), postDoc);
 		} catch (err) {
@@ -140,26 +142,69 @@
 		}
 	}
 
+	// 👤 Get user display name from UID
+	async function getUserDisplayName(uid: string): Promise<string> {
+		if (userCache.has(uid)) {
+			return userCache.get(uid)!;
+		}
+		
+		try {
+			const userDoc = await getDoc(doc(db, 'users', uid));
+			if (userDoc.exists()) {
+				const userData = userDoc.data();
+				const displayName = userData.displayName || userData.email?.split('@')[0] || 'Unknown';
+				userCache.set(uid, displayName);
+				return displayName;
+			}
+		} catch (err) {
+			console.error('Error fetching user:', err);
+		}
+		
+		const fallbackName = 'Unknown';
+		userCache.set(uid, fallbackName);
+		return fallbackName;
+	}
+
+	// 🗳️ Get voter names for a poll option
+	async function getVoterNames(votes: string[]): Promise<string> {
+		if (!votes || votes.length === 0) return '';
+		
+		const names = await Promise.all(votes.map(uid => getUserDisplayName(uid)));
+		return names.join(', ');
+	}
+
 	// 🗳️ Vote in poll
 	async function voteInPoll(post: any, optionIndex: number) {
 		if (!user?.uid) return;
-		const userId = user.uid; // Store uid to avoid null check issues
+		const userId = user.uid;
+		
 		try {
-			// prevent double voting: remove user from all options first
-			const postRef = doc(db, 'posts', post.id);
-			const updates: any = {};
-			post.poll.options.forEach((_: any, i: number) => {
-				updates[`poll.options.${i}.votes`] = arrayRemove(userId);
-			});
-			await updateDoc(postRef, updates);
+			// Create updated options array with the user's vote
+			const updatedOptions = post.poll.options.map((option: any, index: number) => ({
+				...option,
+				votes: index === optionIndex 
+					? [...(option.votes || []).filter((id: string) => id !== userId), userId]
+					: (option.votes || []).filter((id: string) => id !== userId)
+			}));
 
-			// then add user to the chosen option
-			await updateDoc(postRef, {
-				[`poll.options.${optionIndex}.votes`]: arrayUnion(userId)
-			});
+			// Update Firestore with the new options array
+			const postRef = doc(db, 'posts', post.id);
+			await updateDoc(postRef, { 'poll.options': updatedOptions });
 		} catch (err) {
 			console.error('Poll vote failed:', err);
 		}
+	}
+
+	// 🗳️ Get user's current vote in a poll
+	function getUserVote(poll: any): number | null {
+		if (!user?.uid || !poll?.options) return null;
+		
+		for (let i = 0; i < poll.options.length; i++) {
+			if (poll.options[i].votes?.includes(user.uid)) {
+				return i;
+			}
+		}
+		return null;
 	}
 
 	// 🗑️ Delete post
@@ -316,23 +361,44 @@
 							<!-- Poll -->
 							{#if post.poll?.options}
 								<div class="mb-4 rounded-lg border border-gray-200 p-4">
-									<h4 class="mb-3 font-medium text-gray-900">{post.poll.question}</h4>
+									<h3 class="mb-4 text-lg font-medium text-gray-900">{post.poll.title}</h3>
 									{#each post.poll.options as opt, index (index)}
-										<div class="mb-2 flex items-center justify-between rounded border p-2">
-											<span>{opt.text}</span>
-											<div class="flex items-center space-x-2">
-												<span class="text-xs text-gray-500">{opt.votes?.length || 0} votes</span>
-												{#if user}
-													<button
-														onclick={() => voteInPoll(post, index)}
-														class="rounded bg-indigo-500 px-2 py-1 text-xs text-white hover:bg-indigo-600"
-													>
-														Vote
-													</button>
-												{/if}
+										{@const isUserVoted = opt.votes?.includes(user?.uid)}
+										{@const voterNamesPromise = getVoterNames(opt.votes || [])}
+										<button
+											onclick={() => voteInPoll(post, index)}
+											disabled={!user}
+											class="mb-3 w-full rounded-lg border p-3 text-left transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 {isUserVoted ? 'bg-blue-50 border-blue-200' : 'border-gray-200'}"
+										>
+											<div class="flex items-center justify-between">
+												<span class="font-medium text-gray-900">{opt.text}</span>
+												<div class="text-sm text-gray-600">
+													{#await voterNamesPromise}
+														<span class="text-gray-400">Loading...</span>
+													{:then voterNames}
+														{#if voterNames}
+															<span>{voterNames}</span>
+														{:else}
+															<span class="text-gray-400">No votes yet</span>
+														{/if}
+													{:catch}
+														<span class="text-gray-400">Error loading</span>
+													{/await}
+												</div>
 											</div>
-										</div>
+										</button>
 									{/each}
+									
+									{#if user && getUserVote(post.poll) !== null}
+										{@const userVoteIndex = getUserVote(post.poll)}
+										{#if userVoteIndex !== null}
+											<div class="mt-3 pt-3 border-t border-gray-200">
+												<p class="text-sm text-blue-600 font-medium">
+													You voted: {post.poll.options[userVoteIndex].text}
+												</p>
+											</div>
+										{/if}
+									{/if}
 								</div>
 							{/if}
 						</div>
