@@ -230,7 +230,7 @@
 									}))
 							}
 						: null,
-				timestamp: new Date(),
+				createdAt: new Date(),
 				familyId: 'ghassan-family'
 			};
 
