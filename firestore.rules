@@ -2,52 +2,29 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Function to check if user is in allowed email list
-    function isAllowedUser() {
-      return request.auth != null && 
-             request.auth.token.email in [
-               "nilezat@gmail.com",
-               "abdessamia.mariem@gmail.com", 
-               "yazidgeemail@gmail.com",
-               "yahyageemail@gmail.com"
-             ];
+    function isFamily() {
+      return request.auth != null &&
+        request.auth.token.email in [
+          "nilezat@gmail.com",
+          "abdessamia.mariem@gmail.com",
+          "yazidgeemail@gmail.com",
+          "yahyageemail@gmail.com"
+        ];
     }
-    
-    // Function to check if document belongs to family
-    function isFamilyDoc() {
-      return resource.data.familyId == "ghassan-family";
-    }
-    
-    // Function to check if new document is for family
-    function isNewFamilyDoc() {
-      return request.resource.data.familyId == "ghassan-family";
-    }
-    
-    // Posts collection rules
+
+    // Posts collection
     match /posts/{postId} {
-      allow read: if isAllowedUser() && isFamilyDoc();
-      allow create: if isAllowedUser() && isNewFamilyDoc() && 
-                       request.resource.data.author.uid == request.auth.uid;
-      allow update: if isAllowedUser() && isFamilyDoc() && (
-        // Allow post author to update their own posts
-        resource.data.author.uid == request.auth.uid ||
-        // Allow others to update likes, comments, and poll only
-        (request.resource.data.diff(resource.data).affectedKeys()
-         .hasOnly(['likes', 'comments', 'poll']))
-      );
-      allow delete: if isAllowedUser() && isFamilyDoc() && 
-                       resource.data.author.uid == request.auth.uid;
+      // All family can create, read, update
+      allow read, create, update: if isFamily();
+      
+      // Only the post owner can delete
+      allow delete: if isFamily() &&
+        resource.data.authorUid == request.auth.uid;
     }
-    
-    // User profiles collection
-    match /users/{userId} {
-      allow read, write: if isAllowedUser() && userId == request.auth.uid;
-    }
-    
-    // Family metadata
-    match /families/ghassan-family {
-      allow read: if isAllowedUser();
-      allow write: if false; // Prevent modifications to family metadata
+
+    // Everything else (users, families, etc.)
+    match /{doc=**} {
+      allow read, write: if isFamily();
     }
   }
 }
