@@ -2,8 +2,6 @@
 	import { createEventDispatcher } from 'svelte';
 	import { Image, Video, Youtube, BarChart3, Send, X } from 'lucide-svelte';
 	import imageCompression from 'browser-image-compression';
-	import { FFmpeg } from '@ffmpeg/ffmpeg';
-	import { fetchFile, toBlobURL } from '@ffmpeg/util';
 	import { validateImageFile, validateVideoFile, validatePost } from '$lib/schemas';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 	import { storage } from '$lib/firebase';
@@ -22,8 +20,6 @@
 	let isUploading = $state(false);
 	let previewUrls: string[] = $state([]);
 	let uploadProgress = $state('');
-	let ffmpeg: FFmpeg | null = $state(null);
-	let ffmpegLoaded = $state(false);
 
 	function setPostType(type: typeof postType) {
 		postType = type;
@@ -34,24 +30,6 @@
 		pollOptions = ['', ''];
 		previewUrls = [];
 		uploadProgress = '';
-	}
-
-	async function initializeFFmpeg() {
-		if (ffmpegLoaded || ffmpeg) return ffmpeg;
-
-		try {
-			ffmpeg = new FFmpeg();
-			const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-			await ffmpeg.load({
-				coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-				wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
-			});
-			ffmpegLoaded = true;
-			return ffmpeg;
-		} catch (error) {
-			console.warn('Failed to initialize FFmpeg:', error);
-			return null;
-		}
 	}
 
 	function handleFileSelect(event: Event) {
@@ -97,71 +75,6 @@
 			return await imageCompression(file, options);
 		} catch (error) {
 			console.error('Error compressing image:', error);
-			return file;
-		}
-	}
-
-	async function compressVideo(file: File): Promise<File> {
-		if (!file.type.startsWith('video/')) return file;
-
-		try {
-			uploadProgress = 'Initializing video compression...';
-			const ffmpegInstance = await initializeFFmpeg();
-
-			if (!ffmpegInstance) {
-				uploadProgress = 'Video compression unavailable, uploading original...';
-				return file;
-			}
-
-			uploadProgress = 'Compressing video...';
-
-			// Write input file
-			await ffmpegInstance.writeFile('input.mp4', await fetchFile(file));
-
-			// Compress video with web-friendly settings
-			await ffmpegInstance.exec([
-				'-i',
-				'input.mp4',
-				'-c:v',
-				'libx264',
-				'-crf',
-				'28',
-				'-preset',
-				'medium',
-				'-c:a',
-				'aac',
-				'-b:a',
-				'128k',
-				'-movflags',
-				'+faststart',
-				'-vf',
-				'scale=1280:720:force_original_aspect_ratio=decrease',
-				'output.mp4'
-			]);
-
-			// Read output file
-			const data = await ffmpegInstance.readFile('output.mp4');
-			// Fix: FileData can be Uint8Array or string, handle both cases
-			let blobData: BlobPart;
-			if (typeof data === 'string') {
-				blobData = new TextEncoder().encode(data);
-			} else {
-				// For Uint8Array, create new instance to ensure compatibility
-				blobData = new Uint8Array(data as unknown as ArrayBuffer);
-			}
-			const compressedBlob = new Blob([blobData], { type: 'video/mp4' });
-
-			// Create new File object
-			const compressedFile = new File([compressedBlob], `compressed_${file.name}`, {
-				type: 'video/mp4',
-				lastModified: Date.now()
-			});
-
-			uploadProgress = 'Video compression complete';
-			return compressedFile;
-		} catch (error) {
-			console.warn('Video compression failed, using original file:', error);
-			uploadProgress = 'Compression failed, uploading original...';
 			return file;
 		}
 	}
@@ -224,13 +137,11 @@
 						if (!validation.success) {
 							throw new Error(`Invalid video file: ${file.name}`);
 						}
-						uploadProgress = `Processing video: ${file.name}`;
-						const processedFile = await compressVideo(file);
-
-						// Upload to Firebase Storage and get download URL
+						
+						// Upload original file without compression
 						uploadProgress = `Uploading video: ${file.name}`;
-						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${processedFile.name}`);
-						const uploadSnapshot = await uploadBytes(fileRef, processedFile);
+						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
+						const uploadSnapshot = await uploadBytes(fileRef, file);
 						const downloadURL = await getDownloadURL(uploadSnapshot.ref);
 						videoPaths.push(downloadURL);
 					}

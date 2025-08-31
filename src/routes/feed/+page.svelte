@@ -129,7 +129,7 @@
 
 	// ❤️ Likes
 	async function toggleLike(postId: string, isLiked: boolean) {
-		if (!user) return;
+		if (!user?.uid) return;
 		try {
 			const postRef = doc(db, 'posts', postId);
 			if (isLiked) {
@@ -343,7 +343,6 @@
 							{#if post.videoPath}
 								<video controls class="mb-4 max-h-96 w-full rounded-lg bg-black">
 									<source src={post.videoPath} type="video/mp4" />
-									<track kind="captions" src="" label="Captions" default />
 									Your browser does not support the video tag.
 								</video>
 							{/if}
