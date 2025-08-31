@@ -121,17 +121,12 @@ describe('Schema Validation', () => {
 			expect(result.success).toBe(false);
 		});
 
-		it('should validate a photo post with files', () => {
-			const mockImageFile = new File(['mock content'], 'test.jpg', { 
-				type: 'image/jpeg',
-				lastModified: Date.now()
-			});
-
+		it('should validate a photo post with imagePaths', () => {
 			const photoPost = {
 				type: 'photo' as const,
 				content: 'Photo description',
 				author: mockAuthor,
-				files: [mockImageFile],
+				imagePaths: ['https://example.com/image1.jpg'],
 				familyId: 'test-family',
 				createdAt: new Date()
 			};

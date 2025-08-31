@@ -63,9 +63,11 @@ export const basePostSchema = z.object({
 	type: z.enum(['text', 'photo', 'video', 'youtube', 'poll']),
 	content: z.string(), // Permissive - allow empty content for some post types
 	author: postAuthorSchema,
-	files: z.array(z.instanceof(File)).optional(),
 	familyId: z.string().min(1, 'Family ID is required'),
-	createdAt: z.date()
+	createdAt: z.date(),
+	// Firestore schema fields for media
+	imagePaths: z.array(z.string().url()).optional(),
+	videoPaths: z.array(z.string().url()).optional()
 });
 
 // Text post schema
@@ -77,13 +79,13 @@ export const textPostSchema = basePostSchema.extend({
 // Photo post schema
 export const photoPostSchema = basePostSchema.extend({
 	type: z.literal('photo'),
-	files: z.array(z.instanceof(File)).min(1, 'Photo post must have at least one image')
+	imagePaths: z.array(z.string().url()).min(1, 'Photo post must have at least one image URL')
 });
 
 // Video post schema
 export const videoPostSchema = basePostSchema.extend({
 	type: z.literal('video'),
-	files: z.array(z.instanceof(File)).length(1, 'Video post must have exactly one video file')
+	videoPaths: z.array(z.string().url()).length(1, 'Video post must have exactly one video URL')
 });
 
 // YouTube post schema

@@ -14,8 +14,7 @@
 		onSnapshot,
 		serverTimestamp
 	} from 'firebase/firestore';
-	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-	import { auth, db, storage } from '$lib/firebase';
+	import { auth, db } from '$lib/firebase';
 	import FeedUpload from '$lib/FeedUpload.svelte';
 	import { ensureUserProfile } from '$lib/auth';
 	import { Heart, MessageCircle, Share2, Trash2 } from 'lucide-svelte';
@@ -90,26 +89,6 @@
 		const postData = event.detail;
 
 		try {
-			let imagePaths: string[] = [];
-			let videoPaths: string[] = [];
-
-			if (postData.type === 'photo' && postData.files?.length > 0) {
-				for (const file of postData.files) {
-					const fRef = ref(storage, `posts/${user?.uid}/${Date.now()}-${file.name}`);
-					const snap = await uploadBytes(fRef, file);
-					const downloadURL = await getDownloadURL(snap.ref);
-					imagePaths.push(downloadURL);
-				}
-			}
-
-			if (postData.type === 'video' && postData.files?.length > 0) {
-				const file = postData.files[0];
-				const fRef = ref(storage, `posts/${user?.uid}/${Date.now()}-${file.name}`);
-				const snap = await uploadBytes(fRef, file);
-				const downloadURL = await getDownloadURL(snap.ref);
-				videoPaths.push(downloadURL);
-			}
-
 			const youtubeId = postData.youtubeUrl ? getYouTubeVideoId(postData.youtubeUrl) : null;
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -124,15 +103,20 @@
 			};
 
 			if (youtubeId) postDoc.youtubeId = youtubeId;
-			if (imagePaths.length > 0) {
-				postDoc.imagePath = imagePaths[0];
-				if (imagePaths.length > 1) {
-					postDoc.imagePaths = imagePaths;
+			
+			// Handle image paths from uploaded files
+			if (postData.imagePaths && postData.imagePaths.length > 0) {
+				postDoc.imagePath = postData.imagePaths[0];
+				if (postData.imagePaths.length > 1) {
+					postDoc.imagePaths = postData.imagePaths;
 				}
 			}
-			if (videoPaths.length > 0) {
-				postDoc.videoPath = videoPaths[0];
+			
+			// Handle video paths from uploaded files
+			if (postData.videoPaths && postData.videoPaths.length > 0) {
+				postDoc.videoPath = postData.videoPaths[0];
 			}
+			
 			if (postData.poll && postData.poll.question) postDoc.poll = postData.poll;
 
 			await addDoc(collection(db, 'posts'), postDoc);
