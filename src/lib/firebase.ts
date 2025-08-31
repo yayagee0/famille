@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import { browser } from '$app/environment';
 
 const firebaseConfig = {
@@ -30,10 +30,10 @@ googleProvider.setCustomParameters({
 
 // Only connect to emulators in development
 if (browser && import.meta.env.DEV) {
-	// Uncomment if using emulators locally
+	// Emulator connections removed - uncomment and import if needed locally
 	// connectAuthEmulator(auth, 'http://localhost:9099');
 	// connectFirestoreEmulator(db, 'localhost', 8080);
-	// connectStorageEmulator(storage, 'localhost', 9199);
+	// connectStorageEmulator(storage, 'localhost', 9199');
 }
 
 // Helper function to get current family ID
