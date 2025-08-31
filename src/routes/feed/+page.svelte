@@ -176,13 +176,15 @@
 								{#if post.author?.avatarUrl}
 									<img src={post.author.avatarUrl} alt="" class="h-10 w-10 rounded-full" />
 								{:else}
-									<div class="h-10 w-10 bg-gray-300 rounded-full"></div>
+									<div class="h-10 w-10 rounded-full bg-gray-300"></div>
 								{/if}
 								<div>
 									<p class="text-sm font-medium text-gray-900">{post.author?.displayName}</p>
 									<p class="text-xs text-gray-500">
 										{#if post.createdAt}
-											{dayjs(post.createdAt?.toDate ? post.createdAt.toDate() : post.createdAt).fromNow()}
+											{dayjs(
+												post.createdAt?.toDate ? post.createdAt.toDate() : post.createdAt
+											).fromNow()}
 										{/if}
 									</p>
 								</div>
@@ -195,19 +197,23 @@
 
 							<!-- Image -->
 							{#if post.imagePath}
-								<img src={post.imagePath} alt="Photo" class="w-full rounded-lg max-h-96 object-cover mb-4" />
+								<img
+									src={post.imagePath}
+									alt="Photo"
+									class="mb-4 max-h-96 w-full rounded-lg object-cover"
+								/>
 							{/if}
 
 							<!-- Video -->
 							{#if post.videoPath}
-								<video controls class="max-h-96 w-full rounded-lg bg-black mb-4">
+								<video controls class="mb-4 max-h-96 w-full rounded-lg bg-black">
 									<source src={post.videoPath} type="video/mp4" />
 								</video>
 							{/if}
 
 							<!-- YouTube -->
 							{#if post.youtubeId}
-								<div class="relative aspect-video mb-4">
+								<div class="relative mb-4 aspect-video">
 									<iframe
 										src="https://www.youtube.com/embed/{post.youtubeId}"
 										class="absolute inset-0 h-full w-full rounded-lg"
@@ -221,7 +227,7 @@
 								<div class="mb-4 rounded-lg border border-gray-200 p-4">
 									<h4 class="mb-3 font-medium text-gray-900">{post.poll.question}</h4>
 									{#each post.poll.options as opt}
-										<div class="flex justify-between p-2 border rounded mb-2">
+										<div class="mb-2 flex justify-between rounded border p-2">
 											<span>{opt.text}</span>
 											<span class="text-xs text-gray-500">{opt.votes?.length || 0} votes</span>
 										</div>
@@ -238,13 +244,23 @@
 									class="flex items-center space-x-2 text-sm text-gray-500 hover:text-red-600"
 								>
 									<Heart class="h-5 w-5 {isUserLiked(post) ? 'fill-red-500 text-red-500' : ''}" />
-									<span>{post.likes?.length || 0} {(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span>
+									<span
+										>{post.likes?.length || 0}
+										{(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span
+									>
 								</button>
-								<button class="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600">
+								<button
+									class="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600"
+								>
 									<MessageCircle class="h-5 w-5" />
-									<span>{post.comments?.length || 0} {(post.comments?.length || 0) === 1 ? 'comment' : 'comments'}</span>
+									<span
+										>{post.comments?.length || 0}
+										{(post.comments?.length || 0) === 1 ? 'comment' : 'comments'}</span
+									>
 								</button>
-								<button class="flex items-center space-x-2 text-sm text-gray-500 hover:text-green-600">
+								<button
+									class="flex items-center space-x-2 text-sm text-gray-500 hover:text-green-600"
+								>
 									<Share2 class="h-5 w-5" />
 									<span>Share</span>
 								</button>
