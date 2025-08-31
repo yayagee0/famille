@@ -6,6 +6,7 @@
 	import { User, Save, Mail } from 'lucide-svelte';
 	import imageCompression from 'browser-image-compression';
 	import ErrorMessage from '$lib/ErrorMessage.svelte';
+	import { validateImageFile } from '$lib/schemas';
 
 	let user = $state(auth.currentUser);
 	let displayName = $state('');
@@ -32,15 +33,15 @@
 
 		if (!file || !user) return;
 
-		// Validate file type
-		if (!file.type.startsWith('image/')) {
-			errorMessage = 'Please select an image file';
-			return;
-		}
-
-		// Validate file size (5MB max)
-		if (file.size > 5 * 1024 * 1024) {
-			errorMessage = 'Image must be smaller than 5MB';
+		// Validate file using Zod schema
+		const fileValidation = validateImageFile(file);
+		if (!fileValidation.success) {
+			const error = fileValidation.error;
+			if (error instanceof Error) {
+				errorMessage = error.message;
+			} else {
+				errorMessage = 'Invalid file selected';
+			}
 			return;
 		}
 
