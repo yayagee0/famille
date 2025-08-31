@@ -46,6 +46,7 @@
 ### Unified Data Schema
 
 #### Posts Collection (`posts/{docId}`)
+
 ```typescript
 {
   authorUid: string;           // References users/{uid}
@@ -55,13 +56,13 @@
   createdAt: Timestamp;        // Server timestamp
   likes: string[];             // Array of user UIDs
   comments: Comment[];         // Array of comment objects
-  
+
   // Media fields (optional)
   imagePath?: string;          // Single image URL
   imagePaths?: string[];       // Multiple image URLs
   videoPath?: string;          // Single video URL
   youtubeId?: string;          // YouTube video ID
-  
+
   // Poll fields (optional)
   poll?: {
     title: string;
@@ -74,6 +75,7 @@
 ```
 
 #### Users Collection (`users/{uid}`)
+
 ```typescript
 {
   uid: string;                 // Firebase Auth UID
@@ -88,6 +90,7 @@
 ```
 
 #### Schema Validation with Zod
+
 - **`postSchema`**: Validates all post types with discriminated union
 - **`userSchema`**: Validates user document structure
 - **`imageFileSchema`**: Validates image upload metadata (5MB limit)
@@ -95,6 +98,7 @@
 - **Author Enrichment**: Posts store only `authorUid`, author data enriched from `users/{uid}` in components
 
 #### Daily Ayah Widget
+
 - **Component**: `DailyAyah.svelte`
 - **Features**: Rotates Quranic verses daily based on date
 - **Styling**: Uses Amiri font for Arabic text

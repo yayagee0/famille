@@ -74,14 +74,18 @@
 
 			// Update user document in Firestore
 			const userDocRef = doc(db, 'users', user.uid);
-			await setDoc(userDocRef, {
-				uid: user.uid,
-				displayName: user.displayName || null,
-				email: user.email,
-				avatarUrl: downloadURL,
-				photoURL: downloadURL,
-				lastUpdatedAt: serverTimestamp()
-			}, { merge: true });
+			await setDoc(
+				userDocRef,
+				{
+					uid: user.uid,
+					displayName: user.displayName || null,
+					email: user.email,
+					avatarUrl: downloadURL,
+					photoURL: downloadURL,
+					lastUpdatedAt: serverTimestamp()
+				},
+				{ merge: true }
+			);
 
 			// Force refresh user object
 			await auth.currentUser?.reload();
@@ -117,14 +121,18 @@
 
 			// Update user document in Firestore
 			const userDocRef = doc(db, 'users', user.uid);
-			await setDoc(userDocRef, {
-				uid: user.uid,
-				displayName: displayName.trim(),
-				email: user.email,
-				avatarUrl: user.photoURL || null,
-				photoURL: user.photoURL || null,
-				lastUpdatedAt: serverTimestamp()
-			}, { merge: true });
+			await setDoc(
+				userDocRef,
+				{
+					uid: user.uid,
+					displayName: displayName.trim(),
+					email: user.email,
+					avatarUrl: user.photoURL || null,
+					photoURL: user.photoURL || null,
+					lastUpdatedAt: serverTimestamp()
+				},
+				{ merge: true }
+			);
 
 			// Force refresh user object
 			await auth.currentUser?.reload();

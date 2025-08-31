@@ -1,6 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
+	import {
+		collection,
+		query,
+		where,
+		orderBy,
+		limit,
+		getDocs,
+		doc,
+		getDoc
+	} from 'firebase/firestore';
 	import { db, getFamilyId } from '$lib/firebase';
 	import { Users, MessageSquare, Image } from 'lucide-svelte';
 	import dayjs from 'dayjs';
@@ -58,7 +67,7 @@
 			familyHighlights = enrichedPosts.slice(0, 3).map((post: any) => {
 				const authorName = post.author?.displayName || 'Someone';
 				const timeAgo = dayjs(post.createdAt?.toDate()).fromNow();
-				
+
 				if (post.kind === 'photo') return `${authorName} shared a photo ${timeAgo} 📷`;
 				if (post.kind === 'video') return `${authorName} shared a video ${timeAgo} 🎥`;
 				if (post.kind === 'youtube') return `${authorName} shared a YouTube video ${timeAgo} 🎬`;
@@ -84,19 +93,19 @@
 	<DailyAyah />
 
 	<!-- Family Highlights -->
-	<div class="rounded-2xl bg-white shadow-sm p-6">
+	<div class="rounded-2xl bg-white p-6 shadow-sm">
 		<h3 class="mb-4 text-lg font-semibold text-gray-900">Family Highlights</h3>
 		{#if loading}
 			<LoadingSpinner size="medium" message="Loading highlights..." />
 		{:else if familyHighlights.length === 0}
-			<div class="text-center py-8">
+			<div class="py-8 text-center">
 				<p class="text-gray-500">✨ No recent activity to highlight</p>
-				<p class="text-sm text-gray-400 mt-1">Start sharing to see family highlights!</p>
+				<p class="mt-1 text-sm text-gray-400">Start sharing to see family highlights!</p>
 			</div>
 		{:else}
 			<div class="space-y-3">
 				{#each familyHighlights as highlight}
-					<div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
+					<div class="flex items-center space-x-3 rounded-xl bg-gray-50 p-3">
 						<div class="flex-1">
 							<p class="text-sm text-gray-700">{highlight}</p>
 						</div>

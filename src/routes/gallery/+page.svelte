@@ -101,7 +101,7 @@
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (!selectedPhoto) return;
-		
+
 		if (event.key === 'Escape') closeLightbox();
 		if (event.key === 'ArrowLeft') previousPhoto();
 		if (event.key === 'ArrowRight') nextPhoto();
@@ -127,9 +127,9 @@
 	{:else if photos.length === 0}
 		<!-- Empty State -->
 		<div class="py-16 text-center">
-			<div class="text-6xl mb-4">📷</div>
-			<h3 class="text-lg font-medium text-gray-900 mb-2">No photos yet</h3>
-			<p class="text-gray-500 mb-6">Start sharing photos with your family to see them here!</p>
+			<div class="mb-4 text-6xl">📷</div>
+			<h3 class="mb-2 text-lg font-medium text-gray-900">No photos yet</h3>
+			<p class="mb-6 text-gray-500">Start sharing photos with your family to see them here!</p>
 			<a
 				href="/feed"
 				class="inline-flex items-center rounded-2xl border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
@@ -142,7 +142,7 @@
 		<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
 			{#each photos as photo, index}
 				<button
-					class="group relative aspect-square overflow-hidden rounded-2xl bg-gray-100 shadow-sm hover:shadow-md transition-shadow"
+					class="group relative aspect-square overflow-hidden rounded-2xl bg-gray-100 shadow-sm transition-shadow hover:shadow-md"
 					onclick={() => openLightbox(photo, index)}
 				>
 					<img
@@ -151,7 +151,9 @@
 						class="h-full w-full object-cover transition-transform group-hover:scale-105"
 						loading="lazy"
 					/>
-					<div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity"></div>
+					<div
+						class="bg-opacity-0 group-hover:bg-opacity-20 absolute inset-0 bg-black transition-opacity"
+					></div>
 				</button>
 			{/each}
 		</div>
@@ -159,7 +161,8 @@
 		<!-- Photo Count -->
 		<div class="text-center">
 			<p class="text-sm text-gray-500">
-				{photos.length} {photos.length === 1 ? 'photo' : 'photos'} in your family gallery
+				{photos.length}
+				{photos.length === 1 ? 'photo' : 'photos'} in your family gallery
 			</p>
 		</div>
 	{/if}
@@ -167,15 +170,15 @@
 
 <!-- Lightbox Modal -->
 {#if selectedPhoto}
-	<div 
-		class="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4"
+	<div
+		class="bg-opacity-90 fixed inset-0 z-50 flex items-center justify-center bg-black p-4"
 		onclick={closeLightbox}
 		role="dialog"
 		aria-modal="true"
 	>
 		<!-- Close Button -->
 		<button
-			class="absolute top-4 right-4 z-60 rounded-full bg-black bg-opacity-50 p-2 text-white hover:bg-opacity-70"
+			class="bg-opacity-50 hover:bg-opacity-70 absolute top-4 right-4 z-60 rounded-full bg-black p-2 text-white"
 			onclick={closeLightbox}
 		>
 			<X class="h-6 w-6" />
@@ -184,16 +187,22 @@
 		<!-- Navigation Buttons -->
 		{#if photos.length > 1}
 			<button
-				class="absolute left-4 top-1/2 z-60 -translate-y-1/2 rounded-full bg-black bg-opacity-50 p-2 text-white hover:bg-opacity-70 disabled:opacity-30"
-				onclick={(e) => { e.stopPropagation(); previousPhoto(); }}
+				class="bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 left-4 z-60 -translate-y-1/2 rounded-full bg-black p-2 text-white disabled:opacity-30"
+				onclick={(e) => {
+					e.stopPropagation();
+					previousPhoto();
+				}}
 				disabled={selectedIndex === 0}
 			>
 				<ArrowLeft class="h-6 w-6" />
 			</button>
 
 			<button
-				class="absolute right-4 top-1/2 z-60 -translate-y-1/2 rounded-full bg-black bg-opacity-50 p-2 text-white hover:bg-opacity-70 disabled:opacity-30"
-				onclick={(e) => { e.stopPropagation(); nextPhoto(); }}
+				class="bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 right-4 z-60 -translate-y-1/2 rounded-full bg-black p-2 text-white disabled:opacity-30"
+				onclick={(e) => {
+					e.stopPropagation();
+					nextPhoto();
+				}}
 				disabled={selectedIndex === photos.length - 1}
 			>
 				<ArrowRight class="h-6 w-6" />
@@ -201,16 +210,16 @@
 		{/if}
 
 		<!-- Image Container -->
-		<div 
-			class="flex flex-col items-center justify-center max-h-full max-w-full"
+		<div
+			class="flex max-h-full max-w-full flex-col items-center justify-center"
 			onclick={(e) => e.stopPropagation()}
 		>
 			<img
 				src={selectedPhoto.displayUrl}
 				alt="Family photo"
-				class="max-h-[80vh] max-w-full object-contain rounded-lg"
+				class="max-h-[80vh] max-w-full rounded-lg object-contain"
 			/>
-			
+
 			<!-- Photo Info -->
 			<div class="mt-4 max-w-md text-center">
 				<div class="flex items-center justify-center space-x-3 text-white">
