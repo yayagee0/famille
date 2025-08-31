@@ -16,6 +16,7 @@
 	} from 'firebase/firestore';
 	import { auth, db } from '$lib/firebase';
 	import FeedUpload from '$lib/FeedUpload.svelte';
+	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import { ensureUserProfile } from '$lib/auth';
 	import { Heart, MessageCircle, Share2, Trash2 } from 'lucide-svelte';
 	import dayjs from 'dayjs';
@@ -244,33 +245,7 @@
 		<FeedUpload {user} on:post-created={handlePostCreated} />
 
 		{#if loading}
-			<!-- Loading skeletons -->
-			<div class="space-y-6">
-				{#each Array(3) as skeleton, index (index)}
-					<div class="animate-pulse rounded-lg bg-white shadow">
-						<div class="p-6">
-							<div class="mb-4 flex items-center space-x-3">
-								<div class="h-10 w-10 rounded-full bg-gray-300"></div>
-								<div class="flex-1">
-									<div class="mb-1 h-4 w-24 rounded bg-gray-300"></div>
-									<div class="h-3 w-16 rounded bg-gray-200"></div>
-								</div>
-							</div>
-							<div class="mb-4 space-y-2">
-								<div class="h-4 w-full rounded bg-gray-300"></div>
-								<div class="h-4 w-3/4 rounded bg-gray-300"></div>
-							</div>
-							<div class="border-t border-gray-200 pt-3">
-								<div class="flex space-x-6">
-									<div class="h-4 w-16 rounded bg-gray-200"></div>
-									<div class="h-4 w-20 rounded bg-gray-200"></div>
-									<div class="h-4 w-12 rounded bg-gray-200"></div>
-								</div>
-							</div>
-						</div>
-					</div>
-				{/each}
-			</div>
+			<LoadingSpinner size="large" message="Loading family feed..." />
 		{:else if posts.length === 0}
 			<div class="rounded bg-white py-8 text-center shadow">
 				<p class="text-gray-600">No posts yet — be the first!</p>

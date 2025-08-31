@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { Image, Video, Youtube, BarChart3, Send, X } from 'lucide-svelte';
-	import imageCompression from 'browser-image-compression';
 	import { validateImageFile, validateVideoFile, validatePost } from '$lib/schemas';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 	import { storage } from '$lib/firebase';
@@ -62,23 +61,6 @@
 		}
 	}
 
-	async function compressImage(file: File): Promise<File> {
-		if (!file.type.startsWith('image/')) return file;
-
-		try {
-			const options = {
-				maxSizeMB: 1,
-				maxWidthOrHeight: 1920,
-				useWebWorker: true
-			};
-
-			return await imageCompression(file, options);
-		} catch (error) {
-			console.error('Error compressing image:', error);
-			return file;
-		}
-	}
-
 	async function handleSubmit() {
 		// Early validation checks to prevent unnecessary processing
 		if (isUploading) return;
@@ -123,13 +105,11 @@
 						if (!validation.success) {
 							throw new Error(`Invalid image file: ${file.name}`);
 						}
-						uploadProgress = `Compressing image: ${file.name}`;
-						const compressedFile = await compressImage(file);
-
-						// Upload to Firebase Storage and get download URL
+						
+						// Upload original file without compression
 						uploadProgress = `Uploading image: ${file.name}`;
-						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${compressedFile.name}`);
-						const uploadSnapshot = await uploadBytes(fileRef, compressedFile);
+						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
+						const uploadSnapshot = await uploadBytes(fileRef, file);
 						const downloadURL = await getDownloadURL(uploadSnapshot.ref);
 						imagePaths.push(downloadURL);
 					} else if (postType === 'video') {
