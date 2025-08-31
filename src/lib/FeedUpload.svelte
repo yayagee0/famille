@@ -5,6 +5,8 @@
 	import { FFmpeg } from '@ffmpeg/ffmpeg';
 	import { fetchFile, toBlobURL } from '@ffmpeg/util';
 	import { validateImageFile, validateVideoFile, validatePost } from '$lib/schemas';
+	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+	import { storage } from '$lib/firebase';
 
 	const dispatch = createEventDispatcher();
 
@@ -168,6 +170,12 @@
 		// Early validation checks to prevent unnecessary processing
 		if (isUploading) return;
 
+		// Null-safety check
+		if (!user?.uid) {
+			console.error('User not authenticated');
+			return;
+		}
+
 		if (!textContent.trim() && postType === 'text') {
 			return; // No unreachable code after this - validation exit point
 		}
@@ -188,8 +196,10 @@
 		uploadProgress = '';
 
 		try {
-			let files: File[] = [];
+			let imagePaths: string[] = [];
+			let videoPaths: string[] = [];
 
+			// Handle file uploads for photo/video posts
 			if (selectedFiles && (postType === 'photo' || postType === 'video')) {
 				uploadProgress = 'Validating and processing files...';
 
@@ -202,7 +212,13 @@
 						}
 						uploadProgress = `Compressing image: ${file.name}`;
 						const compressedFile = await compressImage(file);
-						files.push(compressedFile);
+						
+						// Upload to Firebase Storage and get download URL
+						uploadProgress = `Uploading image: ${file.name}`;
+						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${compressedFile.name}`);
+						const uploadSnapshot = await uploadBytes(fileRef, compressedFile);
+						const downloadURL = await getDownloadURL(uploadSnapshot.ref);
+						imagePaths.push(downloadURL);
 					} else if (postType === 'video') {
 						const validation = validateVideoFile(file);
 						if (!validation.success) {
@@ -210,13 +226,20 @@
 						}
 						uploadProgress = `Processing video: ${file.name}`;
 						const processedFile = await compressVideo(file);
-						files.push(processedFile);
+						
+						// Upload to Firebase Storage and get download URL
+						uploadProgress = `Uploading video: ${file.name}`;
+						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${processedFile.name}`);
+						const uploadSnapshot = await uploadBytes(fileRef, processedFile);
+						const downloadURL = await getDownloadURL(uploadSnapshot.ref);
+						videoPaths.push(downloadURL);
 					}
 				}
 			}
 
 			uploadProgress = 'Validating post data...';
 
+			// Create post object following Firestore schema
 			const postData = {
 				type: postType,
 				content: textContent.trim(),
@@ -226,27 +249,31 @@
 					photoURL: user.photoURL || null,
 					email: user.email
 				},
-				files: files,
-				youtubeUrl: postType === 'youtube' ? youtubeUrl.trim() : null,
-				poll:
-					postType === 'poll'
-						? {
-								question: pollQuestion.trim(),
-								options: pollOptions
-									.filter((opt) => opt.trim())
-									.map((opt) => ({
-										text: opt.trim(),
-										votes: 0
-									}))
-							}
-						: null,
+				familyId: 'ghassan-family',
 				createdAt: new Date(),
-				familyId: 'ghassan-family'
+				// Add media URLs if present
+				...(imagePaths.length > 0 && { imagePaths }),
+				...(videoPaths.length > 0 && { videoPaths }),
+				// Add YouTube URL if present
+				...(postType === 'youtube' && youtubeUrl.trim() && { youtubeUrl: youtubeUrl.trim() }),
+				// Add poll data if present
+				...(postType === 'poll' && {
+					poll: {
+						question: pollQuestion.trim(),
+						options: pollOptions
+							.filter((opt) => opt.trim())
+							.map((opt) => ({
+								text: opt.trim(),
+								votes: 0
+							}))
+					}
+				})
 			};
 
 			// Validate complete post data with Zod schema
 			const postValidation = validatePost(postData);
 			if (!postValidation.success) {
+				console.error('Post validation failed:', postValidation.error);
 				throw new Error('Invalid post data');
 			}
 
@@ -264,7 +291,7 @@
 			uploadProgress = '';
 		} catch (error) {
 			console.error('Error creating post:', error);
-			uploadProgress = 'Error creating post';
+			uploadProgress = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
 		} finally {
 			isUploading = false;
 		}
