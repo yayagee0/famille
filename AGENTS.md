@@ -16,7 +16,10 @@
 ### Styling & UI
 
 - **TailwindCSS v4** with `@tailwindcss/vite` plugin (required)
+- **Inter font family** as primary font (loaded from Google Fonts)
+- **Amiri font** for Arabic text in Daily Ayah widget
 - **lucide-svelte** for iconography
+- **Design system**: `rounded-2xl` borders, `shadow-sm` for cards, generous whitespace
 - **Responsive design** (mobile-first approach)
 - **Accessibility** standards (ARIA labels, keyboard navigation)
 
@@ -39,6 +42,63 @@
 - **Cloud Firestore** (NoSQL database)
 - **Firebase Storage** (file uploads)
 - **browser-image-compression** for client-side optimization
+
+### Unified Data Schema
+
+#### Posts Collection (`posts/{docId}`)
+```typescript
+{
+  authorUid: string;           // References users/{uid}
+  familyId: "ghassan-family";  // Family identifier
+  kind: "text" | "photo" | "video" | "youtube" | "poll";
+  text: string;                // Post content
+  createdAt: Timestamp;        // Server timestamp
+  likes: string[];             // Array of user UIDs
+  comments: Comment[];         // Array of comment objects
+  
+  // Media fields (optional)
+  imagePath?: string;          // Single image URL
+  imagePaths?: string[];       // Multiple image URLs
+  videoPath?: string;          // Single video URL
+  youtubeId?: string;          // YouTube video ID
+  
+  // Poll fields (optional)
+  poll?: {
+    title: string;
+    options: Array<{
+      text: string;
+      votes: string[];          // Array of user UIDs
+    }>;
+  };
+}
+```
+
+#### Users Collection (`users/{uid}`)
+```typescript
+{
+  uid: string;                 // Firebase Auth UID
+  displayName: string | null;  // User's display name
+  email: string;               // User's email
+  avatarUrl?: string | null;   // Profile picture URL
+  photoURL?: string | null;    // Alias for avatarUrl (Firebase Auth compatibility)
+  createdAt?: Timestamp;       // Account creation
+  lastLoginAt?: Timestamp;     // Last sign-in time
+  lastUpdatedAt?: Timestamp;   // Profile update time
+}
+```
+
+#### Schema Validation with Zod
+- **`postSchema`**: Validates all post types with discriminated union
+- **`userSchema`**: Validates user document structure
+- **`imageFileSchema`**: Validates image upload metadata (5MB limit)
+- **`videoFileSchema`**: Validates video upload metadata (100MB limit)
+- **Author Enrichment**: Posts store only `authorUid`, author data enriched from `users/{uid}` in components
+
+#### Daily Ayah Widget
+- **Component**: `DailyAyah.svelte`
+- **Features**: Rotates Quranic verses daily based on date
+- **Styling**: Uses Amiri font for Arabic text
+- **Location**: Dashboard top section
 
 ## Security Rules & Constraints
 
@@ -83,16 +143,19 @@ src/
 ├── lib/
 │   ├── firebase.ts         # Firebase configuration & helpers
 │   ├── allowlist.ts        # Email validation logic
+│   ├── schemas.ts          # Zod validation schemas
 │   ├── Nav.svelte          # Navigation component
-│   └── FeedUpload.svelte   # Post creation component
+│   ├── FeedUpload.svelte   # Post creation component
+│   └── DailyAyah.svelte    # Daily Quranic verse widget
 ├── routes/
 │   ├── +layout.svelte      # Auth wrapper & navigation
 │   ├── +page.svelte        # Root redirect logic
 │   ├── login/+page.svelte  # Authentication page
-│   ├── dashboard/+page.svelte  # Family statistics
-│   ├── feed/+page.svelte   # Social feed
+│   ├── dashboard/+page.svelte  # Family highlights & Daily Ayah
+│   ├── feed/+page.svelte   # Social feed with real-time updates
+│   ├── gallery/+page.svelte    # Photo gallery with lightbox
 │   └── profile/+page.svelte    # Profile management
-└── app.css                 # TailwindCSS imports
+└── app.css                 # TailwindCSS imports & font config
 ```
 
 ### Component Patterns

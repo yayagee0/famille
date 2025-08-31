@@ -7,21 +7,26 @@ A private, secure family social platform built with SvelteKit 2, TypeScript, and
 - **Secure Authentication**: Google OAuth with email allowlist restriction
 - **Multi-format Posts**: Share text, photos, videos, YouTube links, and polls
 - **Real-time Updates**: Live feed with likes and comments
-- **Image Compression**: Automatic image optimization using browser-image-compression
-- **Responsive Design**: Mobile-first design with TailwindCSS v4
-- **Profile Management**: Avatar upload and display name customization
-- **Dashboard**: Family activity overview and statistics
+- **Image Compression**: Automatic image optimization using browser-image-compression  
+- **Photo Gallery**: Dedicated gallery page with lightbox modal for all family photos
+- **Daily Ayah Widget**: Rotates Quranic verses daily on the dashboard
+- **Family Highlights**: Dashboard shows recent family activity summaries
+- **Smart Poll Voting**: Prevent double-voting with vote removal/addition logic
+- **Unified Schema**: Clean separation with `authorUid` references and user enrichment
+- **Profile Sync**: Updates both Firebase Auth and Firestore user documents
+- **Responsive Design**: Mobile-first design with Inter font and rounded modern UI
+- **Null Safety**: Comprehensive checks for user references throughout the app
 
 ## 🛠 Tech Stack
 
 - **Framework**: SvelteKit 2 with TypeScript
-- **Styling**: TailwindCSS v4 with @tailwindcss/vite
+- **Styling**: TailwindCSS v4 with @tailwindcss/vite, Inter & Amiri fonts
 - **Icons**: lucide-svelte
-- **State Management**: Svelte 5 `$state()` runes
-- **Validation**: Zod v4
+- **State Management**: Svelte 5 `$state()` runes  
+- **Validation**: Zod v4 with comprehensive schemas
 - **Date Handling**: Day.js with relative time
 - **Authentication**: Firebase Auth (Google OAuth only)
-- **Database**: Cloud Firestore
+- **Database**: Cloud Firestore with unified schema
 - **Storage**: Firebase Storage
 - **Image Processing**: browser-image-compression
 - **Package Manager**: npm
@@ -159,37 +164,58 @@ Email allowlist validation for family member access control.
 - **Consistent color scheme** with indigo primary colors
 - **Accessible** design with proper ARIA labels and keyboard navigation
 
-## 📊 Firebase Collections
+## 📊 Unified Firebase Schema
 
 ### Posts Collection (`/posts/{postId}`)
 
 ```typescript
 {
-  id: string
-  type: 'text' | 'photo' | 'video' | 'youtube' | 'poll'
-  content: string
-  author: {
-    uid: string
-    displayName: string
-    photoURL: string | null
-    email: string
-  }
-  imageUrls?: string[]  // for photo posts
-  videoUrls?: string[]  // for video posts
-  youtubeUrl?: string   // for youtube posts
-  poll?: {              // for poll posts
-    question: string
+  authorUid: string;           // References users/{uid} - unified approach
+  familyId: "ghassan-family";  // Family identifier
+  kind: "text" | "photo" | "video" | "youtube" | "poll";
+  text: string;                // Post content  
+  createdAt: Timestamp;        // Server timestamp
+  likes: string[];             // Array of user UIDs
+  comments: Comment[];         // Array of comment objects
+
+  // Media fields (optional)
+  imagePath?: string;          // Single image URL
+  imagePaths?: string[];       // Multiple image URLs  
+  videoPath?: string;          // Single video URL
+  youtubeId?: string;          // YouTube video ID
+
+  // Poll fields (optional)
+  poll?: {
+    title: string;
     options: Array<{
-      text: string
-      votes: number
-    }>
-  }
-  likes: string[]       // array of user UIDs
-  comments: any[]       // future enhancement
-  timestamp: Timestamp
-  familyId: string      // always "ghassan-family"
+      text: string;
+      votes: string[];          // Array of user UIDs who voted
+    }>;
+  };
 }
 ```
+
+### Users Collection (`/users/{uid}`)
+
+```typescript
+{
+  uid: string;                 // Firebase Auth UID
+  displayName: string | null;  // User's display name
+  email: string;               // User's email
+  avatarUrl?: string | null;   // Profile picture URL
+  photoURL?: string | null;    // Alias for avatarUrl (Firebase Auth compatibility)  
+  createdAt?: Timestamp;       // Account creation
+  lastLoginAt?: Timestamp;     // Last sign-in time
+  lastUpdatedAt?: Timestamp;   // Profile update time
+}
+```
+
+### Schema Features
+
+- **Author Enrichment**: Posts store only `authorUid`, author data retrieved from `users/{uid}`
+- **Zod Validation**: All schemas validated with discriminated unions
+- **Null Safety**: Comprehensive null checks throughout components  
+- **Real-time Updates**: Firestore listeners with automatic author enrichment
 
 ## 🚀 Deployment
 

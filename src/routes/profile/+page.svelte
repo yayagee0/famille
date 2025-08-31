@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { auth, storage } from '$lib/firebase';
+	import { auth, storage, db } from '$lib/firebase';
 	import { updateProfile } from 'firebase/auth';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+	import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 	import { User, Save, Mail } from 'lucide-svelte';
 	import imageCompression from 'browser-image-compression';
 	import ErrorMessage from '$lib/ErrorMessage.svelte';
@@ -66,10 +67,21 @@
 			const snapshot = await uploadBytes(avatarRef, compressedFile);
 			const downloadURL = await getDownloadURL(snapshot.ref);
 
-			// Update user profile
+			// Update user profile in Firebase Auth
 			await updateProfile(user, {
 				photoURL: downloadURL
 			});
+
+			// Update user document in Firestore
+			const userDocRef = doc(db, 'users', user.uid);
+			await setDoc(userDocRef, {
+				uid: user.uid,
+				displayName: user.displayName || null,
+				email: user.email,
+				avatarUrl: downloadURL,
+				photoURL: downloadURL,
+				lastUpdatedAt: serverTimestamp()
+			}, { merge: true });
 
 			// Force refresh user object
 			await auth.currentUser?.reload();
@@ -98,9 +110,21 @@
 		errorMessage = null;
 
 		try {
+			// Update Firebase Auth profile
 			await updateProfile(user, {
 				displayName: displayName.trim()
 			});
+
+			// Update user document in Firestore
+			const userDocRef = doc(db, 'users', user.uid);
+			await setDoc(userDocRef, {
+				uid: user.uid,
+				displayName: displayName.trim(),
+				email: user.email,
+				avatarUrl: user.photoURL || null,
+				photoURL: user.photoURL || null,
+				lastUpdatedAt: serverTimestamp()
+			}, { merge: true });
 
 			// Force refresh user object
 			await auth.currentUser?.reload();

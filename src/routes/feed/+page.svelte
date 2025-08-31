@@ -105,7 +105,7 @@
 			};
 
 			if (youtubeId) postDoc.youtubeId = youtubeId;
-			
+
 			// Handle image paths from uploaded files
 			if (postData.imagePaths && postData.imagePaths.length > 0) {
 				postDoc.imagePath = postData.imagePaths[0];
@@ -113,12 +113,12 @@
 					postDoc.imagePaths = postData.imagePaths;
 				}
 			}
-			
+
 			// Handle video paths from uploaded files
 			if (postData.videoPaths && postData.videoPaths.length > 0) {
 				postDoc.videoPath = postData.videoPaths[0];
 			}
-			
+
 			if (postData.poll && postData.poll.title) postDoc.poll = postData.poll;
 
 			await addDoc(collection(db, 'posts'), postDoc);
@@ -147,7 +147,7 @@
 		if (userCache.has(uid)) {
 			return userCache.get(uid)!;
 		}
-		
+
 		try {
 			const userDoc = await getDoc(doc(db, 'users', uid));
 			if (userDoc.exists()) {
@@ -159,7 +159,7 @@
 		} catch (err) {
 			console.error('Error fetching user:', err);
 		}
-		
+
 		const fallbackName = 'Unknown';
 		userCache.set(uid, fallbackName);
 		return fallbackName;
@@ -168,8 +168,8 @@
 	// 🗳️ Get voter names for a poll option
 	async function getVoterNames(votes: string[]): Promise<string> {
 		if (!votes || votes.length === 0) return '';
-		
-		const names = await Promise.all(votes.map(uid => getUserDisplayName(uid)));
+
+		const names = await Promise.all(votes.map((uid) => getUserDisplayName(uid)));
 		return names.join(', ');
 	}
 
@@ -177,14 +177,15 @@
 	async function voteInPoll(post: any, optionIndex: number) {
 		if (!user?.uid) return;
 		const userId = user.uid;
-		
+
 		try {
 			// Create updated options array with the user's vote
 			const updatedOptions = post.poll.options.map((option: any, index: number) => ({
 				...option,
-				votes: index === optionIndex 
-					? [...(option.votes || []).filter((id: string) => id !== userId), userId]
-					: (option.votes || []).filter((id: string) => id !== userId)
+				votes:
+					index === optionIndex
+						? [...(option.votes || []).filter((id: string) => id !== userId), userId]
+						: (option.votes || []).filter((id: string) => id !== userId)
 			}));
 
 			// Update Firestore with the new options array
@@ -198,7 +199,7 @@
 	// 🗳️ Get user's current vote in a poll
 	function getUserVote(poll: any): number | null {
 		if (!user?.uid || !poll?.options) return null;
-		
+
 		for (let i = 0; i < poll.options.length; i++) {
 			if (poll.options[i].votes?.includes(user.uid)) {
 				return i;
@@ -368,7 +369,9 @@
 										<button
 											onclick={() => voteInPoll(post, index)}
 											disabled={!user}
-											class="mb-3 w-full rounded-lg border p-3 text-left transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 {isUserVoted ? 'bg-blue-50 border-blue-200' : 'border-gray-200'}"
+											class="mb-3 w-full rounded-lg border p-3 text-left transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 {isUserVoted
+												? 'border-blue-200 bg-blue-50'
+												: 'border-gray-200'}"
 										>
 											<div class="flex items-center justify-between">
 												<span class="font-medium text-gray-900">{opt.text}</span>
@@ -388,12 +391,12 @@
 											</div>
 										</button>
 									{/each}
-									
+
 									{#if user && getUserVote(post.poll) !== null}
 										{@const userVoteIndex = getUserVote(post.poll)}
 										{#if userVoteIndex !== null}
-											<div class="mt-3 pt-3 border-t border-gray-200">
-												<p class="text-sm text-blue-600 font-medium">
+											<div class="mt-3 border-t border-gray-200 pt-3">
+												<p class="text-sm font-medium text-blue-600">
 													You voted: {post.poll.options[userVoteIndex].text}
 												</p>
 											</div>

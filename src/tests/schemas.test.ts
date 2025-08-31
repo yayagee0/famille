@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { 
-	validateEnv, 
-	validateImageFile, 
-	validateVideoFile, 
+import {
+	validateEnv,
+	validateImageFile,
+	validateVideoFile,
 	validatePost,
 	envSchema,
 	imageFileSchema,
@@ -41,7 +41,7 @@ describe('Schema Validation', () => {
 
 	describe('File Validation', () => {
 		it('should validate valid image files', () => {
-			const mockImageFile = new File(['mock content'], 'test.jpg', { 
+			const mockImageFile = new File(['mock content'], 'test.jpg', {
 				type: 'image/jpeg',
 				lastModified: Date.now()
 			});
@@ -53,7 +53,7 @@ describe('Schema Validation', () => {
 		});
 
 		it('should reject oversized image files', () => {
-			const mockImageFile = new File(['mock content'], 'test.jpg', { 
+			const mockImageFile = new File(['mock content'], 'test.jpg', {
 				type: 'image/jpeg',
 				lastModified: Date.now()
 			});
@@ -65,7 +65,7 @@ describe('Schema Validation', () => {
 		});
 
 		it('should reject non-image files', () => {
-			const mockTextFile = new File(['mock content'], 'test.txt', { 
+			const mockTextFile = new File(['mock content'], 'test.txt', {
 				type: 'text/plain',
 				lastModified: Date.now()
 			});
@@ -75,7 +75,7 @@ describe('Schema Validation', () => {
 		});
 
 		it('should validate valid video files', () => {
-			const mockVideoFile = new File(['mock content'], 'test.mp4', { 
+			const mockVideoFile = new File(['mock content'], 'test.mp4', {
 				type: 'video/mp4',
 				lastModified: Date.now()
 			});
@@ -88,18 +88,11 @@ describe('Schema Validation', () => {
 	});
 
 	describe('Post Validation', () => {
-		const mockAuthor = {
-			uid: 'test-uid',
-			displayName: 'Test User',
-			photoURL: 'https://example.com/photo.jpg',
-			email: 'test@example.com'
-		};
-
 		it('should validate a text post', () => {
 			const textPost = {
 				type: 'text' as const,
 				content: 'This is a test post',
-				author: mockAuthor,
+				authorUid: 'test-uid',
 				familyId: 'test-family',
 				createdAt: new Date()
 			};
@@ -112,7 +105,7 @@ describe('Schema Validation', () => {
 			const textPost = {
 				type: 'text' as const,
 				content: '', // empty content
-				author: mockAuthor,
+				authorUid: 'test-uid',
 				familyId: 'test-family',
 				createdAt: new Date()
 			};
@@ -125,7 +118,7 @@ describe('Schema Validation', () => {
 			const photoPost = {
 				type: 'photo' as const,
 				content: 'Photo description',
-				author: mockAuthor,
+				authorUid: 'test-uid',
 				imagePaths: ['https://example.com/image1.jpg'],
 				familyId: 'test-family',
 				createdAt: new Date()
@@ -139,7 +132,7 @@ describe('Schema Validation', () => {
 			const pollPost = {
 				type: 'poll' as const,
 				content: 'Poll description',
-				author: mockAuthor,
+				authorUid: 'test-uid',
 				poll: {
 					title: 'What is your favorite color?',
 					options: [
@@ -159,7 +152,7 @@ describe('Schema Validation', () => {
 			const youtubePost = {
 				type: 'youtube' as const,
 				content: 'Check out this video',
-				author: mockAuthor,
+				authorUid: 'test-uid',
 				youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
 				familyId: 'test-family',
 				createdAt: new Date()
@@ -173,7 +166,7 @@ describe('Schema Validation', () => {
 			const youtubePost = {
 				type: 'youtube' as const,
 				content: 'Check out this video',
-				author: mockAuthor,
+				authorUid: 'test-uid',
 				youtubeUrl: 'https://example.com/not-youtube',
 				familyId: 'test-family',
 				createdAt: new Date()

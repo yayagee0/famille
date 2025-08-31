@@ -212,7 +212,7 @@
 						}
 						uploadProgress = `Compressing image: ${file.name}`;
 						const compressedFile = await compressImage(file);
-						
+
 						// Upload to Firebase Storage and get download URL
 						uploadProgress = `Uploading image: ${file.name}`;
 						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${compressedFile.name}`);
@@ -226,7 +226,7 @@
 						}
 						uploadProgress = `Processing video: ${file.name}`;
 						const processedFile = await compressVideo(file);
-						
+
 						// Upload to Firebase Storage and get download URL
 						uploadProgress = `Uploading video: ${file.name}`;
 						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${processedFile.name}`);
@@ -239,16 +239,11 @@
 
 			uploadProgress = 'Validating post data...';
 
-			// Create post object following Firestore schema
+			// Create post object following unified Firestore schema
 			const postData = {
 				type: postType,
 				content: textContent.trim(),
-				author: {
-					uid: user.uid,
-					displayName: user.displayName || 'Anonymous',
-					photoURL: user.photoURL || null,
-					email: user.email
-				},
+				authorUid: user?.uid,
 				familyId: 'ghassan-family',
 				createdAt: new Date(),
 				// Add media URLs if present
