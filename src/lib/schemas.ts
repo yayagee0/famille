@@ -36,12 +36,12 @@ export const postAuthorSchema = z.object({
 // Poll option schema
 export const pollOptionSchema = z.object({
 	text: z.string().min(1, 'Poll option text is required'),
-	votes: z.number().int().min(0, 'Votes must be non-negative')
+	votes: z.array(z.string()).default([])
 });
 
 // Poll schema
 export const pollSchema = z.object({
-	question: z.string().min(1, 'Poll question is required'),
+	title: z.string().min(1, 'Poll title is required'),
 	options: z.array(pollOptionSchema).min(2, 'Poll must have at least 2 options')
 });
 

@@ -141,10 +141,10 @@ describe('Schema Validation', () => {
 				content: 'Poll description',
 				author: mockAuthor,
 				poll: {
-					question: 'What is your favorite color?',
+					title: 'What is your favorite color?',
 					options: [
-						{ text: 'Red', votes: 0 },
-						{ text: 'Blue', votes: 0 }
+						{ text: 'Red', votes: [] },
+						{ text: 'Blue', votes: ['user1', 'user2'] }
 					]
 				},
 				familyId: 'test-family',
