@@ -212,7 +212,7 @@
 						}
 						uploadProgress = `Compressing image: ${file.name}`;
 						const compressedFile = await compressImage(file);
-						
+
 						// Upload to Firebase Storage and get download URL
 						uploadProgress = `Uploading image: ${file.name}`;
 						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${compressedFile.name}`);
@@ -226,7 +226,7 @@
 						}
 						uploadProgress = `Processing video: ${file.name}`;
 						const processedFile = await compressVideo(file);
-						
+
 						// Upload to Firebase Storage and get download URL
 						uploadProgress = `Uploading video: ${file.name}`;
 						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${processedFile.name}`);

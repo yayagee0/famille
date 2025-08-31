@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { 
-	validateEnv, 
-	validateImageFile, 
-	validateVideoFile, 
+import {
+	validateEnv,
+	validateImageFile,
+	validateVideoFile,
 	validatePost,
 	envSchema,
 	imageFileSchema,
@@ -41,7 +41,7 @@ describe('Schema Validation', () => {
 
 	describe('File Validation', () => {
 		it('should validate valid image files', () => {
-			const mockImageFile = new File(['mock content'], 'test.jpg', { 
+			const mockImageFile = new File(['mock content'], 'test.jpg', {
 				type: 'image/jpeg',
 				lastModified: Date.now()
 			});
@@ -53,7 +53,7 @@ describe('Schema Validation', () => {
 		});
 
 		it('should reject oversized image files', () => {
-			const mockImageFile = new File(['mock content'], 'test.jpg', { 
+			const mockImageFile = new File(['mock content'], 'test.jpg', {
 				type: 'image/jpeg',
 				lastModified: Date.now()
 			});
@@ -65,7 +65,7 @@ describe('Schema Validation', () => {
 		});
 
 		it('should reject non-image files', () => {
-			const mockTextFile = new File(['mock content'], 'test.txt', { 
+			const mockTextFile = new File(['mock content'], 'test.txt', {
 				type: 'text/plain',
 				lastModified: Date.now()
 			});
@@ -75,7 +75,7 @@ describe('Schema Validation', () => {
 		});
 
 		it('should validate valid video files', () => {
-			const mockVideoFile = new File(['mock content'], 'test.mp4', { 
+			const mockVideoFile = new File(['mock content'], 'test.mp4', {
 				type: 'video/mp4',
 				lastModified: Date.now()
 			});

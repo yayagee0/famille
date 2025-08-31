@@ -46,17 +46,14 @@ export const pollSchema = z.object({
 });
 
 // YouTube URL validation (permissive - allows various YouTube formats)
-export const youtubeUrlSchema = z.string().refine(
-	(url) => {
-		const patterns = [
-			/^https?:\/\/(www\.)?youtube\.com\/watch\?v=[\w-]+/,
-			/^https?:\/\/youtu\.be\/[\w-]+/,
-			/^https?:\/\/(www\.)?youtube\.com\/embed\/[\w-]+/
-		];
-		return patterns.some(pattern => pattern.test(url));
-	},
-	'Must be a valid YouTube URL'
-);
+export const youtubeUrlSchema = z.string().refine((url) => {
+	const patterns = [
+		/^https?:\/\/(www\.)?youtube\.com\/watch\?v=[\w-]+/,
+		/^https?:\/\/youtu\.be\/[\w-]+/,
+		/^https?:\/\/(www\.)?youtube\.com\/embed\/[\w-]+/
+	];
+	return patterns.some((pattern) => pattern.test(url));
+}, 'Must be a valid YouTube URL');
 
 // Base post schema
 export const basePostSchema = z.object({
@@ -120,11 +117,14 @@ export function validateEnv(env: Record<string, unknown>) {
 
 export function validateImageFile(file: File) {
 	try {
-		return { success: true as const, data: imageFileSchema.parse({
-			name: file.name,
-			size: file.size,
-			type: file.type
-		}) };
+		return {
+			success: true as const,
+			data: imageFileSchema.parse({
+				name: file.name,
+				size: file.size,
+				type: file.type
+			})
+		};
 	} catch (error) {
 		return { success: false as const, error };
 	}
@@ -132,11 +132,14 @@ export function validateImageFile(file: File) {
 
 export function validateVideoFile(file: File) {
 	try {
-		return { success: true as const, data: videoFileSchema.parse({
-			name: file.name,
-			size: file.size,
-			type: file.type
-		}) };
+		return {
+			success: true as const,
+			data: videoFileSchema.parse({
+				name: file.name,
+				size: file.size,
+				type: file.type
+			})
+		};
 	} catch (error) {
 		return { success: false as const, error };
 	}
