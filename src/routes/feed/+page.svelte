@@ -10,7 +10,8 @@
 		updateDoc,
 		arrayUnion,
 		arrayRemove,
-		onSnapshot
+		onSnapshot,
+		serverTimestamp
 	} from 'firebase/firestore';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 	import { auth, db, storage } from '$lib/firebase';
@@ -104,11 +105,11 @@
 
 			const youtubeId = youtubeUrl ? getYouTubeVideoId(youtubeUrl) : null;
 
-			// Build doc without undefined values
+			// build doc without undefined values
 			const postDoc: any = {
 				...rest,
 				authorUid: user?.uid,
-				createdAt: new Date(),
+				createdAt: serverTimestamp(), // 🔑 ensure Firestore timestamp
 				kind: postData.type,
 				text: postData.text || '',
 				likes: [],
