@@ -25,12 +25,23 @@ export const videoFileSchema = z.object({
 	type: z.string().refine((type) => type.startsWith('video/'), 'File must be a video')
 });
 
-// Post author schema
+// Post author schema (for inline author objects if needed)
 export const postAuthorSchema = z.object({
 	uid: z.string().min(1, 'User ID is required'),
 	displayName: z.string().nullable(),
 	photoURL: z.string().url().nullable().or(z.literal('')),
 	email: z.string().email('Valid email is required')
+});
+
+// User document schema for Firestore users/{uid}
+export const userSchema = z.object({
+	uid: z.string().min(1, 'User ID is required'),
+	displayName: z.string().nullable(),
+	email: z.string().email('Valid email is required'),
+	avatarUrl: z.string().url().nullable().or(z.literal('')).optional(),
+	photoURL: z.string().url().nullable().or(z.literal('')).optional(),
+	createdAt: z.date().optional(),
+	lastLoginAt: z.date().optional()
 });
 
 // Poll option schema
@@ -55,11 +66,11 @@ export const youtubeUrlSchema = z.string().refine((url) => {
 	return patterns.some((pattern) => pattern.test(url));
 }, 'Must be a valid YouTube URL');
 
-// Base post schema
+// Base post schema - unified to use authorUid only
 export const basePostSchema = z.object({
 	type: z.enum(['text', 'photo', 'video', 'youtube', 'poll']),
 	content: z.string(), // Permissive - allow empty content for some post types
-	author: postAuthorSchema,
+	authorUid: z.string().min(1, 'Author UID is required'),
 	familyId: z.string().min(1, 'Family ID is required'),
 	createdAt: z.date(),
 	// Firestore schema fields for media

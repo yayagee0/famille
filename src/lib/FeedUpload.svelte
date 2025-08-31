@@ -239,16 +239,11 @@
 
 			uploadProgress = 'Validating post data...';
 
-			// Create post object following Firestore schema
+			// Create post object following unified Firestore schema
 			const postData = {
 				type: postType,
 				content: textContent.trim(),
-				author: {
-					uid: user.uid,
-					displayName: user.displayName || 'Anonymous',
-					photoURL: user.photoURL || null,
-					email: user.email
-				},
+				authorUid: user?.uid,
 				familyId: 'ghassan-family',
 				createdAt: new Date(),
 				// Add media URLs if present

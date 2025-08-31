@@ -1,28 +1,23 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+	import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 	import { db, getFamilyId } from '$lib/firebase';
-	import { Users, MessageSquare, Image, Calendar } from 'lucide-svelte';
+	import { Users, MessageSquare, Image } from 'lucide-svelte';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
+	import DailyAyah from '$lib/DailyAyah.svelte';
 
 	dayjs.extend(relativeTime);
 
-	let stats = $state({
-		totalPosts: 0,
-		totalPhotos: 0,
-		totalMembers: 4, // Based on allowlist
-		lastActivity: null as Date | null
-	});
-
 	let recentPosts = $state<any[]>([]);
 	let loading = $state(true);
+	let familyHighlights = $state<string[]>([]);
 
 	onMount(async () => {
 		try {
 			const familyId = getFamilyId();
 
-			// Get recent posts
+			// Get recent posts with author enrichment
 			const postsQuery = query(
 				collection(db, 'posts'),
 				where('familyId', '==', familyId),
@@ -31,15 +26,44 @@
 			);
 
 			const postsSnapshot = await getDocs(postsQuery);
-			recentPosts = postsSnapshot.docs.map((doc) => ({
+			const rawPosts = postsSnapshot.docs.map((doc) => ({
 				id: doc.id,
 				...doc.data()
 			}));
 
-			// Calculate stats
-			stats.totalPosts = postsSnapshot.size;
-			stats.totalPhotos = recentPosts.filter((post) => post.type === 'photo').length;
-			stats.lastActivity = recentPosts.length > 0 ? recentPosts[0].createdAt?.toDate() : null;
+			// Enrich posts with author data from users/{uid}
+			const enrichedPosts = await Promise.all(
+				rawPosts.map(async (post: any) => {
+					if (post.authorUid) {
+						const userDoc = await getDoc(doc(db, 'users', post.authorUid));
+						if (userDoc.exists()) {
+							const userData = userDoc.data();
+							return {
+								...post,
+								author: {
+									displayName: userData.displayName || 'Unknown User',
+									avatarUrl: userData.avatarUrl || null
+								}
+							};
+						}
+					}
+					return { ...post, author: { displayName: 'Unknown User', avatarUrl: null } };
+				})
+			);
+
+			recentPosts = enrichedPosts;
+
+			// Generate family highlights from recent activity
+			familyHighlights = enrichedPosts.slice(0, 3).map((post: any) => {
+				const authorName = post.author?.displayName || 'Someone';
+				const timeAgo = dayjs(post.createdAt?.toDate()).fromNow();
+				
+				if (post.kind === 'photo') return `${authorName} shared a photo ${timeAgo} 📷`;
+				if (post.kind === 'video') return `${authorName} shared a video ${timeAgo} 🎥`;
+				if (post.kind === 'youtube') return `${authorName} shared a YouTube video ${timeAgo} 🎬`;
+				if (post.kind === 'poll') return `${authorName} created a poll ${timeAgo} 📊`;
+				return `${authorName} shared an update ${timeAgo} 💬`;
+			});
 		} catch (error) {
 			console.error('Error loading dashboard data:', error);
 		} finally {
@@ -55,77 +79,36 @@
 		<p class="mt-1 text-sm text-gray-500">Welcome to your family hub</p>
 	</div>
 
-	<!-- Stats Cards -->
-	<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-		<!-- Total Posts -->
-		<div class="overflow-hidden rounded-lg bg-white shadow">
-			<div class="p-5">
-				<div class="flex items-center">
-					<div class="flex-shrink-0">
-						<MessageSquare class="h-6 w-6 text-gray-400" />
-					</div>
-					<div class="ml-5 w-0 flex-1">
-						<dl>
-							<dt class="truncate text-sm font-medium text-gray-500">Total Posts</dt>
-							<dd class="text-lg font-medium text-gray-900">{stats.totalPosts}</dd>
-						</dl>
-					</div>
-				</div>
-			</div>
-		</div>
+	<!-- Daily Ayah -->
+	<DailyAyah />
 
-		<!-- Total Photos -->
-		<div class="overflow-hidden rounded-lg bg-white shadow">
-			<div class="p-5">
-				<div class="flex items-center">
-					<div class="flex-shrink-0">
-						<Image class="h-6 w-6 text-gray-400" />
+	<!-- Family Highlights -->
+	<div class="rounded-2xl bg-white shadow-sm p-6">
+		<h3 class="mb-4 text-lg font-semibold text-gray-900">Family Highlights</h3>
+		{#if loading}
+			<div class="space-y-3">
+				{#each Array(3) as _}
+					<div class="flex animate-pulse items-center space-x-4">
+						<div class="h-4 w-3/4 rounded bg-gray-200"></div>
 					</div>
-					<div class="ml-5 w-0 flex-1">
-						<dl>
-							<dt class="truncate text-sm font-medium text-gray-500">Photos Shared</dt>
-							<dd class="text-lg font-medium text-gray-900">{stats.totalPhotos}</dd>
-						</dl>
-					</div>
-				</div>
+				{/each}
 			</div>
-		</div>
-
-		<!-- Family Members -->
-		<div class="overflow-hidden rounded-lg bg-white shadow">
-			<div class="p-5">
-				<div class="flex items-center">
-					<div class="flex-shrink-0">
-						<Users class="h-6 w-6 text-gray-400" />
-					</div>
-					<div class="ml-5 w-0 flex-1">
-						<dl>
-							<dt class="truncate text-sm font-medium text-gray-500">Family Members</dt>
-							<dd class="text-lg font-medium text-gray-900">{stats.totalMembers}</dd>
-						</dl>
-					</div>
-				</div>
+		{:else if familyHighlights.length === 0}
+			<div class="text-center py-8">
+				<p class="text-gray-500">✨ No recent activity to highlight</p>
+				<p class="text-sm text-gray-400 mt-1">Start sharing to see family highlights!</p>
 			</div>
-		</div>
-
-		<!-- Last Activity -->
-		<div class="overflow-hidden rounded-lg bg-white shadow">
-			<div class="p-5">
-				<div class="flex items-center">
-					<div class="flex-shrink-0">
-						<Calendar class="h-6 w-6 text-gray-400" />
+		{:else}
+			<div class="space-y-3">
+				{#each familyHighlights as highlight}
+					<div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
+						<div class="flex-1">
+							<p class="text-sm text-gray-700">{highlight}</p>
+						</div>
 					</div>
-					<div class="ml-5 w-0 flex-1">
-						<dl>
-							<dt class="truncate text-sm font-medium text-gray-500">Last Activity</dt>
-							<dd class="text-lg font-medium text-gray-900">
-								{stats.lastActivity ? dayjs(stats.lastActivity).fromNow() : 'No activity'}
-							</dd>
-						</dl>
-					</div>
-				</div>
+				{/each}
 			</div>
-		</div>
+		{/if}
 	</div>
 
 	<!-- Recent Activity -->
@@ -166,10 +149,10 @@
 					{#each recentPosts as post}
 						<div class="flex items-start space-x-3">
 							<div class="flex-shrink-0">
-								{#if post.author?.photoURL}
+								{#if post.author?.avatarUrl}
 									<img
 										class="h-10 w-10 rounded-full"
-										src={post.author.photoURL}
+										src={post.author.avatarUrl}
 										alt={post.author.displayName || 'User'}
 									/>
 								{:else}
@@ -181,7 +164,7 @@
 									<p class="text-sm font-medium text-gray-900">
 										{post.author?.displayName || 'Unknown'}
 									</p>
-									{#if post.type === 'photo' || post.type === 'video'}
+									{#if post.kind === 'photo' || post.kind === 'video'}
 										<Image class="h-4 w-4 text-gray-400" />
 									{:else}
 										<MessageSquare class="h-4 w-4 text-gray-400" />
@@ -191,16 +174,16 @@
 									</span>
 								</div>
 								<p class="mt-1 truncate text-sm text-gray-700">
-									{#if post.type === 'poll'}
+									{#if post.kind === 'poll'}
 										Poll: {post.poll?.title}
-									{:else if post.type === 'youtube'}
+									{:else if post.kind === 'youtube'}
 										Shared a YouTube video
-									{:else if post.type === 'photo'}
-										Shared a photo{post.content ? `: ${post.content}` : ''}
-									{:else if post.type === 'video'}
-										Shared a video{post.content ? `: ${post.content}` : ''}
+									{:else if post.kind === 'photo'}
+										Shared a photo{post.text ? `: ${post.text}` : ''}
+									{:else if post.kind === 'video'}
+										Shared a video{post.text ? `: ${post.text}` : ''}
 									{:else}
-										{post.content}
+										{post.text || post.content}
 									{/if}
 								</p>
 							</div>
@@ -250,17 +233,19 @@
 					</div>
 				</a>
 
-				<div
-					class="relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm"
+				<a
+					href="/gallery"
+					class="relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
 				>
 					<div class="flex-shrink-0">
 						<Image class="h-10 w-10 text-indigo-600" />
 					</div>
 					<div class="min-w-0 flex-1">
+						<span class="absolute inset-0" aria-hidden="true"></span>
 						<p class="text-sm font-medium text-gray-900">Photo Gallery</p>
-						<p class="truncate text-sm text-gray-500">Coming soon</p>
+						<p class="truncate text-sm text-gray-500">View family photos</p>
 					</div>
-				</div>
+				</a>
 			</div>
 		</div>
 	</div>
