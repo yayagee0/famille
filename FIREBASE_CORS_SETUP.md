@@ -23,7 +23,7 @@ Apply the CORS configuration from `cors.json`:
 gsutil cors set cors.json gs://YOUR_STORAGE_BUCKET_NAME
 ```
 
-Replace `YOUR_STORAGE_BUCKET_NAME` with your actual Firebase Storage bucket name.
+Replace `YOUR_STORAGE_BUCKET_NAME` with your actual Firebase Storage bucket name (e.g., `familyg-719f2.appspot.com`).
 
 ### 2. Verify CORS Configuration
 
@@ -40,9 +40,13 @@ The verification command should return:
 ```json
 [
 	{
-		"origin": ["http://localhost:5173", "https://famille-nine.vercel.app"],
-		"method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
-		"header": ["Content-Type", "Authorization"],
+		"origin": [
+			"http://localhost:5173",
+			"https://famille-nine.vercel.app",
+			"https://familyg-719f2.appspot.com"
+		],
+		"method": ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],
+		"header": ["Content-Type", "Authorization", "X-Requested-With"],
 		"maxAgeSeconds": 3600
 	}
 ]
@@ -53,8 +57,9 @@ The verification command should return:
 - **Origins**:
   - `http://localhost:5173` - Local development server
   - `https://famille-nine.vercel.app` - Production deployment
-- **Methods**: `GET`, `POST`, `PUT`, `DELETE`, `HEAD`
-- **Headers**: `Content-Type`, `Authorization`
+  - `https://familyg-719f2.appspot.com` - Firebase Storage bucket domain
+- **Methods**: `GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`
+- **Headers**: `Content-Type`, `Authorization`, `X-Requested-With`
 - **Max Age**: 3600 seconds (1 hour)
 
 ## Troubleshooting
@@ -65,6 +70,8 @@ If you encounter CORS errors:
 2. Ensure you have proper permissions to modify bucket settings
 3. Check that the origins match exactly (including protocol and port)
 4. Wait a few minutes after applying CORS settings for changes to propagate
+5. Ensure `getDownloadURL()` is used instead of manual URL construction
+6. Verify file paths exist in Firebase Storage before accessing them
 
 ## Alternative Method: Firebase Console
 
