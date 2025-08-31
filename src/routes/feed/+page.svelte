@@ -3,7 +3,6 @@
 	import {
 		collection,
 		query,
-		where,
 		orderBy,
 		addDoc,
 		getDoc,
@@ -14,7 +13,7 @@
 		onSnapshot
 	} from 'firebase/firestore';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-	import { auth, db, storage, getFamilyId } from '$lib/firebase';
+	import { auth, db, storage } from '$lib/firebase';
 	import FeedUpload from '$lib/FeedUpload.svelte';
 	import { Heart, MessageCircle, Share2 } from 'lucide-svelte';
 	import dayjs from 'dayjs';
@@ -44,12 +43,7 @@
 
 	// 🔄 Real-time posts with author enrichment
 	function subscribeToPosts() {
-		const familyId = getFamilyId();
-		const postsQuery = query(
-			collection(db, 'posts'),
-			where('familyId', '==', familyId),
-			orderBy('createdAt', 'desc')
-		);
+		const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
 
 		loading = true;
 		unsubscribePosts = onSnapshot(
@@ -89,7 +83,6 @@
 	// ➕ Create post
 	async function handlePostCreated(event: CustomEvent) {
 		const postData = event.detail;
-		const familyId = getFamilyId();
 
 		try {
 			const { files: _, youtubeUrl, ...rest } = postData;
@@ -111,10 +104,9 @@
 
 			const youtubeId = youtubeUrl ? getYouTubeVideoId(youtubeUrl) : null;
 
-			// build doc without undefined values
+			// Build doc without undefined values
 			const postDoc: any = {
 				...rest,
-				familyId,
 				authorUid: user?.uid,
 				createdAt: new Date(),
 				kind: postData.type,
