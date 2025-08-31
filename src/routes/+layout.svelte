@@ -60,23 +60,35 @@
 		name="description"
 		content="A private family hub for sharing moments and staying connected"
 	/>
-	<!-- Suppress irrelevant third-party cookie warnings from Google/YouTube -->
+	<!-- Suppress irrelevant third-party warnings that don't affect app functionality -->
 	<script>
-		// Fix: Suppress Google/YouTube cookie warnings that are not actionable
+		// Suppress irrelevant third-party warnings that are not actionable
 		if (typeof console !== 'undefined') {
+			const IGNORED_PATTERNS = [
+				'__Secure-YEC',
+				'SameSite=Lax',
+				'SameSite=Strict',
+				'partitioned cookie',
+				'googleads.g.doubleclick.net',
+				'CORS request did not succeed',
+				'CORS preflight response did not succeed'
+			];
+
 			const originalWarn = console.warn;
+			const originalError = console.error;
+
 			console.warn = function (...args) {
 				const message = args.join(' ');
-				// Suppress specific cookie warnings that don't affect app functionality
-				if (
-					message.includes('__Secure-YEC') ||
-					message.includes('SameSite=Lax') ||
-					message.includes('SameSite=Strict') ||
-					message.includes('partitioned cookie')
-				) {
-					return; // Suppress these warnings
+				if (!IGNORED_PATTERNS.some(pattern => message.includes(pattern))) {
+					originalWarn.apply(console, args);
 				}
-				originalWarn.apply(console, args);
+			};
+
+			console.error = function (...args) {
+				const message = args.join(' ');
+				if (!IGNORED_PATTERNS.some(pattern => message.includes(pattern))) {
+					originalError.apply(console, args);
+				}
 			};
 		}
 	</script>
