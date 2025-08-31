@@ -24,6 +24,7 @@
 	dayjs.extend(relativeTime);
 
 	let user = $state(auth.currentUser);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let posts = $state<any[]>([]);
 	let loading = $state(true);
 	let unsubscribePosts: (() => void) | null = null;
@@ -90,25 +91,32 @@
 		const postData = event.detail;
 
 		try {
-			let imagePath: string | undefined;
-			let videoPath: string | undefined;
+			let imagePaths: string[] = [];
+			let videoPaths: string[] = [];
 
-			if (postData.type === 'photo' && postData.files?.[0]) {
-				const f = postData.files[0];
-				const fRef = ref(storage, `posts/${user?.uid}/${Date.now()}-${f.name}`);
-				const snap = await uploadBytes(fRef, f);
-				imagePath = await getDownloadURL(snap.ref);
+			// Handle multiple photo uploads
+			if (postData.type === 'photo' && postData.files?.length > 0) {
+				for (const file of postData.files) {
+					const fRef = ref(storage, `posts/${user?.uid}/${Date.now()}-${file.name}`);
+					const snap = await uploadBytes(fRef, file);
+					const downloadURL = await getDownloadURL(snap.ref);
+					imagePaths.push(downloadURL);
+				}
 			}
-			if (postData.type === 'video' && postData.files?.[0]) {
-				const f = postData.files[0];
-				const fRef = ref(storage, `posts/${user?.uid}/${Date.now()}-${f.name}`);
-				const snap = await uploadBytes(fRef, f);
-				videoPath = await getDownloadURL(snap.ref);
+
+			// Handle video upload (typically single file)
+			if (postData.type === 'video' && postData.files?.length > 0) {
+				const file = postData.files[0]; // Take first video file
+				const fRef = ref(storage, `posts/${user?.uid}/${Date.now()}-${file.name}`);
+				const snap = await uploadBytes(fRef, file);
+				const downloadURL = await getDownloadURL(snap.ref);
+				videoPaths.push(downloadURL);
 			}
 
 			const youtubeId = postData.youtubeUrl ? getYouTubeVideoId(postData.youtubeUrl) : null;
 
-			// build doc without undefined values
+			// Build doc without undefined values
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const postDoc: any = {
 				authorUid: user?.uid,
 				createdAt: serverTimestamp(),
@@ -121,9 +129,18 @@
 
 			// Only add fields if they have values
 			if (youtubeId) postDoc.youtubeId = youtubeId;
-			if (imagePath) postDoc.imagePath = imagePath;
-			if (videoPath) postDoc.videoPath = videoPath;
-			if (postData.poll) postDoc.poll = postData.poll;
+			if (imagePaths.length > 0) {
+				// For backward compatibility, store first image as imagePath
+				// and all images as imagePaths array
+				postDoc.imagePath = imagePaths[0];
+				if (imagePaths.length > 1) {
+					postDoc.imagePaths = imagePaths;
+				}
+			}
+			if (videoPaths.length > 0) {
+				postDoc.videoPath = videoPaths[0];
+			}
+			if (postData.poll && postData.poll.question) postDoc.poll = postData.poll;
 
 			await addDoc(collection(db, 'posts'), postDoc);
 		} catch (err) {
@@ -164,10 +181,11 @@
 
 	function getYouTubeVideoId(url: string): string | null {
 		const regex =
-			/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+			/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/;
 		const m = url.match(regex);
 		return m ? m[1] : null;
 	}
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	function isUserLiked(post: any) {
 		return post.likes?.includes(user?.uid) || false;
 	}
@@ -185,7 +203,7 @@
 		{#if loading}
 			<!-- Loading skeletons -->
 			<div class="space-y-6">
-				{#each Array(3) as _, index (index)}
+				{#each Array(3) as skeleton, index (index)}
 					<div class="animate-pulse rounded-lg bg-white shadow">
 						<div class="p-6">
 							<!-- Header skeleton -->
@@ -246,13 +264,45 @@
 								<p class="mb-4 text-gray-900">{post.text}</p>
 							{/if}
 
-							<!-- Image -->
+							<!-- Images -->
 							{#if post.imagePath}
-								<img
-									src={post.imagePath}
-									alt="User posted content"
-									class="mb-4 max-h-96 w-full rounded-lg object-cover"
-								/>
+								{#if post.imagePaths && post.imagePaths.length > 1}
+									<!-- Multiple images grid -->
+									<div
+										class="mb-4 grid grid-cols-2 gap-2 {post.imagePaths.length === 3
+											? 'grid-cols-3'
+											: ''} {post.imagePaths.length > 4 ? 'grid-cols-3' : ''}"
+									>
+										{#each post.imagePaths.slice(0, 6) as imagePath, index (imagePath)}
+											<div class="relative">
+												<img
+													src={imagePath}
+													alt="User posted content"
+													class="h-32 w-full rounded-lg object-cover {index === 5 &&
+													post.imagePaths.length > 6
+														? 'opacity-75'
+														: ''}"
+												/>
+												{#if index === 5 && post.imagePaths.length > 6}
+													<div
+														class="bg-opacity-50 absolute inset-0 flex items-center justify-center rounded-lg bg-black"
+													>
+														<span class="text-lg font-bold text-white"
+															>+{post.imagePaths.length - 6}</span
+														>
+													</div>
+												{/if}
+											</div>
+										{/each}
+									</div>
+								{:else}
+									<!-- Single image -->
+									<img
+										src={post.imagePath}
+										alt="User posted content"
+										class="mb-4 max-h-96 w-full rounded-lg object-cover"
+									/>
+								{/if}
 							{/if}
 
 							<!-- Video -->

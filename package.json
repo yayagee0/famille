@@ -35,6 +35,8 @@
 		"vite": "^7.0.4"
 	},
 	"dependencies": {
+		"@ffmpeg/ffmpeg": "^0.12.15",
+		"@ffmpeg/util": "^0.12.2",
 		"browser-image-compression": "^2.0.2",
 		"dayjs": "^1.11.18",
 		"firebase": "^12.2.1",

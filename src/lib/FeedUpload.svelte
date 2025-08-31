@@ -2,9 +2,12 @@
 	import { createEventDispatcher } from 'svelte';
 	import { Image, Video, Youtube, BarChart3, Send, X } from 'lucide-svelte';
 	import imageCompression from 'browser-image-compression';
+	import { FFmpeg } from '@ffmpeg/ffmpeg';
+	import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
 	const dispatch = createEventDispatcher();
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let { user } = $props<{ user: any }>();
 
 	let textContent = $state('');
@@ -15,6 +18,9 @@
 	let postType: 'text' | 'photo' | 'video' | 'youtube' | 'poll' = $state('text');
 	let isUploading = $state(false);
 	let previewUrls: string[] = $state([]);
+	let uploadProgress = $state('');
+	let ffmpeg: FFmpeg | null = $state(null);
+	let ffmpegLoaded = $state(false);
 
 	function setPostType(type: typeof postType) {
 		postType = type;
@@ -24,17 +30,36 @@
 		pollQuestion = '';
 		pollOptions = ['', ''];
 		previewUrls = [];
+		uploadProgress = '';
+	}
+
+	async function initializeFFmpeg() {
+		if (ffmpegLoaded || ffmpeg) return ffmpeg;
+
+		try {
+			ffmpeg = new FFmpeg();
+			const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+			await ffmpeg.load({
+				coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+				wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
+			});
+			ffmpegLoaded = true;
+			return ffmpeg;
+		} catch (error) {
+			console.warn('Failed to initialize FFmpeg:', error);
+			return null;
+		}
 	}
 
 	function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
 		selectedFiles = target.files;
 
-		// Create preview URLs for images
+		// Create preview URLs for images and videos
 		if (selectedFiles) {
 			previewUrls = [];
 			Array.from(selectedFiles).forEach((file) => {
-				if (file.type.startsWith('image/')) {
+				if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
 					const url = URL.createObjectURL(file);
 					previewUrls.push(url);
 				}
@@ -73,6 +98,63 @@
 		}
 	}
 
+	async function compressVideo(file: File): Promise<File> {
+		if (!file.type.startsWith('video/')) return file;
+
+		try {
+			uploadProgress = 'Initializing video compression...';
+			const ffmpegInstance = await initializeFFmpeg();
+
+			if (!ffmpegInstance) {
+				uploadProgress = 'Video compression unavailable, uploading original...';
+				return file;
+			}
+
+			uploadProgress = 'Compressing video...';
+
+			// Write input file
+			await ffmpegInstance.writeFile('input.mp4', await fetchFile(file));
+
+			// Compress video with web-friendly settings
+			await ffmpegInstance.exec([
+				'-i',
+				'input.mp4',
+				'-c:v',
+				'libx264',
+				'-crf',
+				'28',
+				'-preset',
+				'medium',
+				'-c:a',
+				'aac',
+				'-b:a',
+				'128k',
+				'-movflags',
+				'+faststart',
+				'-vf',
+				'scale=1280:720:force_original_aspect_ratio=decrease',
+				'output.mp4'
+			]);
+
+			// Read output file
+			const data = await ffmpegInstance.readFile('output.mp4');
+			const compressedBlob = new Blob([data], { type: 'video/mp4' });
+
+			// Create new File object
+			const compressedFile = new File([compressedBlob], `compressed_${file.name}`, {
+				type: 'video/mp4',
+				lastModified: Date.now()
+			});
+
+			uploadProgress = 'Video compression complete';
+			return compressedFile;
+		} catch (error) {
+			console.warn('Video compression failed, using original file:', error);
+			uploadProgress = 'Compression failed, uploading original...';
+			return file;
+		}
+	}
+
 	async function handleSubmit() {
 		if (isUploading) return;
 
@@ -92,20 +174,28 @@
 		}
 
 		isUploading = true;
+		uploadProgress = '';
 
 		try {
 			let files: File[] = [];
 
 			if (selectedFiles && (postType === 'photo' || postType === 'video')) {
+				uploadProgress = 'Processing files...';
+
 				for (const file of Array.from(selectedFiles)) {
 					if (postType === 'photo') {
+						uploadProgress = `Compressing image: ${file.name}`;
 						const compressedFile = await compressImage(file);
 						files.push(compressedFile);
-					} else {
-						files.push(file);
+					} else if (postType === 'video') {
+						uploadProgress = `Processing video: ${file.name}`;
+						const processedFile = await compressVideo(file);
+						files.push(processedFile);
 					}
 				}
 			}
+
+			uploadProgress = 'Creating post...';
 
 			const postData = {
 				type: postType,
@@ -144,8 +234,10 @@
 			pollOptions = ['', ''];
 			previewUrls = [];
 			postType = 'text';
+			uploadProgress = '';
 		} catch (error) {
 			console.error('Error creating post:', error);
+			uploadProgress = 'Error creating post';
 		} finally {
 			isUploading = false;
 		}
@@ -235,18 +327,27 @@
 			<input
 				type="file"
 				multiple={postType === 'photo'}
-				accept={postType === 'photo' ? 'image/*' : 'video/*'}
+				accept={postType === 'photo'
+					? '.jpg,.jpeg,.png,.webp,.gif,.heic,.bmp,.tiff,.svg'
+					: '.mp4,.mov,.webm,.avi,.mkv,.flv,.wmv,.m4v,.3gp,.ogv'}
 				onchange={handleFileSelect}
 				class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
 			/>
+			{#if uploadProgress}
+				<p class="mt-2 text-xs text-blue-600">{uploadProgress}</p>
+			{/if}
 		</div>
 
-		<!-- Image previews -->
+		<!-- Image and video previews -->
 		{#if previewUrls.length > 0}
 			<div class="mb-4 grid grid-cols-2 gap-4 md:grid-cols-3">
-				{#each previewUrls as url, index}
+				{#each previewUrls as url, index (url)}
 					<div class="relative">
-						<img src={url} alt="Preview" class="h-24 w-full rounded-lg object-cover" />
+						{#if selectedFiles && selectedFiles[index]?.type.startsWith('image/')}
+							<img src={url} alt="Preview" class="h-24 w-full rounded-lg object-cover" />
+						{:else if selectedFiles && selectedFiles[index]?.type.startsWith('video/')}
+							<video src={url} class="h-24 w-full rounded-lg object-cover" muted></video>
+						{/if}
 						<button
 							onclick={() => removePreview(index)}
 							class="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
@@ -281,7 +382,7 @@
 				class="w-full rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
 			/>
 
-			{#each pollOptions as option, index}
+			{#each pollOptions as pollOption, index (index)}
 				<div class="flex items-center space-x-2">
 					<input
 						type="text"
@@ -320,7 +421,7 @@
 		>
 			{#if isUploading}
 				<div class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
-				Posting...
+				{uploadProgress || 'Posting...'}
 			{:else}
 				<Send class="mr-2 h-4 w-4" />
 				Post
