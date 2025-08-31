@@ -8,6 +8,7 @@
 		getDoc,
 		doc,
 		updateDoc,
+		deleteDoc,
 		arrayUnion,
 		arrayRemove,
 		onSnapshot,
@@ -16,7 +17,8 @@
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 	import { auth, db, storage } from '$lib/firebase';
 	import FeedUpload from '$lib/FeedUpload.svelte';
-	import { Heart, MessageCircle, Share2 } from 'lucide-svelte';
+	import { ensureUserProfile } from '$lib/auth';
+	import { Heart, MessageCircle, Share2, Trash2 } from 'lucide-svelte';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	dayjs.extend(relativeTime);
@@ -27,9 +29,11 @@
 	let unsubscribePosts: (() => void) | null = null;
 
 	onMount(() => {
-		const unsubAuth = auth.onAuthStateChanged((firebaseUser) => {
+		const unsubAuth = auth.onAuthStateChanged(async (firebaseUser) => {
 			user = firebaseUser;
 			if (firebaseUser) {
+				// Ensure user profile exists
+				await ensureUserProfile(firebaseUser);
 				subscribeToPosts();
 			} else {
 				if (unsubscribePosts) unsubscribePosts();
@@ -86,7 +90,6 @@
 		const postData = event.detail;
 
 		try {
-			const { files: _, youtubeUrl, ...rest } = postData;
 			let imagePath: string | undefined;
 			let videoPath: string | undefined;
 
@@ -103,21 +106,24 @@
 				videoPath = await getDownloadURL(snap.ref);
 			}
 
-			const youtubeId = youtubeUrl ? getYouTubeVideoId(youtubeUrl) : null;
+			const youtubeId = postData.youtubeUrl ? getYouTubeVideoId(postData.youtubeUrl) : null;
 
 			// build doc without undefined values
 			const postDoc: any = {
-				...rest,
 				authorUid: user?.uid,
-				createdAt: serverTimestamp(), // 🔑 ensure Firestore timestamp
+				createdAt: serverTimestamp(),
 				kind: postData.type,
-				text: postData.text || '',
+				text: postData.content || '',
 				likes: [],
-				comments: []
+				comments: [],
+				familyId: postData.familyId
 			};
+
+			// Only add fields if they have values
 			if (youtubeId) postDoc.youtubeId = youtubeId;
 			if (imagePath) postDoc.imagePath = imagePath;
 			if (videoPath) postDoc.videoPath = videoPath;
+			if (postData.poll) postDoc.poll = postData.poll;
 
 			await addDoc(collection(db, 'posts'), postDoc);
 		} catch (err) {
@@ -137,6 +143,22 @@
 			}
 		} catch (err) {
 			console.error('Like toggle failed:', err);
+		}
+	}
+
+	// 🗑️ Delete post
+	async function deletePost(postId: string) {
+		if (!user) return;
+
+		if (!confirm('Are you sure you want to delete this post?')) {
+			return;
+		}
+
+		try {
+			const postRef = doc(db, 'posts', postId);
+			await deleteDoc(postRef);
+		} catch (err) {
+			console.error('Delete post failed:', err);
 		}
 	}
 
@@ -161,14 +183,43 @@
 		<FeedUpload {user} on:post-created={handlePostCreated} />
 
 		{#if loading}
-			<p class="text-gray-500">Loading feed...</p>
+			<!-- Loading skeletons -->
+			<div class="space-y-6">
+				{#each Array(3) as _, index (index)}
+					<div class="animate-pulse rounded-lg bg-white shadow">
+						<div class="p-6">
+							<!-- Header skeleton -->
+							<div class="mb-4 flex items-center space-x-3">
+								<div class="h-10 w-10 rounded-full bg-gray-300"></div>
+								<div class="flex-1">
+									<div class="mb-1 h-4 w-24 rounded bg-gray-300"></div>
+									<div class="h-3 w-16 rounded bg-gray-200"></div>
+								</div>
+							</div>
+							<!-- Content skeleton -->
+							<div class="mb-4 space-y-2">
+								<div class="h-4 w-full rounded bg-gray-300"></div>
+								<div class="h-4 w-3/4 rounded bg-gray-300"></div>
+							</div>
+							<!-- Actions skeleton -->
+							<div class="border-t border-gray-200 pt-3">
+								<div class="flex space-x-6">
+									<div class="h-4 w-16 rounded bg-gray-200"></div>
+									<div class="h-4 w-20 rounded bg-gray-200"></div>
+									<div class="h-4 w-12 rounded bg-gray-200"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
 		{:else if posts.length === 0}
 			<div class="rounded bg-white py-8 text-center shadow">
 				<p class="text-gray-600">No posts yet — be the first!</p>
 			</div>
 		{:else}
 			<div class="space-y-6">
-				{#each posts as post}
+				{#each posts as post (post.id)}
 					<article class="rounded-lg bg-white shadow">
 						<div class="p-6 pb-4">
 							<!-- Header -->
@@ -176,13 +227,15 @@
 								{#if post.author?.avatarUrl}
 									<img src={post.author.avatarUrl} alt="" class="h-10 w-10 rounded-full" />
 								{:else}
-									<div class="h-10 w-10 bg-gray-300 rounded-full"></div>
+									<div class="h-10 w-10 rounded-full bg-gray-300"></div>
 								{/if}
 								<div>
 									<p class="text-sm font-medium text-gray-900">{post.author?.displayName}</p>
 									<p class="text-xs text-gray-500">
 										{#if post.createdAt}
-											{dayjs(post.createdAt?.toDate ? post.createdAt.toDate() : post.createdAt).fromNow()}
+											{dayjs(
+												post.createdAt?.toDate ? post.createdAt.toDate() : post.createdAt
+											).fromNow()}
 										{/if}
 									</p>
 								</div>
@@ -195,22 +248,28 @@
 
 							<!-- Image -->
 							{#if post.imagePath}
-								<img src={post.imagePath} alt="Photo" class="w-full rounded-lg max-h-96 object-cover mb-4" />
+								<img
+									src={post.imagePath}
+									alt="User posted content"
+									class="mb-4 max-h-96 w-full rounded-lg object-cover"
+								/>
 							{/if}
 
 							<!-- Video -->
 							{#if post.videoPath}
-								<video controls class="max-h-96 w-full rounded-lg bg-black mb-4">
+								<video controls class="mb-4 max-h-96 w-full rounded-lg bg-black">
 									<source src={post.videoPath} type="video/mp4" />
+									<track kind="captions" src="" label="No captions available" />
 								</video>
 							{/if}
 
 							<!-- YouTube -->
 							{#if post.youtubeId}
-								<div class="relative aspect-video mb-4">
+								<div class="relative mb-4 aspect-video">
 									<iframe
 										src="https://www.youtube.com/embed/{post.youtubeId}"
 										class="absolute inset-0 h-full w-full rounded-lg"
+										title="YouTube video"
 										allowfullscreen
 									></iframe>
 								</div>
@@ -220,8 +279,8 @@
 							{#if post.poll?.options}
 								<div class="mb-4 rounded-lg border border-gray-200 p-4">
 									<h4 class="mb-3 font-medium text-gray-900">{post.poll.question}</h4>
-									{#each post.poll.options as opt}
-										<div class="flex justify-between p-2 border rounded mb-2">
+									{#each post.poll.options as opt, index (index)}
+										<div class="mb-2 flex justify-between rounded border p-2">
 											<span>{opt.text}</span>
 											<span class="text-xs text-gray-500">{opt.votes?.length || 0} votes</span>
 										</div>
@@ -232,22 +291,44 @@
 
 						<!-- Actions -->
 						<div class="border-t border-gray-200 px-6 py-3">
-							<div class="flex items-center space-x-6">
-								<button
-									onclick={() => toggleLike(post.id, isUserLiked(post))}
-									class="flex items-center space-x-2 text-sm text-gray-500 hover:text-red-600"
-								>
-									<Heart class="h-5 w-5 {isUserLiked(post) ? 'fill-red-500 text-red-500' : ''}" />
-									<span>{post.likes?.length || 0} {(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span>
-								</button>
-								<button class="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600">
-									<MessageCircle class="h-5 w-5" />
-									<span>{post.comments?.length || 0} {(post.comments?.length || 0) === 1 ? 'comment' : 'comments'}</span>
-								</button>
-								<button class="flex items-center space-x-2 text-sm text-gray-500 hover:text-green-600">
-									<Share2 class="h-5 w-5" />
-									<span>Share</span>
-								</button>
+							<div class="flex items-center justify-between">
+								<div class="flex items-center space-x-6">
+									<button
+										onclick={() => toggleLike(post.id, isUserLiked(post))}
+										class="flex items-center space-x-2 text-sm text-gray-500 hover:text-red-600"
+									>
+										<Heart class="h-5 w-5 {isUserLiked(post) ? 'fill-red-500 text-red-500' : ''}" />
+										<span
+											>{post.likes?.length || 0}
+											{(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span
+										>
+									</button>
+									<button
+										class="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600"
+									>
+										<MessageCircle class="h-5 w-5" />
+										<span
+											>{post.comments?.length || 0}
+											{(post.comments?.length || 0) === 1 ? 'comment' : 'comments'}</span
+										>
+									</button>
+									<button
+										class="flex items-center space-x-2 text-sm text-gray-500 hover:text-green-600"
+									>
+										<Share2 class="h-5 w-5" />
+										<span>Share</span>
+									</button>
+								</div>
+								<!-- Delete button (visible for all allowed users) -->
+								{#if user}
+									<button
+										onclick={() => deletePost(post.id)}
+										class="flex items-center space-x-1 text-sm text-gray-400 hover:text-red-600"
+										title="Delete post"
+									>
+										<Trash2 class="h-4 w-4" />
+									</button>
+								{/if}
 							</div>
 						</div>
 					</article>
