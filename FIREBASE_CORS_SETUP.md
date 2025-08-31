@@ -20,17 +20,17 @@ gcloud config set project YOUR_PROJECT_ID
 Apply the CORS configuration from `cors.json`:
 
 ```bash
-gsutil cors set cors.json gs://YOUR_STORAGE_BUCKET_NAME
+gsutil cors set cors.json gs://familyg-719f2.appspot.com
 ```
 
-Replace `YOUR_STORAGE_BUCKET_NAME` with your actual Firebase Storage bucket name (e.g., `familyg-719f2.appspot.com`).
+**Note**: Replace `familyg-719f2.appspot.com` with your actual Firebase Storage bucket name if different.
 
 ### 2. Verify CORS Configuration
 
 Check the current CORS settings:
 
 ```bash
-gsutil cors get gs://YOUR_STORAGE_BUCKET_NAME
+gsutil cors get gs://familyg-719f2.appspot.com
 ```
 
 ### 3. Expected CORS Output

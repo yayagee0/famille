@@ -31,9 +31,9 @@ service cloud.firestore {
       allow update: if isAllowedUser() && isFamilyDoc() && (
         // Allow post author to update their own posts
         resource.data.author.uid == request.auth.uid ||
-        // Allow others to update likes and comments only
+        // Allow others to update likes, comments, and poll only
         (request.resource.data.diff(resource.data).affectedKeys()
-         .hasOnly(['likes', 'comments']))
+         .hasOnly(['likes', 'comments', 'poll']))
       );
       allow delete: if isAllowedUser() && isFamilyDoc() && 
                        resource.data.author.uid == request.auth.uid;
