@@ -26,7 +26,7 @@
 			const postsQuery = query(
 				collection(db, 'posts'),
 				where('familyId', '==', familyId),
-				orderBy('timestamp', 'desc'),
+				orderBy('createdAt', 'desc'),
 				limit(5)
 			);
 
@@ -39,7 +39,7 @@
 			// Calculate stats
 			stats.totalPosts = postsSnapshot.size;
 			stats.totalPhotos = recentPosts.filter((post) => post.type === 'photo').length;
-			stats.lastActivity = recentPosts.length > 0 ? recentPosts[0].timestamp?.toDate() : null;
+			stats.lastActivity = recentPosts.length > 0 ? recentPosts[0].createdAt?.toDate() : null;
 		} catch (error) {
 			console.error('Error loading dashboard data:', error);
 		} finally {
@@ -187,7 +187,7 @@
 										<MessageSquare class="h-4 w-4 text-gray-400" />
 									{/if}
 									<span class="text-sm text-gray-500">
-										{dayjs(post.timestamp?.toDate()).fromNow()}
+										{dayjs(post.createdAt?.toDate()).fromNow()}
 									</span>
 								</div>
 								<p class="mt-1 truncate text-sm text-gray-700">
