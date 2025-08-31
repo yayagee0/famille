@@ -1,7 +1,8 @@
 [
 	{
-		"origin": ["*"],
-		"method": ["GET"],
+		"origin": ["http://localhost:5173", "https://famille-nine.vercel.app"],
+		"method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+		"header": ["Content-Type", "Authorization"],
 		"maxAgeSeconds": 3600
 	}
 ]
