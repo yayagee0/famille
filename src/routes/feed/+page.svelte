@@ -52,34 +52,38 @@
 		);
 
 		loading = true;
-		unsubscribePosts = onSnapshot(postsQuery, async (snapshot) => {
-			const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+		unsubscribePosts = onSnapshot(
+			postsQuery,
+			async (snapshot) => {
+				const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-			const enriched = await Promise.all(
-				rawPosts.map(async (post) => {
-					if (post.authorUid) {
-						const uDoc = await getDoc(doc(db, 'users', post.authorUid));
-						if (uDoc.exists()) {
-							const u = uDoc.data();
-							return {
-								...post,
-								author: {
-									displayName: u.displayName || 'Unknown User',
-									avatarUrl: u.avatarUrl || null
-								}
-							};
+				const enriched = await Promise.all(
+					rawPosts.map(async (post) => {
+						if (post.authorUid) {
+							const uDoc = await getDoc(doc(db, 'users', post.authorUid));
+							if (uDoc.exists()) {
+								const u = uDoc.data();
+								return {
+									...post,
+									author: {
+										displayName: u.displayName || 'Unknown User',
+										avatarUrl: u.avatarUrl || null
+									}
+								};
+							}
 						}
-					}
-					return { ...post, author: { displayName: 'Unknown User', avatarUrl: null } };
-				})
-			);
+						return { ...post, author: { displayName: 'Unknown User', avatarUrl: null } };
+					})
+				);
 
-			posts = enriched;
-			loading = false;
-		}, (err) => {
-			console.error('Feed subscription error:', err);
-			loading = false;
-		});
+				posts = enriched;
+				loading = false;
+			},
+			(err) => {
+				console.error('Feed subscription error:', err);
+				loading = false;
+			}
+		);
 	}
 
 	// ➕ Create post
@@ -89,7 +93,8 @@
 
 		try {
 			const { files: _, youtubeUrl, ...rest } = postData;
-			let imagePath, videoPath;
+			let imagePath: string | undefined;
+			let videoPath: string | undefined;
 
 			if (postData.type === 'photo' && postData.files?.[0]) {
 				const f = postData.files[0];
@@ -106,22 +111,22 @@
 
 			const youtubeId = youtubeUrl ? getYouTubeVideoId(youtubeUrl) : null;
 
-			const postDoc = {
+			// build doc without undefined values
+			const postDoc: any = {
 				...rest,
 				familyId,
 				authorUid: user?.uid,
 				createdAt: new Date(),
 				kind: postData.type,
 				text: postData.text || '',
-				youtubeId,
-				imagePath,
-				videoPath,
 				likes: [],
 				comments: []
 			};
+			if (youtubeId) postDoc.youtubeId = youtubeId;
+			if (imagePath) postDoc.imagePath = imagePath;
+			if (videoPath) postDoc.videoPath = videoPath;
 
 			await addDoc(collection(db, 'posts'), postDoc);
-			// no manual reload needed → onSnapshot updates
 		} catch (err) {
 			console.error('Error creating post:', err);
 		}
