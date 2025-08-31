@@ -3,6 +3,14 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { browser } from '$app/environment';
+import { validateEnv } from './schemas';
+
+// Validate environment variables
+const envValidation = validateEnv(import.meta.env);
+if (!envValidation.success) {
+	console.error('Invalid environment variables:', envValidation.error);
+	throw new Error('Invalid environment configuration');
+}
 
 const firebaseConfig = {
 	apiKey: import.meta.env.VITE_FB_API_KEY,

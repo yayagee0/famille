@@ -4,6 +4,7 @@
 	import imageCompression from 'browser-image-compression';
 	import { FFmpeg } from '@ffmpeg/ffmpeg';
 	import { fetchFile, toBlobURL } from '@ffmpeg/util';
+	import { validateImageFile, validateVideoFile, validatePost } from '$lib/schemas';
 
 	const dispatch = createEventDispatcher();
 
@@ -190,14 +191,23 @@
 			let files: File[] = [];
 
 			if (selectedFiles && (postType === 'photo' || postType === 'video')) {
-				uploadProgress = 'Processing files...';
+				uploadProgress = 'Validating and processing files...';
 
 				for (const file of Array.from(selectedFiles)) {
+					// Validate files using Zod schemas
 					if (postType === 'photo') {
+						const validation = validateImageFile(file);
+						if (!validation.success) {
+							throw new Error(`Invalid image file: ${file.name}`);
+						}
 						uploadProgress = `Compressing image: ${file.name}`;
 						const compressedFile = await compressImage(file);
 						files.push(compressedFile);
 					} else if (postType === 'video') {
+						const validation = validateVideoFile(file);
+						if (!validation.success) {
+							throw new Error(`Invalid video file: ${file.name}`);
+						}
 						uploadProgress = `Processing video: ${file.name}`;
 						const processedFile = await compressVideo(file);
 						files.push(processedFile);
@@ -205,7 +215,7 @@
 				}
 			}
 
-			uploadProgress = 'Creating post...';
+			uploadProgress = 'Validating post data...';
 
 			const postData = {
 				type: postType,
@@ -234,6 +244,13 @@
 				familyId: 'ghassan-family'
 			};
 
+			// Validate complete post data with Zod schema
+			const postValidation = validatePost(postData);
+			if (!postValidation.success) {
+				throw new Error('Invalid post data');
+			}
+
+			uploadProgress = 'Creating post...';
 			dispatch('post-created', postData);
 
 			// Reset form
