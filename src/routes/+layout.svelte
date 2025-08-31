@@ -60,6 +60,26 @@
 		name="description"
 		content="A private family hub for sharing moments and staying connected"
 	/>
+	<!-- Suppress irrelevant third-party cookie warnings from Google/YouTube -->
+	<script>
+		// Fix: Suppress Google/YouTube cookie warnings that are not actionable
+		if (typeof console !== 'undefined') {
+			const originalWarn = console.warn;
+			console.warn = function (...args) {
+				const message = args.join(' ');
+				// Suppress specific cookie warnings that don't affect app functionality
+				if (
+					message.includes('__Secure-YEC') ||
+					message.includes('SameSite=Lax') ||
+					message.includes('SameSite=Strict') ||
+					message.includes('partitioned cookie')
+				) {
+					return; // Suppress these warnings
+				}
+				originalWarn.apply(console, args);
+			};
+		}
+	</script>
 </svelte:head>
 
 {#if authLoading}

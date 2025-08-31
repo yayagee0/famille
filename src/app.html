@@ -3,9 +3,26 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!-- Preload critical CSS to prevent FOUC -->
+		<style>
+			/* Critical loading styles to prevent FOUC */
+			body {
+				visibility: hidden;
+				opacity: 0;
+			}
+			body.svelte-loaded {
+				visibility: visible;
+				opacity: 1;
+				transition: opacity 0.1s;
+			}
+		</style>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
+		<!-- Show body after SvelteKit loads to prevent FOUC -->
+		<script>
+			document.body.classList.add('svelte-loaded');
+		</script>
 	</body>
 </html>

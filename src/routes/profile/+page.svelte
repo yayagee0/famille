@@ -3,7 +3,7 @@
 	import { auth, storage } from '$lib/firebase';
 	import { updateProfile } from 'firebase/auth';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-	import { Camera, User, Save, Mail } from 'lucide-svelte';
+	import { User, Save, Mail } from 'lucide-svelte';
 	import imageCompression from 'browser-image-compression';
 
 	let user = $state(auth.currentUser);

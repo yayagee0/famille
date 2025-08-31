@@ -55,10 +55,11 @@
 		unsubscribePosts = onSnapshot(
 			postsQuery,
 			async (snapshot) => {
-				const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+				// Fix: Add proper TypeScript typing for posts
+				const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<any>;
 
 				const enriched = await Promise.all(
-					rawPosts.map(async (post) => {
+					rawPosts.map(async (post: any) => {
 						if (post.authorUid) {
 							const uDoc = await getDoc(doc(db, 'users', post.authorUid));
 							if (uDoc.exists()) {

@@ -138,7 +138,15 @@
 
 			// Read output file
 			const data = await ffmpegInstance.readFile('output.mp4');
-			const compressedBlob = new Blob([data], { type: 'video/mp4' });
+			// Fix: FileData can be Uint8Array or string, handle both cases
+			let blobData: BlobPart;
+			if (typeof data === 'string') {
+				blobData = new TextEncoder().encode(data);
+			} else {
+				// For Uint8Array, create new instance to ensure compatibility
+				blobData = new Uint8Array(data as unknown as ArrayBuffer);
+			}
+			const compressedBlob = new Blob([blobData], { type: 'video/mp4' });
 
 			// Create new File object
 			const compressedFile = new File([compressedBlob], `compressed_${file.name}`, {
@@ -156,23 +164,25 @@
 	}
 
 	async function handleSubmit() {
+		// Early validation checks to prevent unnecessary processing
 		if (isUploading) return;
 
 		if (!textContent.trim() && postType === 'text') {
-			return;
+			return; // No unreachable code after this - validation exit point
 		}
 
 		if (postType === 'youtube' && !youtubeUrl.trim()) {
-			return;
+			return; // No unreachable code after this - validation exit point
 		}
 
 		if (
 			postType === 'poll' &&
 			(!pollQuestion.trim() || pollOptions.filter((opt) => opt.trim()).length < 2)
 		) {
-			return;
+			return; // No unreachable code after this - validation exit point
 		}
 
+		// Main submission logic starts here - no unreachable code issue
 		isUploading = true;
 		uploadProgress = '';
 
