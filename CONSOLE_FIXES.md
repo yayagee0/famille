@@ -9,6 +9,7 @@ This document summarizes the fixes applied to resolve console and browser errors
 **Problem**: Layout was forced before the page was fully loaded, causing unstyled content to flash.
 
 **Solution**: Updated `src/app.html` to:
+
 - Add critical loading styles that hide the body initially
 - Show the body only after SvelteKit loads
 - Added smooth opacity transition to prevent jarring visual changes
@@ -17,9 +18,10 @@ This document summarizes the fixes applied to resolve console and browser errors
 
 ### 2. Cookie Warnings ✅
 
-**Problem**: "__Secure-YEC rejected due to SameSite=Lax/Strict, partitioned cookie notices" from Google/YouTube.
+**Problem**: "\_\_Secure-YEC rejected due to SameSite=Lax/Strict, partitioned cookie notices" from Google/YouTube.
 
 **Solution**: Added console warning suppression in `src/routes/+layout.svelte` to:
+
 - Filter out irrelevant third-party cookie warnings
 - Maintain functional warnings while suppressing non-actionable ones
 - Specifically target Google/YouTube cookie messages
@@ -55,11 +57,13 @@ This document summarizes the fixes applied to resolve console and browser errors
 **Problem**: "Cross-Origin Request Blocked … Preflight did not succeed … 404."
 
 **Solution**: Enhanced CORS configuration in multiple files:
+
 - Updated `cors.json` to include Firebase Storage domain and additional headers
 - Enhanced `FIREBASE_CORS_SETUP.md` with better troubleshooting guidance
 - Added proper file existence checks in documentation
 
-**Files Modified**: 
+**Files Modified**:
+
 - `cors.json` - Added `familyg-719f2.appspot.com` origin and `X-Requested-With` header
 - `FIREBASE_CORS_SETUP.md` - Enhanced with better troubleshooting steps
 
@@ -69,12 +73,14 @@ This document summarizes the fixes applied to resolve console and browser errors
 
 **Problem**: Type errors in FFmpeg FileData handling and Firestore document typing.
 
-**Solution**: 
+**Solution**:
+
 - Fixed FFmpeg FileData to Blob conversion in `src/lib/FeedUpload.svelte`
 - Added proper typing for Firestore documents in `src/routes/feed/+page.svelte`
 - Removed unused import in `src/routes/profile/+page.svelte`
 
-**Files Modified**: 
+**Files Modified**:
+
 - `src/lib/FeedUpload.svelte`
 - `src/routes/feed/+page.svelte`
 - `src/routes/profile/+page.svelte`
