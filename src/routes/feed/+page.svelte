@@ -23,11 +23,30 @@
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	dayjs.extend(relativeTime);
 
+	type Post = {
+		id: string;
+		authorUid: string;
+		author?: { displayName: string; avatarUrl: string | null };
+		createdAt: any;
+		kind: string;
+		text?: string;
+		imagePath?: string;
+		imagePaths?: string[];
+		videoPath?: string;
+		youtubeId?: string;
+		likes: string[];
+		comments: any[];
+		familyId: string;
+		poll?: { question: string; options: Array<{ text: string; votes: string[] }> };
+	};
+
 	let user = $state(auth.currentUser);
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let posts = $state<any[]>([]);
+	let posts = $state<Post[]>([]);
 	let loading = $state(true);
 	let unsubscribePosts: (() => void) | null = null;
+
+	// cache for resolving voter names
+	let userProfiles: Record<string, string> = {};
 
 	onMount(() => {
 		const unsubAuth = auth.onAuthStateChanged(async (firebaseUser) => {
@@ -46,32 +65,57 @@
 		};
 	});
 
-	// 🔄 Real-time posts with author enrichment
+	// 🔄 Real-time posts
 	function subscribeToPosts() {
 		const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
-
 		loading = true;
+
 		unsubscribePosts = onSnapshot(
 			postsQuery,
 			async (snapshot) => {
-				const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<any>;
+				const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<Post>;
 
+				// enrich posts with author info + resolve voter names
 				const enriched = await Promise.all(
-					rawPosts.map(async (post: any) => {
+					rawPosts.map(async (post: Post) => {
+						let enrichedAuthor = { displayName: 'Unknown User', avatarUrl: null };
+
 						if (post.authorUid) {
 							const uDoc = await getDoc(doc(db, 'users', post.authorUid));
 							if (uDoc.exists()) {
 								const u = uDoc.data();
-								return {
-									...post,
-									author: {
-										displayName: u.displayName || 'Unknown User',
-										avatarUrl: u.avatarUrl || null
-									}
+								enrichedAuthor = {
+									displayName: (u.displayName as string) || 'Unknown User',
+									avatarUrl: (u.avatarUrl as string) || null
 								};
 							}
 						}
-						return { ...post, author: { displayName: 'Unknown User', avatarUrl: null } };
+
+						// resolve voter names for polls
+						if (post.poll?.options) {
+							for (const opt of post.poll.options) {
+								if (opt.votes) {
+									const names: string[] = [];
+									for (const email of opt.votes) {
+										if (!userProfiles[email]) {
+											// fetch once
+											const uSnap = await getDoc(doc(db, 'users', email));
+											if (uSnap.exists()) {
+												const d = uSnap.data();
+												userProfiles[email] = (d.displayName as string) || email;
+											} else {
+												userProfiles[email] = email;
+											}
+										}
+										names.push(userProfiles[email]);
+									}
+									// @ts-ignore add a helper for UI
+									opt._voterNames = names;
+								}
+							}
+						}
+
+						return { ...post, author: enrichedAuthor };
 					})
 				);
 
@@ -88,7 +132,6 @@
 	// ➕ Create post
 	async function handlePostCreated(event: CustomEvent) {
 		const postData = event.detail;
-
 		try {
 			let imagePaths: string[] = [];
 			let videoPaths: string[] = [];
@@ -112,7 +155,6 @@
 
 			const youtubeId = postData.youtubeUrl ? getYouTubeVideoId(postData.youtubeUrl) : null;
 
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const postDoc: any = {
 				authorUid: user?.uid,
 				createdAt: serverTimestamp(),
@@ -147,9 +189,9 @@
 		try {
 			const postRef = doc(db, 'posts', postId);
 			if (isLiked) {
-				await updateDoc(postRef, { likes: arrayRemove(user.uid) });
+				await updateDoc(postRef, { likes: arrayRemove(user.email) });
 			} else {
-				await updateDoc(postRef, { likes: arrayUnion(user.uid) });
+				await updateDoc(postRef, { likes: arrayUnion(user.email) });
 			}
 		} catch (err) {
 			console.error('Like toggle failed:', err);
@@ -157,20 +199,19 @@
 	}
 
 	// 🗳️ Vote in poll
-	async function voteInPoll(post: any, optionIndex: number) {
+	async function voteInPoll(post: Post, optionIndex: number) {
 		if (!user) return;
 		try {
-			// prevent double voting: remove user from all options first
 			const postRef = doc(db, 'posts', post.id);
+			// remove from all options
 			const updates: any = {};
-			post.poll.options.forEach((_: any, i: number) => {
-				updates[`poll.options.${i}.votes`] = arrayRemove(user.uid);
+			post.poll?.options.forEach((_: any, i: number) => {
+				updates[`poll.options.${i}.votes`] = arrayRemove(user.email);
 			});
 			await updateDoc(postRef, updates);
-
-			// then add user to the chosen option
+			// add to selected option
 			await updateDoc(postRef, {
-				[`poll.options.${optionIndex}.votes`]: arrayUnion(user.uid)
+				[`poll.options.${optionIndex}.votes`]: arrayUnion(user.email)
 			});
 		} catch (err) {
 			console.error('Poll vote failed:', err);
@@ -181,10 +222,8 @@
 	async function deletePost(postId: string) {
 		if (!user) return;
 		if (!confirm('Are you sure you want to delete this post?')) return;
-
 		try {
-			const postRef = doc(db, 'posts', postId);
-			await deleteDoc(postRef);
+			await deleteDoc(doc(db, 'posts', postId));
 		} catch (err) {
 			console.error('Delete post failed:', err);
 		}
@@ -197,9 +236,8 @@
 		return m ? m[1] : null;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	function isUserLiked(post: any) {
-		return post.likes?.includes(user?.uid) || false;
+	function isUserLiked(post: Post) {
+		return post.likes?.includes(user?.email) || false;
 	}
 </script>
 
@@ -213,33 +251,7 @@
 		<FeedUpload {user} on:post-created={handlePostCreated} />
 
 		{#if loading}
-			<!-- Loading skeletons -->
-			<div class="space-y-6">
-				{#each Array(3) as skeleton, index (index)}
-					<div class="animate-pulse rounded-lg bg-white shadow">
-						<div class="p-6">
-							<div class="mb-4 flex items-center space-x-3">
-								<div class="h-10 w-10 rounded-full bg-gray-300"></div>
-								<div class="flex-1">
-									<div class="mb-1 h-4 w-24 rounded bg-gray-300"></div>
-									<div class="h-3 w-16 rounded bg-gray-200"></div>
-								</div>
-							</div>
-							<div class="mb-4 space-y-2">
-								<div class="h-4 w-full rounded bg-gray-300"></div>
-								<div class="h-4 w-3/4 rounded bg-gray-300"></div>
-							</div>
-							<div class="border-t border-gray-200 pt-3">
-								<div class="flex space-x-6">
-									<div class="h-4 w-16 rounded bg-gray-200"></div>
-									<div class="h-4 w-20 rounded bg-gray-200"></div>
-									<div class="h-4 w-12 rounded bg-gray-200"></div>
-								</div>
-							</div>
-						</div>
-					</div>
-				{/each}
-			</div>
+			<p class="text-gray-500">Loading...</p>
 		{:else if posts.length === 0}
 			<div class="rounded bg-white py-8 text-center shadow">
 				<p class="text-gray-600">No posts yet — be the first!</p>
@@ -249,6 +261,7 @@
 				{#each posts as post (post.id)}
 					<article class="rounded-lg bg-white shadow">
 						<div class="p-6 pb-4">
+							<!-- Header -->
 							<div class="mb-4 flex items-center space-x-3">
 								{#if post.author?.avatarUrl}
 									<img src={post.author.avatarUrl} alt="" class="h-10 w-10 rounded-full" />
@@ -272,41 +285,7 @@
 							{/if}
 
 							{#if post.imagePath}
-								{#if post.imagePaths && post.imagePaths.length > 1}
-									<div
-										class="mb-4 grid grid-cols-2 gap-2 {post.imagePaths.length === 3
-											? 'grid-cols-3'
-											: ''} {post.imagePaths.length > 4 ? 'grid-cols-3' : ''}"
-									>
-										{#each post.imagePaths.slice(0, 6) as imagePath, index (imagePath)}
-											<div class="relative">
-												<img
-													src={imagePath}
-													alt="User posted content"
-													class="h-32 w-full rounded-lg object-cover {index === 5 &&
-													post.imagePaths.length > 6
-														? 'opacity-75'
-														: ''}"
-												/>
-												{#if index === 5 && post.imagePaths.length > 6}
-													<div
-														class="bg-opacity-50 absolute inset-0 flex items-center justify-center rounded-lg bg-black"
-													>
-														<span class="text-lg font-bold text-white"
-															>+{post.imagePaths.length - 6}</span
-														>
-													</div>
-												{/if}
-											</div>
-										{/each}
-									</div>
-								{:else}
-									<img
-										src={post.imagePath}
-										alt="User posted content"
-										class="mb-4 max-h-96 w-full rounded-lg object-cover"
-									/>
-								{/if}
+								<img src={post.imagePath} alt="" class="mb-4 max-h-96 w-full rounded-lg object-cover" />
 							{/if}
 
 							{#if post.videoPath}
@@ -331,14 +310,24 @@
 								<div class="mb-4 rounded-lg border border-gray-200 p-4">
 									<h4 class="mb-3 font-medium text-gray-900">{post.poll.question}</h4>
 									{#each post.poll.options as opt, index (index)}
-										<div class="mb-2 flex justify-between items-center rounded border p-2">
+										<div
+											class="mb-2 flex justify-between items-center rounded border p-2 {opt.votes?.includes(user?.email) ? 'bg-indigo-50' : ''}"
+										>
 											<span>{opt.text}</span>
-											<div class="flex items-center space-x-2">
-												<span class="text-xs text-gray-500">{opt.votes?.length || 0} votes</span>
+											<div class="flex flex-col items-end text-xs text-gray-500">
+												{#if opt.votes?.length > 0}
+													<span>{opt.votes.length} voted</span>
+													<span class="text-gray-400">
+														{opt._voterNames?.join(', ')}
+													</span>
+												{:else}
+													<span class="text-gray-400">No votes yet</span>
+												{/if}
 												{#if user}
 													<button
 														onclick={() => voteInPoll(post, index)}
-														class="rounded bg-indigo-500 px-2 py-1 text-xs text-white hover:bg-indigo-600"
+														disabled={opt.votes?.includes(user?.email)}
+														class="mt-1 rounded bg-indigo-500 px-2 py-0.5 text-white hover:bg-indigo-600 disabled:opacity-50"
 													>
 														Vote
 													</button>
@@ -350,6 +339,7 @@
 							{/if}
 						</div>
 
+						<!-- Actions -->
 						<div class="border-t border-gray-200 px-6 py-3">
 							<div class="flex items-center justify-between">
 								<div class="flex items-center space-x-6">
@@ -363,18 +353,14 @@
 											{(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span
 										>
 									</button>
-									<button
-										class="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600"
-									>
+									<button class="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600">
 										<MessageCircle class="h-5 w-5" />
 										<span
 											>{post.comments?.length || 0}
 											{(post.comments?.length || 0) === 1 ? 'comment' : 'comments'}</span
 										>
 									</button>
-									<button
-										class="flex items-center space-x-2 text-sm text-gray-500 hover:text-green-600"
-									>
+									<button class="flex items-center space-x-2 text-sm text-gray-500 hover:text-green-600">
 										<Share2 class="h-5 w-5" />
 										<span>Share</span>
 									</button>
