@@ -33,7 +33,6 @@
 		const unsubAuth = auth.onAuthStateChanged(async (firebaseUser) => {
 			user = firebaseUser;
 			if (firebaseUser) {
-				// Ensure user profile exists
 				await ensureUserProfile(firebaseUser);
 				subscribeToPosts();
 			} else {
@@ -55,7 +54,6 @@
 		unsubscribePosts = onSnapshot(
 			postsQuery,
 			async (snapshot) => {
-				// Fix: Add proper TypeScript typing for posts
 				const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<any>;
 
 				const enriched = await Promise.all(
@@ -95,7 +93,6 @@
 			let imagePaths: string[] = [];
 			let videoPaths: string[] = [];
 
-			// Handle multiple photo uploads
 			if (postData.type === 'photo' && postData.files?.length > 0) {
 				for (const file of postData.files) {
 					const fRef = ref(storage, `posts/${user?.uid}/${Date.now()}-${file.name}`);
@@ -105,9 +102,8 @@
 				}
 			}
 
-			// Handle video upload (typically single file)
 			if (postData.type === 'video' && postData.files?.length > 0) {
-				const file = postData.files[0]; // Take first video file
+				const file = postData.files[0];
 				const fRef = ref(storage, `posts/${user?.uid}/${Date.now()}-${file.name}`);
 				const snap = await uploadBytes(fRef, file);
 				const downloadURL = await getDownloadURL(snap.ref);
@@ -116,7 +112,6 @@
 
 			const youtubeId = postData.youtubeUrl ? getYouTubeVideoId(postData.youtubeUrl) : null;
 
-			// Build doc without undefined values
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const postDoc: any = {
 				authorUid: user?.uid,
@@ -128,11 +123,8 @@
 				familyId: postData.familyId
 			};
 
-			// Only add fields if they have values
 			if (youtubeId) postDoc.youtubeId = youtubeId;
 			if (imagePaths.length > 0) {
-				// For backward compatibility, store first image as imagePath
-				// and all images as imagePaths array
 				postDoc.imagePath = imagePaths[0];
 				if (imagePaths.length > 1) {
 					postDoc.imagePaths = imagePaths;
@@ -164,13 +156,31 @@
 		}
 	}
 
+	// 🗳️ Vote in poll
+	async function voteInPoll(post: any, optionIndex: number) {
+		if (!user) return;
+		try {
+			// prevent double voting: remove user from all options first
+			const postRef = doc(db, 'posts', post.id);
+			const updates: any = {};
+			post.poll.options.forEach((_: any, i: number) => {
+				updates[`poll.options.${i}.votes`] = arrayRemove(user.uid);
+			});
+			await updateDoc(postRef, updates);
+
+			// then add user to the chosen option
+			await updateDoc(postRef, {
+				[`poll.options.${optionIndex}.votes`]: arrayUnion(user.uid)
+			});
+		} catch (err) {
+			console.error('Poll vote failed:', err);
+		}
+	}
+
 	// 🗑️ Delete post
 	async function deletePost(postId: string) {
 		if (!user) return;
-
-		if (!confirm('Are you sure you want to delete this post?')) {
-			return;
-		}
+		if (!confirm('Are you sure you want to delete this post?')) return;
 
 		try {
 			const postRef = doc(db, 'posts', postId);
@@ -186,6 +196,7 @@
 		const m = url.match(regex);
 		return m ? m[1] : null;
 	}
+
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	function isUserLiked(post: any) {
 		return post.likes?.includes(user?.uid) || false;
@@ -207,7 +218,6 @@
 				{#each Array(3) as skeleton, index (index)}
 					<div class="animate-pulse rounded-lg bg-white shadow">
 						<div class="p-6">
-							<!-- Header skeleton -->
 							<div class="mb-4 flex items-center space-x-3">
 								<div class="h-10 w-10 rounded-full bg-gray-300"></div>
 								<div class="flex-1">
@@ -215,12 +225,10 @@
 									<div class="h-3 w-16 rounded bg-gray-200"></div>
 								</div>
 							</div>
-							<!-- Content skeleton -->
 							<div class="mb-4 space-y-2">
 								<div class="h-4 w-full rounded bg-gray-300"></div>
 								<div class="h-4 w-3/4 rounded bg-gray-300"></div>
 							</div>
-							<!-- Actions skeleton -->
 							<div class="border-t border-gray-200 pt-3">
 								<div class="flex space-x-6">
 									<div class="h-4 w-16 rounded bg-gray-200"></div>
@@ -241,7 +249,6 @@
 				{#each posts as post (post.id)}
 					<article class="rounded-lg bg-white shadow">
 						<div class="p-6 pb-4">
-							<!-- Header -->
 							<div class="mb-4 flex items-center space-x-3">
 								{#if post.author?.avatarUrl}
 									<img src={post.author.avatarUrl} alt="" class="h-10 w-10 rounded-full" />
@@ -260,15 +267,12 @@
 								</div>
 							</div>
 
-							<!-- Text -->
 							{#if post.text}
 								<p class="mb-4 text-gray-900">{post.text}</p>
 							{/if}
 
-							<!-- Images -->
 							{#if post.imagePath}
 								{#if post.imagePaths && post.imagePaths.length > 1}
-									<!-- Multiple images grid -->
 									<div
 										class="mb-4 grid grid-cols-2 gap-2 {post.imagePaths.length === 3
 											? 'grid-cols-3'
@@ -297,7 +301,6 @@
 										{/each}
 									</div>
 								{:else}
-									<!-- Single image -->
 									<img
 										src={post.imagePath}
 										alt="User posted content"
@@ -306,15 +309,12 @@
 								{/if}
 							{/if}
 
-							<!-- Video -->
 							{#if post.videoPath}
 								<video controls class="mb-4 max-h-96 w-full rounded-lg bg-black">
 									<source src={post.videoPath} type="video/mp4" />
-									<track kind="captions" src="" label="No captions available" />
 								</video>
 							{/if}
 
-							<!-- YouTube -->
 							{#if post.youtubeId}
 								<div class="relative mb-4 aspect-video">
 									<iframe
@@ -331,16 +331,25 @@
 								<div class="mb-4 rounded-lg border border-gray-200 p-4">
 									<h4 class="mb-3 font-medium text-gray-900">{post.poll.question}</h4>
 									{#each post.poll.options as opt, index (index)}
-										<div class="mb-2 flex justify-between rounded border p-2">
+										<div class="mb-2 flex justify-between items-center rounded border p-2">
 											<span>{opt.text}</span>
-											<span class="text-xs text-gray-500">{opt.votes?.length || 0} votes</span>
+											<div class="flex items-center space-x-2">
+												<span class="text-xs text-gray-500">{opt.votes?.length || 0} votes</span>
+												{#if user}
+													<button
+														onclick={() => voteInPoll(post, index)}
+														class="rounded bg-indigo-500 px-2 py-1 text-xs text-white hover:bg-indigo-600"
+													>
+														Vote
+													</button>
+												{/if}
+											</div>
 										</div>
 									{/each}
 								</div>
 							{/if}
 						</div>
 
-						<!-- Actions -->
 						<div class="border-t border-gray-200 px-6 py-3">
 							<div class="flex items-center justify-between">
 								<div class="flex items-center space-x-6">
@@ -370,7 +379,6 @@
 										<span>Share</span>
 									</button>
 								</div>
-								<!-- Delete button (visible for all allowed users) -->
 								{#if user}
 									<button
 										onclick={() => deletePost(post.id)}
