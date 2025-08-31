@@ -6,6 +6,7 @@
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import DailyAyah from '$lib/DailyAyah.svelte';
+	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 
 	dayjs.extend(relativeTime);
 
@@ -86,13 +87,7 @@
 	<div class="rounded-2xl bg-white shadow-sm p-6">
 		<h3 class="mb-4 text-lg font-semibold text-gray-900">Family Highlights</h3>
 		{#if loading}
-			<div class="space-y-3">
-				{#each Array(3) as _}
-					<div class="flex animate-pulse items-center space-x-4">
-						<div class="h-4 w-3/4 rounded bg-gray-200"></div>
-					</div>
-				{/each}
-			</div>
+			<LoadingSpinner size="medium" message="Loading highlights..." />
 		{:else if familyHighlights.length === 0}
 			<div class="text-center py-8">
 				<p class="text-gray-500">✨ No recent activity to highlight</p>
@@ -117,17 +112,7 @@
 			<h3 class="mb-4 text-lg leading-6 font-medium text-gray-900">Recent Activity</h3>
 
 			{#if loading}
-				<div class="space-y-3">
-					{#each Array(3) as _}
-						<div class="flex animate-pulse items-center space-x-4">
-							<div class="h-10 w-10 rounded-full bg-gray-200"></div>
-							<div class="flex-1 space-y-2">
-								<div class="h-4 w-3/4 rounded bg-gray-200"></div>
-								<div class="h-3 w-1/2 rounded bg-gray-200"></div>
-							</div>
-						</div>
-					{/each}
-				</div>
+				<LoadingSpinner size="medium" message="Loading recent activity..." />
 			{:else if recentPosts.length === 0}
 				<div class="py-12 text-center">
 					<MessageSquare class="mx-auto h-12 w-12 text-gray-400" />
