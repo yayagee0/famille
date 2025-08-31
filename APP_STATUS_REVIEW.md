@@ -49,9 +49,9 @@ Jan 7, 2025 – Initial Review
 ✅ All 5 routes functional
 
 (C) PAGES, SCREENS & ROUTES
-Route	Purpose	Status	Notes
-/	Redirect hub	✅ OK	Fast redirect to login/dashboard
-/login	Google OAuth entry	✅ OK	Allowlist validated (4 emails)
-/dashboard	Family overview	✅ OK	Real-time Firestore stats
-/feed	Social timeline	⚠️ Issue	Null safety bug in poll interactions
-/profile	User account management	✅ OK	Avatar upload & metadata functional
+Route Purpose Status Notes
+/ Redirect hub ✅ OK Fast redirect to login/dashboard
+/login Google OAuth entry ✅ OK Allowlist validated (4 emails)
+/dashboard Family overview ✅ OK Real-time Firestore stats
+/feed Social timeline ⚠️ Issue Null safety bug in poll interactions
+/profile User account management ✅ OK Avatar upload & metadata functional

@@ -158,19 +158,20 @@
 
 	// 🗳️ Vote in poll
 	async function voteInPoll(post: any, optionIndex: number) {
-		if (!user) return;
+		if (!user?.uid) return;
+		const userId = user.uid; // Store uid to avoid null check issues
 		try {
 			// prevent double voting: remove user from all options first
 			const postRef = doc(db, 'posts', post.id);
 			const updates: any = {};
 			post.poll.options.forEach((_: any, i: number) => {
-				updates[`poll.options.${i}.votes`] = arrayRemove(user.uid);
+				updates[`poll.options.${i}.votes`] = arrayRemove(userId);
 			});
 			await updateDoc(postRef, updates);
 
 			// then add user to the chosen option
 			await updateDoc(postRef, {
-				[`poll.options.${optionIndex}.votes`]: arrayUnion(user.uid)
+				[`poll.options.${optionIndex}.votes`]: arrayUnion(userId)
 			});
 		} catch (err) {
 			console.error('Poll vote failed:', err);
@@ -312,6 +313,8 @@
 							{#if post.videoPath}
 								<video controls class="mb-4 max-h-96 w-full rounded-lg bg-black">
 									<source src={post.videoPath} type="video/mp4" />
+									<track kind="captions" src="" label="Captions" default />
+									Your browser does not support the video tag.
 								</video>
 							{/if}
 
@@ -331,7 +334,7 @@
 								<div class="mb-4 rounded-lg border border-gray-200 p-4">
 									<h4 class="mb-3 font-medium text-gray-900">{post.poll.question}</h4>
 									{#each post.poll.options as opt, index (index)}
-										<div class="mb-2 flex justify-between items-center rounded border p-2">
+										<div class="mb-2 flex items-center justify-between rounded border p-2">
 											<span>{opt.text}</span>
 											<div class="flex items-center space-x-2">
 												<span class="text-xs text-gray-500">{opt.votes?.length || 0} votes</span>

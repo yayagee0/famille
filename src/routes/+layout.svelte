@@ -79,14 +79,14 @@
 
 			console.warn = function (...args) {
 				const message = args.join(' ');
-				if (!IGNORED_PATTERNS.some(pattern => message.includes(pattern))) {
+				if (!IGNORED_PATTERNS.some((pattern) => message.includes(pattern))) {
 					originalWarn.apply(console, args);
 				}
 			};
 
 			console.error = function (...args) {
 				const message = args.join(' ');
-				if (!IGNORED_PATTERNS.some(pattern => message.includes(pattern))) {
+				if (!IGNORED_PATTERNS.some((pattern) => message.includes(pattern))) {
 					originalError.apply(console, args);
 				}
 			};
