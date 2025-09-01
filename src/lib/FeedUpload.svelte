@@ -105,7 +105,7 @@
 						if (!validation.success) {
 							throw new Error(`Invalid image file: ${file.name}`);
 						}
-						
+
 						// Upload original file without compression
 						uploadProgress = `Uploading image: ${file.name}`;
 						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
@@ -117,7 +117,7 @@
 						if (!validation.success) {
 							throw new Error(`Invalid video file: ${file.name}`);
 						}
-						
+
 						// Upload original file without compression
 						uploadProgress = `Uploading video: ${file.name}`;
 						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);

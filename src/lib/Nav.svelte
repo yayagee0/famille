@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/firebase';
 	import { signOut } from 'firebase/auth';
-	import { Home, User, Rss, LogOut, Menu, X } from 'lucide-svelte';
+	import { Home, User, Rss, LogOut, Menu, X, Gamepad2 } from 'lucide-svelte';
 
 	let { user } = $props<{ user: any }>();
 	let mobileMenuOpen = $state(false);
@@ -11,6 +11,7 @@
 	const navigation = [
 		{ name: 'Dashboard', href: '/dashboard', icon: 'home' },
 		{ name: 'Feed', href: '/feed', icon: 'rss' },
+		{ name: 'Play Area', href: '/playground', icon: 'gamepad' },
 		{ name: 'Profile', href: '/profile', icon: 'user' }
 	];
 
@@ -33,6 +34,8 @@
 				return Home;
 			case 'rss':
 				return Rss;
+			case 'gamepad':
+				return Gamepad2;
 			case 'user':
 				return User;
 			default:
@@ -67,6 +70,8 @@
 										<Home class="h-6 w-6 shrink-0" />
 									{:else if item.icon === 'rss'}
 										<Rss class="h-6 w-6 shrink-0" />
+									{:else if item.icon === 'gamepad'}
+										<Gamepad2 class="h-6 w-6 shrink-0" />
 									{:else if item.icon === 'user'}
 										<User class="h-6 w-6 shrink-0" />
 									{/if}
@@ -165,6 +170,8 @@
 													<Home class="h-6 w-6 shrink-0" />
 												{:else if item.icon === 'rss'}
 													<Rss class="h-6 w-6 shrink-0" />
+												{:else if item.icon === 'gamepad'}
+													<Gamepad2 class="h-6 w-6 shrink-0" />
 												{:else if item.icon === 'user'}
 													<User class="h-6 w-6 shrink-0" />
 												{/if}

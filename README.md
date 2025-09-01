@@ -7,7 +7,7 @@ A private, secure family social platform built with SvelteKit 2, TypeScript, and
 - **Secure Authentication**: Google OAuth with email allowlist restriction
 - **Multi-format Posts**: Share text, photos, videos, YouTube links, and polls
 - **Real-time Updates**: Live feed with likes and comments
-- **Image Compression**: Automatic image optimization using browser-image-compression  
+- **Image Compression**: Automatic image optimization using browser-image-compression
 - **Photo Gallery**: Dedicated gallery page with lightbox modal for all family photos
 - **Daily Ayah Widget**: Rotates Quranic verses daily on the dashboard
 - **Family Highlights**: Dashboard shows recent family activity summaries
@@ -22,7 +22,7 @@ A private, secure family social platform built with SvelteKit 2, TypeScript, and
 - **Framework**: SvelteKit 2 with TypeScript
 - **Styling**: TailwindCSS v4 with @tailwindcss/vite, Inter & Amiri fonts
 - **Icons**: lucide-svelte
-- **State Management**: Svelte 5 `$state()` runes  
+- **State Management**: Svelte 5 `$state()` runes
 - **Validation**: Zod v4 with comprehensive schemas
 - **Date Handling**: Day.js with relative time
 - **Authentication**: Firebase Auth (Google OAuth only)
@@ -173,14 +173,14 @@ Email allowlist validation for family member access control.
   authorUid: string;           // References users/{uid} - unified approach
   familyId: "ghassan-family";  // Family identifier
   kind: "text" | "photo" | "video" | "youtube" | "poll";
-  text: string;                // Post content  
+  text: string;                // Post content
   createdAt: Timestamp;        // Server timestamp
   likes: string[];             // Array of user UIDs
   comments: Comment[];         // Array of comment objects
 
   // Media fields (optional)
   imagePath?: string;          // Single image URL
-  imagePaths?: string[];       // Multiple image URLs  
+  imagePaths?: string[];       // Multiple image URLs
   videoPath?: string;          // Single video URL
   youtubeId?: string;          // YouTube video ID
 
@@ -203,7 +203,7 @@ Email allowlist validation for family member access control.
   displayName: string | null;  // User's display name
   email: string;               // User's email
   avatarUrl?: string | null;   // Profile picture URL
-  photoURL?: string | null;    // Alias for avatarUrl (Firebase Auth compatibility)  
+  photoURL?: string | null;    // Alias for avatarUrl (Firebase Auth compatibility)
   createdAt?: Timestamp;       // Account creation
   lastLoginAt?: Timestamp;     // Last sign-in time
   lastUpdatedAt?: Timestamp;   // Profile update time
@@ -214,7 +214,7 @@ Email allowlist validation for family member access control.
 
 - **Author Enrichment**: Posts store only `authorUid`, author data retrieved from `users/{uid}`
 - **Zod Validation**: All schemas validated with discriminated unions
-- **Null Safety**: Comprehensive null checks throughout components  
+- **Null Safety**: Comprehensive null checks throughout components
 - **Real-time Updates**: Firestore listeners with automatic author enrichment
 
 ## 🚀 Deployment
