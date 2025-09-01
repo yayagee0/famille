@@ -18,7 +18,7 @@
 	import FeedUpload from '$lib/FeedUpload.svelte';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import { ensureUserProfile } from '$lib/auth';
-	import { Heart, MessageCircle, Share2, Trash2 } from 'lucide-svelte';
+	import { Heart, MessageCircle, Trash2 } from 'lucide-svelte';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	dayjs.extend(relativeTime);
@@ -30,6 +30,10 @@
 	let unsubscribePosts: (() => void) | null = null;
 	// Cache for user display names
 	let userCache = $state<Map<string, string>>(new Map());
+	// Track which posts have comments section open
+	let openComments = $state<Set<string>>(new Set());
+	// Track comment input values for each post
+	let commentInputs = $state<Map<string, string>>(new Map());
 
 	onMount(() => {
 		const unsubAuth = auth.onAuthStateChanged(async (firebaseUser) => {
@@ -222,6 +226,43 @@
 		}
 	}
 
+	// 💬 Toggle comments section visibility
+	function toggleComments(postId: string) {
+		if (openComments.has(postId)) {
+			openComments.delete(postId);
+		} else {
+			openComments.add(postId);
+		}
+		openComments = new Set(openComments); // Trigger reactivity
+	}
+
+	// 💬 Add comment to post
+	async function addComment(postId: string) {
+		if (!user?.uid) return;
+		
+		const commentText = commentInputs.get(postId)?.trim();
+		if (!commentText) return;
+
+		try {
+			const newComment = {
+				author: user.displayName || user.email?.split('@')[0] || 'Unknown User',
+				text: commentText,
+				createdAt: new Date()
+			};
+
+			const postRef = doc(db, 'posts', postId);
+			await updateDoc(postRef, {
+				comments: arrayUnion(newComment)
+			});
+
+			// Clear the input
+			commentInputs.set(postId, '');
+			commentInputs = new Map(commentInputs); // Trigger reactivity
+		} catch (err) {
+			console.error('Add comment failed:', err);
+		}
+	}
+
 	function getYouTubeVideoId(url: string): string | null {
 		const regex =
 			/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/;
@@ -394,6 +435,7 @@
 										>
 									</button>
 									<button
+										onclick={() => toggleComments(post.id)}
 										class="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600"
 									>
 										<MessageCircle class="h-5 w-5" />
@@ -401,12 +443,6 @@
 											>{post.comments?.length || 0}
 											{(post.comments?.length || 0) === 1 ? 'comment' : 'comments'}</span
 										>
-									</button>
-									<button
-										class="flex items-center space-x-2 text-sm text-gray-500 hover:text-green-600"
-									>
-										<Share2 class="h-5 w-5" />
-										<span>Share</span>
 									</button>
 								</div>
 								{#if user}
@@ -419,6 +455,56 @@
 									</button>
 								{/if}
 							</div>
+
+							<!-- Comments Section -->
+							{#if openComments.has(post.id)}
+								<div class="border-t border-gray-200 px-6 py-4">
+									<!-- Existing Comments -->
+									{#if post.comments && post.comments.length > 0}
+										<div class="space-y-3 mb-4">
+											{#each post.comments as comment (comment)}
+												<div class="text-sm">
+													<span class="font-medium text-gray-900">{comment.author}</span>
+													<span class="text-gray-600 ml-2">{comment.text}</span>
+													<div class="text-xs text-gray-400 mt-1">
+														{dayjs(comment.createdAt?.toDate ? comment.createdAt.toDate() : comment.createdAt).fromNow()}
+													</div>
+												</div>
+											{/each}
+										</div>
+									{/if}
+
+									<!-- Add Comment Input -->
+									{#if user}
+										<div class="flex space-x-3">
+											<input
+												type="text"
+												placeholder="Write a comment..."
+												value={commentInputs.get(post.id) || ''}
+												oninput={(e) => {
+													const target = e.target as HTMLInputElement;
+													commentInputs.set(post.id, target.value);
+													commentInputs = new Map(commentInputs);
+												}}
+												onkeydown={(e) => {
+													if (e.key === 'Enter' && !e.shiftKey) {
+														e.preventDefault();
+														addComment(post.id);
+													}
+												}}
+												class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+											/>
+											<button
+												onclick={() => addComment(post.id)}
+												disabled={!commentInputs.get(post.id)?.trim()}
+												class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+											>
+												Post
+											</button>
+										</div>
+									{/if}
+								</div>
+							{/if}
 						</div>
 					</article>
 				{/each}
