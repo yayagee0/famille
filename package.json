@@ -14,7 +14,8 @@
 		"lint": "prettier --check . && eslint .",
 		"test": "vitest",
 		"test:ui": "vitest --ui",
-		"test:run": "vitest run"
+		"test:run": "vitest run",
+		"audit": "npx tsx scripts/audit-generator.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
