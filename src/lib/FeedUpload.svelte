@@ -284,7 +284,7 @@
 				{#each previewUrls as url, index (url)}
 					<div class="relative">
 						{#if selectedFiles && selectedFiles[index]?.type.startsWith('image/')}
-							<img src={url} alt="" class="h-24 w-full object-contain bg-gray-100 rounded-xl" />
+							<img src={url} alt="" class="h-24 w-full rounded-xl bg-gray-100 object-contain" />
 						{:else if selectedFiles && selectedFiles[index]?.type.startsWith('video/')}
 							<video src={url} class="h-24 w-full rounded-lg object-cover" muted></video>
 						{/if}

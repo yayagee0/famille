@@ -289,8 +289,8 @@
 												<img
 													src={imagePath}
 													alt=""
-													class="w-full max-h-[600px] object-contain bg-gray-100 rounded-xl {index === 5 &&
-													post.imagePaths.length > 6
+													class="max-h-[600px] w-full rounded-xl bg-gray-100 object-contain {index ===
+														5 && post.imagePaths.length > 6
 														? 'opacity-75'
 														: ''}"
 												/>
@@ -310,7 +310,7 @@
 									<img
 										src={post.imagePath}
 										alt=""
-										class="mb-4 w-full max-h-[600px] object-contain bg-gray-100 rounded-xl"
+										class="mb-4 max-h-[600px] w-full rounded-xl bg-gray-100 object-contain"
 									/>
 								{/if}
 							{/if}
