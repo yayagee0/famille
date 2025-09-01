@@ -121,7 +121,7 @@
 
 #### Birthday Celebrations
 
-- **Component**: `BirthdayPreview.svelte` 
+- **Component**: `BirthdayPreview.svelte`
 - **Format**: "{Name} turns {Age} on {Date}" with countdown days
 - **Special Effects**: Confetti animation when birthday is today
 - **Location**: Dashboard below mood check-in

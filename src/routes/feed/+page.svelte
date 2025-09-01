@@ -288,9 +288,9 @@
 											<div class="relative">
 												<img
 													src={imagePath}
-													alt="User posted content"
-													class="h-32 w-full rounded-lg object-cover {index === 5 &&
-													post.imagePaths.length > 6
+													alt=""
+													class="max-h-[600px] w-full rounded-xl bg-gray-100 object-contain {index ===
+														5 && post.imagePaths.length > 6
 														? 'opacity-75'
 														: ''}"
 												/>
@@ -309,8 +309,8 @@
 								{:else}
 									<img
 										src={post.imagePath}
-										alt="User posted content"
-										class="mb-4 max-h-96 w-full rounded-lg object-cover"
+										alt=""
+										class="mb-4 max-h-[600px] w-full rounded-xl bg-gray-100 object-contain"
 									/>
 								{/if}
 							{/if}

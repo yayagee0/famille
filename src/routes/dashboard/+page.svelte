@@ -118,7 +118,7 @@
 				{/each}
 			</div>
 		{/if}
-		
+
 		<div class="mt-4 text-center">
 			<a href="/feed" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
 				View all activity →
