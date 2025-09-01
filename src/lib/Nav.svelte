@@ -17,11 +17,23 @@
 
 	async function handleSignOut() {
 		try {
+			// Trigger haptic feedback for mobile
+			if ('vibrate' in navigator) {
+				navigator.vibrate(50);
+			}
 			await signOut(auth);
 			await goto('/login');
 		} catch (error) {
 			console.error('Error signing out:', error);
 		}
+	}
+
+	function handleMobileMenuOpen() {
+		// Trigger haptic feedback for mobile
+		if ('vibrate' in navigator) {
+			navigator.vibrate(25);
+		}
+		mobileMenuOpen = true;
 	}
 
 	function closeMobileMenu() {
@@ -60,20 +72,28 @@
 							<li>
 								<a
 									href={item.href}
-									class="group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold {$page
+									class="group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-all duration-200 ease-in-out hover:scale-105 active:scale-95 {$page
 										.url.pathname === item.href
 										? 'bg-gray-50 text-indigo-600'
 										: 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600'}"
 									onclick={closeMobileMenu}
 								>
 									{#if item.icon === 'home'}
-										<Home class="h-6 w-6 shrink-0" />
+										<Home
+											class="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
+										/>
 									{:else if item.icon === 'rss'}
-										<Rss class="h-6 w-6 shrink-0" />
+										<Rss
+											class="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
+										/>
 									{:else if item.icon === 'gamepad'}
-										<Gamepad2 class="h-6 w-6 shrink-0" />
+										<Gamepad2
+											class="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
+										/>
 									{:else if item.icon === 'user'}
-										<User class="h-6 w-6 shrink-0" />
+										<User
+											class="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
+										/>
 									{/if}
 									{item.name}
 								</a>
@@ -100,9 +120,11 @@
 						</div>
 						<button
 							onclick={handleSignOut}
-							class="group flex w-full gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
+							class="group flex w-full gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-gray-700 transition-all duration-200 ease-in-out hover:scale-105 hover:bg-gray-50 hover:text-indigo-600 active:scale-95"
 						>
-							<LogOut class="h-6 w-6 shrink-0" />
+							<LogOut
+								class="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
+							/>
 							Sign out
 						</button>
 					{/if}
@@ -118,11 +140,11 @@
 >
 	<button
 		type="button"
-		class="-m-2.5 p-2.5 text-gray-700 lg:hidden"
-		onclick={() => (mobileMenuOpen = true)}
+		class="-m-2.5 p-2.5 text-gray-700 transition-all duration-200 ease-in-out hover:scale-110 hover:text-indigo-600 active:scale-95 lg:hidden"
+		onclick={handleMobileMenuOpen}
 	>
 		<span class="sr-only">Open sidebar</span>
-		<Menu class="h-6 w-6" />
+		<Menu class="h-6 w-6 transition-transform duration-200 hover:rotate-90" />
 	</button>
 	<div class="flex-1 text-sm leading-6 font-semibold text-gray-900">Family Hub</div>
 	{#if user && user.photoURL}
@@ -200,9 +222,11 @@
 									</div>
 									<button
 										onclick={handleSignOut}
-										class="group flex w-full gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
+										class="group flex w-full gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-gray-700 transition-all duration-200 ease-in-out hover:scale-105 hover:bg-gray-50 hover:text-indigo-600 active:scale-95"
 									>
-										<LogOut class="h-6 w-6 shrink-0" />
+										<LogOut
+											class="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
+										/>
 										Sign out
 									</button>
 								{/if}

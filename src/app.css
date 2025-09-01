@@ -6,3 +6,23 @@
 		'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
 	--font-family-arabic: 'Amiri', serif;
 }
+
+/* Dark mode support */
+html {
+	color-scheme: light dark;
+}
+
+html.dark {
+	color-scheme: dark;
+}
+
+/* Custom dark mode variables */
+:root {
+	--background: white;
+	--foreground: #0f172a;
+}
+
+html.dark {
+	--background: #0f172a;
+	--foreground: #f8fafc;
+}
