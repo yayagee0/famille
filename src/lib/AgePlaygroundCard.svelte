@@ -2,13 +2,21 @@
 	import { birthdays } from './birthdays';
 	import dayjs from 'dayjs';
 
+	// Member emojis for fun visual representation
+	const memberEmojis: Record<string, string> = {
+		'nilezat@gmail.com': '👨‍💼',
+		'abdessamia.mariem@gmail.com': '👩‍💼', 
+		'yazidgeemail@gmail.com': '👦',
+		'yahyageemail@gmail.com': '🧒'
+	};
+
 	// State for the selected family member and target age
 	let selectedMember = $state(birthdays[0]);
 	let targetAge = $state(10);
 	let showExactOffsets = $state(false);
 
 	// Calculate how old everyone would be when the selected member reaches target age
-	const futureAges = $derived(() => {
+	const futureAges = $derived.by(() => {
 		const selectedBirthDate = dayjs(selectedMember.date);
 		const selectedCurrentAge = dayjs().diff(selectedBirthDate, 'year');
 		const yearsToAdd = targetAge - selectedCurrentAge;
@@ -37,124 +45,154 @@
 	function increaseAge() {
 		if (targetAge < 70) targetAge++;
 	}
+
+	function selectMember(member: any) {
+		selectedMember = member;
+	}
 </script>
 
-<div class="rounded-xl bg-white p-4 shadow">
-	<h2 class="mb-4 text-lg font-bold text-indigo-700">👶➡️👴 Age Playground</h2>
+<div class="rounded-3xl bg-gradient-to-br from-purple-50 to-blue-50 p-6 shadow-lg border-2 border-purple-100">
+	<h2 class="mb-6 text-2xl font-bold text-purple-700 text-center">
+		🌟 Age Playground 🌟
+	</h2>
 
-	<!-- Family member selection -->
-	<div class="mb-4">
-		<label for="family-member-select" class="mb-2 block text-sm font-medium text-gray-700"
-			>Pick a family member:</label
-		>
-		<select
-			id="family-member-select"
-			bind:value={selectedMember}
-			class="w-full rounded-lg border border-gray-300 p-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
-		>
+	<!-- Family member selection with clickable avatar chips -->
+	<div class="mb-6">
+		<p class="mb-3 text-lg font-semibold text-purple-600 text-center">
+			Pick a family member:
+		</p>
+		<div class="grid grid-cols-2 gap-3">
 			{#each birthdays as member (member.email)}
-				<option value={member}>{member.name}</option>
+				<button
+					onclick={() => selectMember(member)}
+					class="flex flex-col items-center space-y-2 rounded-2xl p-4 transition-all duration-200 
+					{selectedMember.email === member.email 
+						? 'bg-purple-200 shadow-lg scale-105 border-2 border-purple-400' 
+						: 'bg-white hover:bg-purple-100 hover:scale-102 shadow-md border-2 border-transparent'}"
+				>
+					<div class="text-3xl">{memberEmojis[member.email] || '👤'}</div>
+					<span class="text-sm font-bold text-gray-800">{member.name}</span>
+					{#if selectedMember.email === member.email}
+						<div class="text-xs text-purple-600 font-medium">Selected! ✨</div>
+					{/if}
+				</button>
 			{/each}
-		</select>
+		</div>
 	</div>
 
-	<!-- Target age control -->
-	<div class="mb-4">
-		<label for="target-age-slider" class="mb-2 block text-sm font-medium text-gray-700"
-			>Target age:</label
-		>
+	<!-- Target age control with fun styling -->
+	<div class="mb-6 rounded-2xl bg-white p-4 border-2 border-blue-200">
+		<p class="mb-3 text-lg font-semibold text-blue-600 text-center">
+			🎯 Set the age:
+		</p>
 
-		<!-- Age control row with buttons and slider -->
-		<div class="mb-2 flex items-center space-x-3">
+		<!-- Age control row with animated buttons and slider -->
+		<div class="mb-4 flex items-center space-x-3">
 			<button
 				onclick={decreaseAge}
-				class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-600 hover:bg-indigo-200"
+				class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-red-100 to-pink-100 text-xl font-bold text-red-600 hover:scale-110 transition-transform duration-200 disabled:opacity-50 disabled:hover:scale-100 shadow-md"
 				disabled={targetAge <= 1}
 			>
 				−
 			</button>
 
-			<input
-				id="target-age-slider"
-				type="range"
-				min="1"
-				max="70"
-				bind:value={targetAge}
-				class="slider h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200"
-			/>
+			<div class="flex-1 px-2">
+				<input
+					type="range"
+					min="1"
+					max="70"
+					bind:value={targetAge}
+					class="slider w-full h-3 cursor-pointer appearance-none rounded-full bg-gradient-to-r from-blue-200 to-purple-200"
+				/>
+			</div>
 
 			<button
 				onclick={increaseAge}
-				class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-600 hover:bg-indigo-200"
+				class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-green-100 to-blue-100 text-xl font-bold text-green-600 hover:scale-110 transition-transform duration-200 disabled:opacity-50 disabled:hover:scale-100 shadow-md"
 				disabled={targetAge >= 70}
 			>
 				+
 			</button>
 		</div>
 
-		<!-- Number input that syncs with slider -->
-		<input
-			type="number"
-			min="1"
-			max="70"
-			bind:value={targetAge}
-			class="w-20 rounded-lg border border-gray-300 p-2 text-center focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
-		/>
+		<!-- Age display -->
+		<div class="text-center">
+			<div class="inline-flex items-center space-x-2 rounded-xl bg-gradient-to-r from-yellow-100 to-orange-100 px-4 py-2 border-2 border-yellow-200">
+				<span class="text-2xl">🎂</span>
+				<span class="text-xl font-bold text-orange-600">{targetAge} years old</span>
+			</div>
+		</div>
 	</div>
 
-	<!-- Show exact offsets checkbox -->
-	<div class="mb-4">
-		<label class="flex items-center space-x-2">
+	<!-- Show exact offsets checkbox with fun styling -->
+	<div class="mb-6 flex justify-center">
+		<label class="flex items-center space-x-3 rounded-xl bg-white p-3 shadow-md border-2 border-gray-200 hover:border-indigo-300 transition-colors cursor-pointer">
 			<input
 				type="checkbox"
 				bind:checked={showExactOffsets}
-				class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+				class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 scale-125"
 			/>
-			<span class="text-sm text-gray-700">Show exact offsets</span>
+			<span class="text-sm font-medium text-gray-700">Show exact age differences ➕➖</span>
 		</label>
 	</div>
 
-	<!-- Results -->
-	<div class="rounded-lg bg-indigo-50 p-3">
-		<p class="mb-2 text-sm font-medium text-indigo-900">
-			If {selectedMember.name} is {targetAge} years old:
+	<!-- Results with colorful styling -->
+	<div class="rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 p-4 border-2 border-indigo-200">
+		<p class="mb-4 text-center text-lg font-bold text-indigo-800">
+			✨ If {selectedMember.name} is {targetAge} years old: ✨
 		</p>
 
-		<div class="space-y-1">
+		<div class="space-y-3">
 			{#each futureAges as member (member.email)}
-				<p class="text-sm text-gray-700">
-					<span class="font-medium">{member.name}</span> will be
-					<span class="font-bold text-indigo-600">{member.futureAge}</span>
-					{#if showExactOffsets}
-						<span class="text-xs text-gray-500">
-							({member.ageDifference}
-							{member.ageDifference === 1 ? 'year' : 'years'}
-							{member.isOlder ? 'older' : 'younger'})
-						</span>
-					{/if}
-				</p>
+				<div class="flex items-center space-x-3 rounded-xl bg-white p-3 shadow-sm border border-gray-200">
+					<div class="text-2xl">{memberEmojis[member.email] || '👤'}</div>
+					<div class="flex-1">
+						<p class="text-sm font-bold text-gray-800">
+							<span class="text-indigo-600">{member.name}</span> will be 
+							<span class="text-lg text-purple-600">{member.futureAge}</span> years old
+						</p>
+						{#if showExactOffsets}
+							<p class="text-xs text-gray-500 mt-1">
+								({member.isOlder ? '+' : '-'}{member.ageDifference}
+								{member.ageDifference === 1 ? 'year' : 'years'}
+								{member.isOlder ? 'older' : 'younger'})
+							</p>
+						{/if}
+					</div>
+				</div>
 			{/each}
 		</div>
 	</div>
 </div>
 
 <style>
-	/* Custom slider styling */
+	/* Custom animated slider styling */
 	.slider::-webkit-slider-thumb {
 		appearance: none;
-		height: 20px;
-		width: 20px;
+		height: 24px;
+		width: 24px;
 		border-radius: 50%;
-		background: #4f46e5;
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		cursor: pointer;
+		box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+		transition: transform 0.2s ease;
+	}
+
+	.slider::-webkit-slider-thumb:hover {
+		transform: scale(1.2);
 	}
 
 	.slider::-moz-range-thumb {
-		height: 20px;
-		width: 20px;
+		height: 24px;
+		width: 24px;
 		border-radius: 50%;
-		background: #4f46e5;
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		cursor: pointer;
 		border: none;
+		box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+	}
+
+	.hover\:scale-102:hover {
+		transform: scale(1.02);
 	}
 </style>

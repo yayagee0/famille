@@ -1,7 +1,6 @@
 <script lang="ts">
 	import AgePlaygroundCard from '$lib/AgePlaygroundCard.svelte';
 	import DreamBuilderPlaygroundCard from '$lib/DreamBuilderPlaygroundCard.svelte';
-	import BirthdayPreview from '$lib/BirthdayPreview.svelte';
 </script>
 
 <div class="space-y-6">
@@ -13,14 +12,9 @@
 		</p>
 	</div>
 
-	<!-- Main playground widgets -->
-	<div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+	<!-- Main playground widgets stacked vertically -->
+	<div class="space-y-6">
 		<AgePlaygroundCard />
 		<DreamBuilderPlaygroundCard />
-	</div>
-
-	<!-- Birthday preview -->
-	<div class="max-w-md">
-		<BirthdayPreview />
 	</div>
 </div>
