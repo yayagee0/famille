@@ -239,7 +239,7 @@
 	// 💬 Add comment to post
 	async function addComment(postId: string) {
 		if (!user?.uid) return;
-		
+
 		const commentText = commentInputs.get(postId)?.trim();
 		if (!commentText) return;
 
@@ -359,6 +359,7 @@
 							{#if post.videoPath}
 								<video controls class="mb-4 max-h-96 w-full rounded-lg bg-black">
 									<source src={post.videoPath} type="video/mp4" />
+									<track kind="captions" srclang="en" label="English" />
 									Your browser does not support the video tag.
 								</video>
 							{/if}
@@ -461,13 +462,17 @@
 								<div class="border-t border-gray-200 px-6 py-4">
 									<!-- Existing Comments -->
 									{#if post.comments && post.comments.length > 0}
-										<div class="space-y-3 mb-4">
+										<div class="mb-4 space-y-3">
 											{#each post.comments as comment (comment)}
 												<div class="text-sm">
 													<span class="font-medium text-gray-900">{comment.author}</span>
-													<span class="text-gray-600 ml-2">{comment.text}</span>
-													<div class="text-xs text-gray-400 mt-1">
-														{dayjs(comment.createdAt?.toDate ? comment.createdAt.toDate() : comment.createdAt).fromNow()}
+													<span class="ml-2 text-gray-600">{comment.text}</span>
+													<div class="mt-1 text-xs text-gray-400">
+														{dayjs(
+															comment.createdAt?.toDate
+																? comment.createdAt.toDate()
+																: comment.createdAt
+														).fromNow()}
 													</div>
 												</div>
 											{/each}

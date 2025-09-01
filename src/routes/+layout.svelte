@@ -1,5 +1,4 @@
 <script lang="ts">
-	import '$lib/console-filter';
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';

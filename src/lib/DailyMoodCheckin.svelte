@@ -4,6 +4,7 @@
 	import { db } from './firebase';
 	import { auth } from './firebase';
 	import { birthdays } from './birthdays';
+	import LoadingSpinner from './LoadingSpinner.svelte';
 	import dayjs from 'dayjs';
 
 	// Available mood emojis
@@ -79,9 +80,7 @@
 	<h3 class="mb-4 text-lg font-semibold text-orange-800">🌟 Daily Mood Check-in</h3>
 
 	{#if loading}
-		<div class="animate-pulse">
-			<div class="h-4 w-24 rounded bg-gray-200"></div>
-		</div>
+		<LoadingSpinner size="small" message="Loading moods..." />
 	{:else}
 		<!-- Family members mood display -->
 		<div class="mb-4 space-y-3">

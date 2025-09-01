@@ -142,12 +142,20 @@
 		<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
 			{#each photos as photo, index}
 				<button
-					class="group relative aspect-square overflow-hidden rounded-2xl bg-gray-100 shadow-sm transition-shadow hover:shadow-md"
+					class="group relative aspect-square overflow-hidden rounded-2xl bg-gray-100 shadow-sm transition-shadow hover:shadow-md focus:ring-2 focus:ring-indigo-500 focus:outline-none"
 					onclick={() => openLightbox(photo, index)}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							openLightbox(photo, index);
+						}
+					}}
+					tabindex="0"
+					aria-label="View photo by {photo.author?.displayName || 'Unknown'}"
 				>
 					<img
 						src={photo.displayUrl}
-						alt="Family photo"
+						alt="Family photo by {photo.author?.displayName || 'Unknown'}"
 						class="h-full w-full object-cover transition-transform group-hover:scale-105"
 						loading="lazy"
 					/>
@@ -173,13 +181,23 @@
 	<div
 		class="bg-opacity-90 fixed inset-0 z-50 flex items-center justify-center bg-black p-4"
 		onclick={closeLightbox}
+		onkeydown={(e) => {
+			if (e.key === 'Escape') {
+				closeLightbox();
+			}
+		}}
 		role="dialog"
 		aria-modal="true"
+		aria-labelledby="photo-dialog-title"
+		aria-describedby="photo-dialog-description"
+		tabindex="-1"
 	>
 		<!-- Close Button -->
 		<button
-			class="bg-opacity-50 hover:bg-opacity-70 absolute top-4 right-4 z-60 rounded-full bg-black p-2 text-white"
+			class="bg-opacity-50 hover:bg-opacity-70 absolute top-4 right-4 z-60 rounded-full bg-black p-2 text-white transition-all focus:ring-2 focus:ring-white focus:outline-none"
 			onclick={closeLightbox}
+			tabindex="0"
+			aria-label="Close photo viewer"
 		>
 			<X class="h-6 w-6" />
 		</button>
@@ -187,23 +205,41 @@
 		<!-- Navigation Buttons -->
 		{#if photos.length > 1}
 			<button
-				class="bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 left-4 z-60 -translate-y-1/2 rounded-full bg-black p-2 text-white disabled:opacity-30"
+				class="bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 left-4 z-60 -translate-y-1/2 rounded-full bg-black p-2 text-white transition-all focus:ring-2 focus:ring-white focus:outline-none disabled:opacity-30"
 				onclick={(e) => {
 					e.stopPropagation();
 					previousPhoto();
 				}}
+				onkeydown={(e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault();
+						e.stopPropagation();
+						previousPhoto();
+					}
+				}}
 				disabled={selectedIndex === 0}
+				tabindex="0"
+				aria-label="Previous photo"
 			>
 				<ArrowLeft class="h-6 w-6" />
 			</button>
 
 			<button
-				class="bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 right-4 z-60 -translate-y-1/2 rounded-full bg-black p-2 text-white disabled:opacity-30"
+				class="bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 right-4 z-60 -translate-y-1/2 rounded-full bg-black p-2 text-white transition-all focus:ring-2 focus:ring-white focus:outline-none disabled:opacity-30"
 				onclick={(e) => {
 					e.stopPropagation();
 					nextPhoto();
 				}}
+				onkeydown={(e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault();
+						e.stopPropagation();
+						nextPhoto();
+					}
+				}}
 				disabled={selectedIndex === photos.length - 1}
+				tabindex="0"
+				aria-label="Next photo"
 			>
 				<ArrowRight class="h-6 w-6" />
 			</button>
@@ -213,15 +249,19 @@
 		<div
 			class="flex max-h-full max-w-full flex-col items-center justify-center"
 			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+			role="button"
+			tabindex="0"
+			id="photo-dialog-title"
 		>
 			<img
 				src={selectedPhoto.displayUrl}
-				alt="Family photo"
+				alt="Family photo by {selectedPhoto.author?.displayName || 'Unknown'}"
 				class="max-h-[80vh] max-w-full rounded-lg object-contain"
 			/>
 
 			<!-- Photo Info -->
-			<div class="mt-4 max-w-md text-center">
+			<div class="mt-4 max-w-md text-center" id="photo-dialog-description">
 				<div class="flex items-center justify-center space-x-3 text-white">
 					{#if selectedPhoto.author?.avatarUrl}
 						<img
