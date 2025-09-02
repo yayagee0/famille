@@ -1,6 +1,14 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { firebaseConfig } from "./src/lib/firebase"; // adjust import if needed
+
+// Firebase config - replace with your actual config or import from .env
+const firebaseConfig = {
+  apiKey: process.env.VITE_FB_API_KEY,
+  authDomain: process.env.VITE_FB_AUTH_DOMAIN,
+  projectId: process.env.VITE_FB_PROJECT_ID,
+  storageBucket: process.env.VITE_FB_STORAGE_BUCKET,
+  appId: process.env.VITE_FB_APP_ID
+};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
