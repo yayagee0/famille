@@ -1,13 +1,13 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-// Firebase config - replace with your actual config or import from .env
+// Load Firebase config from environment variables
 const firebaseConfig = {
   apiKey: process.env.VITE_FB_API_KEY,
   authDomain: process.env.VITE_FB_AUTH_DOMAIN,
   projectId: process.env.VITE_FB_PROJECT_ID,
   storageBucket: process.env.VITE_FB_STORAGE_BUCKET,
-  appId: process.env.VITE_FB_APP_ID
+  appId: process.env.VITE_FB_APP_ID,
 };
 
 // Initialize Firebase
@@ -333,11 +333,11 @@ async function seedQuestions() {
   for (const q of questions) {
     await addDoc(colRef, {
       ...q,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
     });
-    console.log(`Added: ${q.text}`);
+    console.log(`✅ Added: ${q.text}`);
   }
-  console.log("✅ Question bank seeded successfully.");
+  console.log("🎉 Question bank seeded successfully.");
 }
 
 seedQuestions().catch(console.error);
