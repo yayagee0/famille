@@ -16,6 +16,7 @@
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import DailyAyah from '$lib/DailyAyah.svelte';
 	import DailyMoodCheckin from '$lib/DailyMoodCheckin.svelte';
+	import SimilarityHighlights from '$lib/components/SimilarityHighlights.svelte';
 	import BirthdayPreview from '$lib/BirthdayPreview.svelte';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 
@@ -93,6 +94,9 @@
 
 	<!-- Daily Mood Check-in -->
 	<DailyMoodCheckin />
+
+	<!-- Family Similarities -->
+	<SimilarityHighlights />
 
 	<!-- Birthday Preview (moved from playground) -->
 	<BirthdayPreview />

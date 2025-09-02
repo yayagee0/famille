@@ -1,5 +1,32 @@
 import { z } from 'zod';
 
+// Question bank schema
+export const questionSchema = z.object({
+	text: z.string().min(1, 'Question text is required'),
+	category: z.enum(['fun', 'daily', 'family', 'values', 'dreams', 'hobbies', 'personality']),
+	type: z.enum(['multiple-choice', 'open-ended']),
+	options: z.array(z.string()).optional(),
+	allowOther: z.boolean().optional(),
+	sentenceTemplate: z.string().min(1, 'Sentence template is required'),
+	createdAt: z.date(),
+	// Phase 2 fields (future-proof)
+	seasonal: z.boolean().optional(),
+	season: z.string().optional(),
+	createdBy: z.string().optional(),
+	status: z.enum(['pending', 'approved', 'active']).optional(),
+	expiresAt: z.date().optional()
+});
+
+// User answer schema  
+export const userAnswerSchema = z.object({
+	questionId: z.string().min(1, 'Question ID is required'),
+	answer: z.string().min(1, 'Answer is required'),
+	category: z.string().min(1, 'Category is required'),
+	createdAt: z.date(),
+	visibility: z.literal('private'),
+	custom: z.boolean().optional()
+});
+
 // Environment variables schema
 export const envSchema = z.object({
 	VITE_FB_API_KEY: z.string().min(1, 'Firebase API key is required'),
@@ -159,6 +186,22 @@ export function validateVideoFile(file: File) {
 export function validatePost(post: unknown) {
 	try {
 		return { success: true as const, data: postSchema.parse(post) };
+	} catch (error) {
+		return { success: false as const, error };
+	}
+}
+
+export function validateQuestion(question: unknown) {
+	try {
+		return { success: true as const, data: questionSchema.parse(question) };
+	} catch (error) {
+		return { success: false as const, error };
+	}
+}
+
+export function validateUserAnswer(answer: unknown) {
+	try {
+		return { success: true as const, data: userAnswerSchema.parse(answer) };
 	} catch (error) {
 		return { success: false as const, error };
 	}
