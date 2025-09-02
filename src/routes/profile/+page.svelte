@@ -413,9 +413,7 @@
 		<!-- Data Export -->
 		<div class="rounded-lg bg-white shadow">
 			<div class="px-4 py-5 sm:p-6">
-				<h3 class="mb-4 text-lg leading-6 font-medium text-gray-900">
-					Data Export
-				</h3>
+				<h3 class="mb-4 text-lg leading-6 font-medium text-gray-900">Data Export</h3>
 
 				<div class="mb-4">
 					<p class="text-sm text-gray-600">
