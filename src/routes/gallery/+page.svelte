@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { collection, query, where, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
 	import { db, getFamilyId } from '$lib/firebase';
-	import { X, ArrowLeft, ArrowRight } from 'lucide-svelte';
+	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -12,6 +12,16 @@
 	let loading = $state(true);
 	let selectedPhoto = $state<any | null>(null);
 	let selectedIndex = $state(0);
+	
+	// Dynamic import for Lightbox component
+	let LightboxComponent = $state<any>(null);
+
+	async function loadLightbox() {
+		if (!LightboxComponent) {
+			const { default: Lightbox } = await import('$lib/components/Lightbox.svelte');
+			LightboxComponent = Lightbox;
+		}
+	}
 
 	onMount(async () => {
 		try {
@@ -73,7 +83,8 @@
 		}
 	});
 
-	function openLightbox(photo: any, index: number) {
+	async function openLightbox(photo: any, index: number) {
+		await loadLightbox(); // Load Lightbox component dynamically
 		selectedPhoto = photo;
 		selectedIndex = index;
 		document.body.style.overflow = 'hidden';
@@ -290,4 +301,17 @@
 			</div>
 		</div>
 	</div>
+{/if}
+
+<!-- Dynamic Lightbox Component -->
+{#if LightboxComponent && selectedPhoto}
+	<svelte:component 
+		this={LightboxComponent}
+		{photos}
+		{selectedPhoto}
+		{selectedIndex}
+		onClose={closeLightbox}
+		onPrevious={previousPhoto}
+		onNext={nextPhoto}
+	/>
 {/if}

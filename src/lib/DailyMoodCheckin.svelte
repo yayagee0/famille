@@ -76,31 +76,31 @@
 	});
 </script>
 
-<div class="rounded-2xl bg-gradient-to-br from-yellow-50 to-orange-50 p-6 shadow-sm">
-	<h3 class="mb-4 text-lg font-semibold text-orange-800">🌟 Daily Mood Check-in</h3>
+<div class="w-64 h-64 mx-auto rounded-2xl bg-gradient-to-br from-yellow-50 to-orange-50 p-4 shadow-sm">
+	<h3 class="mb-3 text-base font-semibold text-orange-800">🌟 Daily Mood</h3>
 
 	{#if loading}
 		<LoadingSpinner size="small" message="Loading moods..." />
 	{:else}
 		<!-- Family members mood display -->
-		<div class="mb-4 space-y-3">
+		<div class="mb-3 space-y-2">
 			{#each birthdays as member}
 				{@const memberMood = familyMoods[member.email]}
-				<div class="flex items-center space-x-3 rounded-xl bg-white/50 p-3">
-					<div class="text-2xl">
+				<div class="flex items-center space-x-2 rounded-lg bg-white/50 p-2">
+					<div class="text-lg">
 						{#if memberMood}
 							{memberMood.emoji}
 						{:else}
-							<div class="h-8 w-8 rounded-full bg-gray-200"></div>
+							<div class="h-6 w-6 rounded-full bg-gray-200"></div>
 						{/if}
 					</div>
-					<div class="flex-1">
-						<p class="font-medium text-gray-900">{member.name}</p>
+					<div class="flex-1 min-w-0">
+						<p class="text-xs font-medium text-gray-900 truncate">{member.name}</p>
 						<p class="text-xs text-gray-600">
 							{#if memberMood}
-								Feeling {memberMood.label.toLowerCase()}
+								{memberMood.label}
 							{:else}
-								Hasn't checked in today
+								Not set
 							{/if}
 						</p>
 					</div>
@@ -113,15 +113,15 @@
 
 		<!-- Mood selection for current user -->
 		{#if auth.currentUser}
-			<div class="border-t border-orange-200 pt-4">
-				<p class="mb-3 text-sm font-medium text-orange-800">How are you feeling today?</p>
-				<div class="grid grid-cols-4 gap-2">
+			<div class="border-t border-orange-200 pt-3">
+				<p class="mb-2 text-xs font-medium text-orange-800">How are you feeling?</p>
+				<div class="grid grid-cols-4 gap-1">
 					{#each moods as mood}
 						<button
-							class="flex flex-col items-center space-y-1 rounded-lg bg-white p-3 shadow-sm transition-all hover:scale-105 hover:shadow-md active:scale-95"
+							class="flex flex-col items-center space-y-1 rounded-lg bg-white p-2 shadow-sm transition-all hover:scale-105 hover:shadow-md active:scale-95"
 							onclick={() => selectMood(mood)}
 						>
-							<span class="text-xl">{mood.emoji}</span>
+							<span class="text-sm">{mood.emoji}</span>
 							<span class="text-xs font-medium text-gray-700">{mood.label}</span>
 						</button>
 					{/each}

@@ -4,6 +4,7 @@
 	import { validateImageFile, validateVideoFile, validatePost } from '$lib/schemas';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 	import { storage } from '$lib/firebase';
+	import imageCompression from 'browser-image-compression';
 
 	const dispatch = createEventDispatcher();
 
@@ -19,6 +20,23 @@
 	let isUploading = $state(false);
 	let previewUrls: string[] = $state([]);
 	let uploadProgress = $state('');
+
+	// Helper function to resize and compress images
+	async function processImage(file: File): Promise<File> {
+		const options = {
+			maxSizeMB: 1, // Limit to 1MB
+			maxWidthOrHeight: 1280, // Resize to max 1280px
+			useWebWorker: true,
+			fileType: 'image/jpeg' // Convert to JPEG for better compression
+		};
+		
+		try {
+			return await imageCompression(file, options);
+		} catch (error) {
+			console.warn('Image compression failed, using original:', error);
+			return file;
+		}
+	}
 
 	function setPostType(type: typeof postType) {
 		postType = type;
@@ -93,78 +111,130 @@
 		try {
 			let imagePaths: string[] = [];
 			let videoPaths: string[] = [];
+			let placeholderPaths: string[] = [];
 
-			// Handle file uploads for photo/video posts
-			if (selectedFiles && (postType === 'photo' || postType === 'video')) {
+			// For photo posts, create immediate placeholders and dispatch post right away
+			if (selectedFiles && postType === 'photo') {
+				uploadProgress = 'Creating post with placeholders...';
+				
+				// Create placeholder URLs from file objects for immediate display
+				for (const file of Array.from(selectedFiles)) {
+					const validation = validateImageFile(file);
+					if (!validation.success) {
+						throw new Error(`Invalid image file: ${file.name}`);
+					}
+					
+					// Create blob URL for immediate preview
+					const placeholderUrl = URL.createObjectURL(file);
+					placeholderPaths.push(placeholderUrl);
+				}
+
+				// Create post data with placeholder images
+				const placeholderPostData = {
+					type: postType,
+					content: textContent,
+					authorUid: user.uid,
+					familyId: import.meta.env.VITE_FAMILY_ID,
+					createdAt: new Date(),
+					imagePaths: placeholderPaths,
+					isPlaceholder: true // Flag to indicate this needs real upload
+				};
+
+				// Dispatch placeholder post immediately
+				dispatch('post-created', placeholderPostData);
+
+				// Now upload actual images in background and dispatch update
+				uploadProgress = 'Uploading optimized images...';
+				
+				for (let i = 0; i < selectedFiles.length; i++) {
+					const file = selectedFiles[i];
+					uploadProgress = `Optimizing and uploading image ${i + 1}/${selectedFiles.length}...`;
+					
+					// Process and compress image
+					const processedFile = await processImage(file);
+					
+					const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
+					const uploadSnapshot = await uploadBytes(fileRef, processedFile);
+					const downloadURL = await getDownloadURL(uploadSnapshot.ref);
+					imagePaths.push(downloadURL);
+				}
+
+				// Clean up placeholder URLs
+				placeholderPaths.forEach(url => URL.revokeObjectURL(url));
+
+				// Create final post data with real images
+				const finalPostData = {
+					type: postType,
+					content: textContent,
+					authorUid: user.uid,
+					familyId: import.meta.env.VITE_FAMILY_ID,
+					createdAt: new Date(),
+					imagePaths: imagePaths,
+					isUpdate: true, // Flag to indicate this is an update to existing post
+					placeholderPaths: placeholderPaths
+				};
+
+				uploadProgress = 'Finalizing post...';
+				dispatch('post-updated', finalPostData);
+
+			} else if (selectedFiles && postType === 'video') {
+				// Handle video uploads (no placeholders for videos due to size)
 				uploadProgress = 'Validating and processing files...';
 
 				for (const file of Array.from(selectedFiles)) {
-					// Validate files using Zod schemas
-					if (postType === 'photo') {
-						const validation = validateImageFile(file);
-						if (!validation.success) {
-							throw new Error(`Invalid image file: ${file.name}`);
-						}
-
-						// Upload original file without compression
-						uploadProgress = `Uploading image: ${file.name}`;
-						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
-						const uploadSnapshot = await uploadBytes(fileRef, file);
-						const downloadURL = await getDownloadURL(uploadSnapshot.ref);
-						imagePaths.push(downloadURL);
-					} else if (postType === 'video') {
-						const validation = validateVideoFile(file);
-						if (!validation.success) {
-							throw new Error(`Invalid video file: ${file.name}`);
-						}
-
-						// Upload original file without compression
-						uploadProgress = `Uploading video: ${file.name}`;
-						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
-						const uploadSnapshot = await uploadBytes(fileRef, file);
-						const downloadURL = await getDownloadURL(uploadSnapshot.ref);
-						videoPaths.push(downloadURL);
+					const validation = validateVideoFile(file);
+					if (!validation.success) {
+						throw new Error(`Invalid video file: ${file.name}`);
 					}
+
+					uploadProgress = `Uploading video: ${file.name}`;
+					const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
+					const uploadSnapshot = await uploadBytes(fileRef, file);
+					const downloadURL = await getDownloadURL(uploadSnapshot.ref);
+					videoPaths.push(downloadURL);
 				}
 			}
 
-			uploadProgress = 'Validating post data...';
+			// For non-photo posts or if no placeholders were created, handle normally
+			if (postType !== 'photo' || !selectedFiles) {
+				uploadProgress = 'Validating post data...';
 
-			// Create post object following unified Firestore schema
-			const postData = {
-				type: postType,
-				content: textContent.trim(),
-				authorUid: user?.uid,
-				familyId: 'ghassan-family',
-				createdAt: new Date(),
-				// Add media URLs if present
-				...(imagePaths.length > 0 && { imagePaths }),
-				...(videoPaths.length > 0 && { videoPaths }),
-				// Add YouTube URL if present
-				...(postType === 'youtube' && youtubeUrl.trim() && { youtubeUrl: youtubeUrl.trim() }),
-				// Add poll data if present
-				...(postType === 'poll' && {
-					poll: {
-						title: pollTitle.trim(),
-						options: pollOptions
-							.filter((opt) => opt.trim())
-							.map((opt) => ({
-								text: opt.trim(),
-								votes: []
-							}))
-					}
-				})
-			};
+				// Create post object following unified Firestore schema
+				const postData = {
+					type: postType,
+					content: textContent.trim(),
+					authorUid: user?.uid,
+					familyId: 'ghassan-family',
+					createdAt: new Date(),
+					// Add media URLs if present
+					...(imagePaths.length > 0 && { imagePaths }),
+					...(videoPaths.length > 0 && { videoPaths }),
+					// Add YouTube URL if present
+					...(postType === 'youtube' && youtubeUrl.trim() && { youtubeUrl: youtubeUrl.trim() }),
+					// Add poll data if present
+					...(postType === 'poll' && {
+						poll: {
+							title: pollTitle.trim(),
+							options: pollOptions
+								.filter((opt) => opt.trim())
+								.map((opt) => ({
+									text: opt.trim(),
+									votes: []
+								}))
+						}
+					})
+				};
 
-			// Validate complete post data with Zod schema
-			const postValidation = validatePost(postData);
-			if (!postValidation.success) {
-				console.error('Post validation failed:', postValidation.error);
-				throw new Error('Invalid post data');
+				// Validate complete post data with Zod schema
+				const postValidation = validatePost(postData);
+				if (!postValidation.success) {
+					console.error('Post validation failed:', postValidation.error);
+					throw new Error('Invalid post data');
+				}
+
+				uploadProgress = 'Creating post...';
+				dispatch('post-created', postData);
 			}
-
-			uploadProgress = 'Creating post...';
-			dispatch('post-created', postData);
 
 			// Reset form
 			textContent = '';

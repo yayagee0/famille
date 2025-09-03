@@ -9,6 +9,7 @@
 	import { onAuthStateChanged, type User } from 'firebase/auth';
 	import { validateFamilyMember } from '$lib/allowlist';
 	import Nav from '$lib/Nav.svelte';
+	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
 
 	let { children } = $props();
 	let user: User | null = $state(null);
@@ -95,18 +96,20 @@
 		</div>
 	</div>
 {:else}
-	<div class="min-h-full">
-		{#if shouldShowNav}
-			<Nav {user} />
-			<div class="lg:pl-72">
-				<main class="py-10">
-					<div class="px-4 sm:px-6 lg:px-8">
-						{@render children?.()}
-					</div>
-				</main>
-			</div>
-		{:else}
-			{@render children?.()}
-		{/if}
-	</div>
+	<ErrorBoundary>
+		<div class="min-h-full">
+			{#if shouldShowNav}
+				<Nav {user} />
+				<div class="lg:pl-72">
+					<main class="py-10">
+						<div class="px-4 sm:px-6 lg:px-8">
+							{@render children?.()}
+						</div>
+					</main>
+				</div>
+			{:else}
+				{@render children?.()}
+			{/if}
+		</div>
+	</ErrorBoundary>
 {/if}
