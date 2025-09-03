@@ -135,13 +135,28 @@ export const pollPostSchema = basePostSchema.extend({
 	poll: pollSchema
 });
 
+// Tic-Tac-Toe game result schema
+export const ticTacToeGameSchema = basePostSchema.extend({
+	type: z.literal('tic-tac-toe-game'),
+	board: z.array(z.union([z.literal('X'), z.literal('O'), z.null()])).length(9),
+	winner: z.union([z.literal('X'), z.literal('O'), z.null()]),
+	gameMode: z.union([z.literal('human'), z.literal('easy'), z.literal('hard')]),
+	moves: z.array(z.object({
+		index: z.number(),
+		player: z.union([z.literal('X'), z.literal('O')])
+	})),
+	result: z.union([z.literal('X'), z.literal('O'), z.literal('tie')]),
+	timestamp: z.date()
+});
+
 // Union of all post types
 export const postSchema = z.discriminatedUnion('type', [
 	textPostSchema,
 	photoPostSchema,
 	videoPostSchema,
 	youtubePostSchema,
-	pollPostSchema
+	pollPostSchema,
+	ticTacToeGameSchema
 ]);
 
 // Validation helper functions
