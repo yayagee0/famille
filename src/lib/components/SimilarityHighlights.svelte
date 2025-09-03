@@ -33,9 +33,16 @@
 		try {
 			loading = true;
 
-			// Get current user's answers
-			const userAnswersQuery = query(collection(db, 'userAnswers', user.uid, 'answers'));
-			const userAnswersSnapshot = await getDocs(userAnswersQuery);
+			// Batch all required data in parallel for better performance
+			const [userAnswersSnapshot, usersSnapshot, questionsSnapshot] = await Promise.all([
+				// Get current user's answers
+				getDocs(query(collection(db, 'userAnswers', user.uid, 'answers'))),
+				// Get all family members
+				getDocs(query(collection(db, 'users'))),
+				// Get all questions for reference
+				getDocs(query(collection(db, 'questions')))
+			]);
+
 			const userAnswers = userAnswersSnapshot.docs.map((doc) => ({
 				id: doc.id,
 				questionId: doc.data().questionId,
@@ -44,9 +51,6 @@
 				...doc.data()
 			}));
 
-			// Get all family members' UIDs (from allowlist or users collection)
-			const usersQuery = query(collection(db, 'users'));
-			const usersSnapshot = await getDocs(usersQuery);
 			const familyMembers = usersSnapshot.docs
 				.map((doc) => ({
 					uid: doc.id,
@@ -56,6 +60,40 @@
 				}))
 				.filter((member: any) => member.uid !== user?.uid);
 
+			// Create questions lookup map
+			const questionsMap = new Map();
+			questionsSnapshot.docs.forEach((doc) => {
+				questionsMap.set(doc.id, doc.data());
+			});
+
+			// Batch fetch all family members' answers in parallel
+			const memberAnswersPromises = familyMembers.map(async (member) => {
+				const memberAnswersSnapshot = await getDocs(
+					query(collection(db, 'userAnswers', member.uid, 'answers'))
+				);
+				return {
+					memberUid: member.uid,
+					memberName: member.displayName || member.email?.split('@')[0] || 'Family Member',
+					answers: memberAnswersSnapshot.docs.map((doc) => ({
+						questionId: doc.data().questionId,
+						answer: doc.data().answer,
+						category: doc.data().category,
+						...doc.data()
+					}))
+				};
+			});
+
+			const allMemberAnswers = await Promise.all(memberAnswersPromises);
+
+			// Create a lookup map for faster comparison
+			const memberAnswersMap = new Map();
+			allMemberAnswers.forEach(({ memberUid, memberName, answers }) => {
+				answers.forEach((answer) => {
+					const key = `${memberUid}_${answer.questionId}`;
+					memberAnswersMap.set(key, { ...answer, memberName });
+				});
+			});
+
 			const matchingAnswers: Array<{
 				question: string;
 				answer: string;
@@ -63,32 +101,23 @@
 				category: string;
 			}> = [];
 
-			// Compare answers with each family member
+			// Compare answers efficiently using the lookup map
 			for (const userAnswer of userAnswers) {
 				const sharedWith: string[] = [];
 
 				for (const member of familyMembers) {
-					const memberAnswersQuery = query(
-						collection(db, 'userAnswers', member.uid, 'answers'),
-						where('questionId', '==', userAnswer.questionId)
-					);
-					const memberAnswersSnapshot = await getDocs(memberAnswersQuery);
+					const key = `${member.uid}_${userAnswer.questionId}`;
+					const memberAnswer = memberAnswersMap.get(key);
 
-					for (const memberAnswerDoc of memberAnswersSnapshot.docs) {
-						const memberAnswer = memberAnswerDoc.data();
-
-						// Compare answers - exact match for custom answers, otherwise direct comparison
-						if (userAnswer.answer === memberAnswer.answer) {
-							sharedWith.push(member.displayName || member.email?.split('@')[0] || 'Family Member');
-						}
+					if (memberAnswer && userAnswer.answer === memberAnswer.answer) {
+						sharedWith.push(memberAnswer.memberName);
 					}
 				}
 
 				if (sharedWith.length > 0) {
-					// Get question text for display
-					const questionDoc = await getDoc(doc(db, 'questions', userAnswer.questionId));
-					if (questionDoc.exists()) {
-						const questionData = questionDoc.data();
+					// Get question text from the map
+					const questionData = questionsMap.get(userAnswer.questionId);
+					if (questionData) {
 						matchingAnswers.push({
 							question: questionData.text,
 							answer: userAnswer.answer,
@@ -124,10 +153,28 @@
 		</div>
 
 		{#if loading}
+			<!-- Skeleton Loader -->
 			<div class="animate-pulse space-y-3">
-				{#each Array(2) as _}
-					<div class="h-16 rounded-lg bg-gray-200"></div>
+				{#each Array(3) as _, i}
+					<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+						<div class="flex items-start justify-between">
+							<div class="flex-1 space-y-2">
+								<div class="h-4 bg-gray-300 rounded w-3/4"></div>
+								<div class="h-3 bg-gray-200 rounded w-1/2"></div>
+								<div class="flex items-center space-x-2">
+									<div class="h-3 bg-gray-300 rounded w-16"></div>
+									<div class="h-5 bg-gray-200 rounded-full w-20"></div>
+								</div>
+							</div>
+							<div class="ml-3">
+								<div class="h-6 bg-gray-200 rounded-full w-16"></div>
+							</div>
+						</div>
+					</div>
 				{/each}
+				<div class="text-center pt-2">
+					<div class="h-3 bg-gray-200 rounded w-32 mx-auto"></div>
+				</div>
 			</div>
 		{:else if similarities.length === 0}
 			<div class="py-8 text-center">

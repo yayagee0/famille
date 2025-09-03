@@ -1,6 +1,8 @@
 <script lang="ts">
 	import AgePlaygroundCard from '$lib/AgePlaygroundCard.svelte';
 	import DreamBuilderPlaygroundCard from '$lib/DreamBuilderPlaygroundCard.svelte';
+	import TicTacToeCard from '$lib/TicTacToeCard.svelte';
+	import TicTacToeLeaderboard from './TicTacToeLeaderboard.svelte';
 </script>
 
 <div class="space-y-6">
@@ -14,7 +16,9 @@
 
 	<!-- Main playground widgets stacked vertically -->
 	<div class="space-y-6">
+		<TicTacToeCard />
 		<AgePlaygroundCard />
 		<DreamBuilderPlaygroundCard />
+		<TicTacToeLeaderboard />
 	</div>
 </div>

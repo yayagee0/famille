@@ -10,6 +10,7 @@
 	import { validateFamilyMember } from '$lib/allowlist';
 	import Nav from '$lib/Nav.svelte';
 	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
+	import { registerServiceWorker, isOnline } from '$lib/offline';
 
 	let { children } = $props();
 	let user: User | null = $state(null);
@@ -45,6 +46,9 @@
 				}
 			}
 		});
+
+		// Register service worker for offline support
+		registerServiceWorker();
 
 		return unsubscribe;
 	});

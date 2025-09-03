@@ -18,9 +18,10 @@
 	import FeedUpload from '$lib/FeedUpload.svelte';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import { ensureUserProfile } from '$lib/auth';
-	import { Heart, MessageCircle, Trash2 } from 'lucide-svelte';
+	import { Heart, MessageCircle, Trash2, WifiOff } from 'lucide-svelte';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
+	import { isOnline, cachePosts, getCachedPosts } from '$lib/offline';
 	dayjs.extend(relativeTime);
 
 	let user = $state(auth.currentUser);
@@ -83,49 +84,78 @@
 		};
 	});
 
-	// 🔄 Real-time posts with author enrichment
+	// 🔄 Real-time posts with author enrichment and offline support
 	function subscribeToPosts() {
-		const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+		// First, try to load from cache
+		const cachedPosts = getCachedPosts();
+		if (cachedPosts && !$isOnline) {
+			console.log('[Feed] Loading from cache (offline)');
+			posts = cachedPosts;
+			loading = false;
+		} else if (cachedPosts) {
+			console.log('[Feed] Loading from cache while fetching fresh data');
+			posts = cachedPosts;
+			loading = false;
+		}
 
-		loading = true;
-		unsubscribePosts = onSnapshot(
-			postsQuery,
-			async (snapshot) => {
-				const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<any>;
+		// If online, subscribe to real-time updates
+		if ($isOnline) {
+			const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
 
-				// Preload VideoPlayer if there are video posts
-				const hasVideoPosts = rawPosts.some((post: any) => post.videoPath);
-				if (hasVideoPosts) {
-					loadVideoPlayer();
-				}
+			if (!cachedPosts) loading = true;
+			
+			unsubscribePosts = onSnapshot(
+				postsQuery,
+				async (snapshot) => {
+					const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<any>;
 
-				const enriched = await Promise.all(
-					rawPosts.map(async (post: any) => {
-						if (post.authorUid) {
-							const uDoc = await getDoc(doc(db, 'users', post.authorUid));
-							if (uDoc.exists()) {
-								const u = uDoc.data();
-								return {
-									...post,
-									author: {
-										displayName: u.displayName || 'Unknown User',
-										avatarUrl: u.avatarUrl || null
-									}
-								};
+					// Preload VideoPlayer if there are video posts
+					const hasVideoPosts = rawPosts.some((post: any) => post.videoPath);
+					if (hasVideoPosts) {
+						loadVideoPlayer();
+					}
+
+					const enriched = await Promise.all(
+						rawPosts.map(async (post: any) => {
+							if (post.authorUid) {
+								const uDoc = await getDoc(doc(db, 'users', post.authorUid));
+								if (uDoc.exists()) {
+									const u = uDoc.data();
+									return {
+										...post,
+										author: {
+											displayName: u.displayName || 'Unknown User',
+											avatarUrl: u.avatarUrl || null
+										}
+									};
+								}
 							}
-						}
-						return { ...post, author: { displayName: 'Unknown User', avatarUrl: null } };
-					})
-				);
+							return { ...post, author: { displayName: 'Unknown User', avatarUrl: null } };
+						})
+					);
 
-				posts = enriched;
-				loading = false;
-			},
-			(err) => {
-				console.error('Feed subscription error:', err);
-				loading = false;
-			}
-		);
+					posts = enriched;
+					loading = false;
+					
+					// Cache the enriched posts for offline access
+					cachePosts(enriched);
+					console.log('[Feed] Fresh data loaded and cached');
+				},
+				(err) => {
+					console.error('Feed subscription error:', err);
+					loading = false;
+					
+					// If we have cached data, use it as fallback
+					const cachedPosts = getCachedPosts();
+					if (cachedPosts && posts.length === 0) {
+						posts = cachedPosts;
+						console.log('[Feed] Using cached data as fallback after error');
+					}
+				}
+			);
+		} else {
+			console.log('[Feed] Offline mode - using cached data only');
+		}
 	}
 
 	// ➕ Create post
@@ -325,6 +355,21 @@
 		<h1 class="text-2xl font-bold text-gray-900">Family Feed</h1>
 		<p class="mt-1 text-sm text-gray-500">Share moments and stay connected</p>
 	</div>
+
+	<!-- Offline Indicator -->
+	{#if !$isOnline}
+		<div class="rounded-lg border border-orange-200 bg-orange-50 p-4">
+			<div class="flex items-center">
+				<WifiOff class="h-5 w-5 text-orange-600" />
+				<div class="ml-3">
+					<h3 class="text-sm font-medium text-orange-800">You're offline</h3>
+					<p class="mt-1 text-sm text-orange-700">
+						Showing cached content. New posts will sync when you're back online.
+					</p>
+				</div>
+			</div>
+		</div>
+	{/if}
 
 	{#if user}
 		<FeedUpload {user} on:post-created={handlePostCreated} />
