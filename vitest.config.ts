@@ -6,6 +6,14 @@ export default defineConfig({
 	test: {
 		environment: 'node',
 		globals: true,
-		setupFiles: ['./src/tests/setup.ts']
+		setupFiles: ['./src/tests/setup.ts'],
+		exclude: [
+			'**/node_modules/**',
+			'**/dist/**',
+			'**/cypress/**',
+			'**/.{idea,git,cache,output,temp}/**',
+			'**/tests/e2e/**',
+			'**/tests-examples/**'
+		]
 	}
 });

@@ -531,7 +531,7 @@
 							<label for="displayName" class="mb-1 block text-sm font-medium text-gray-700">
 								Nickname
 							</label>
-							<div class="flex space-x-3">
+							<div class="flex flex-col space-y-3 sm:flex-row sm:space-x-3 sm:space-y-0">
 								<input
 									id="displayName"
 									type="text"
@@ -543,7 +543,7 @@
 								<button
 									onclick={handleSaveProfile}
 									disabled={isSaving || !displayName.trim()}
-									class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+									class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
 								>
 									{#if isSaving}
 										<div
@@ -605,13 +605,13 @@
 									<p class="text-sm text-gray-800">{traitText}</p>
 									<div class="mt-1 flex items-center space-x-2">
 										<span
-											class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700"
+											class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 shadow-sm"
 										>
 											{answer.category}
 										</span>
 										{#if answer.custom}
 											<span
-												class="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700"
+												class="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-1 text-xs font-medium text-purple-700 shadow-sm"
 											>
 												<Star class="mr-1 h-3 w-3" />
 												unique

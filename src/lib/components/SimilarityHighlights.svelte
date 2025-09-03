@@ -3,6 +3,7 @@
 	import { auth, db, getFamilyId } from '$lib/firebase';
 	import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 	import { Users, Sparkles } from 'lucide-svelte';
+	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import type { User } from 'firebase/auth';
 
 	let user = $state<User | null>(auth.currentUser);
@@ -15,6 +16,7 @@
 		}>
 	>([]);
 	let loading = $state(true);
+	let error = $state<string | null>(null);
 
 	onMount(() => {
 		const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
@@ -32,6 +34,7 @@
 
 		try {
 			loading = true;
+			error = null;
 
 			// Get current user's answers
 			const userAnswersQuery = query(collection(db, 'userAnswers', user.uid, 'answers'));
@@ -44,7 +47,13 @@
 				...doc.data()
 			}));
 
-			// Get all family members' UIDs (from allowlist or users collection)
+			if (userAnswers.length === 0) {
+				similarities = [];
+				loading = false;
+				return;
+			}
+
+			// Get all family members' UIDs in one query
 			const usersQuery = query(collection(db, 'users'));
 			const usersSnapshot = await getDocs(usersQuery);
 			const familyMembers = usersSnapshot.docs
@@ -56,6 +65,31 @@
 				}))
 				.filter((member: any) => member.uid !== user?.uid);
 
+			if (familyMembers.length === 0) {
+				similarities = [];
+				loading = false;
+				return;
+			}
+
+			// Batch read all family members' answers at once
+			const allMemberAnswers = new Map<string, any[]>();
+			
+			await Promise.all(
+				familyMembers.map(async (member) => {
+					const memberAnswersQuery = query(collection(db, 'userAnswers', member.uid, 'answers'));
+					const memberAnswersSnapshot = await getDocs(memberAnswersQuery);
+					allMemberAnswers.set(
+						member.uid,
+						memberAnswersSnapshot.docs.map((doc) => ({
+							id: doc.id,
+							questionId: doc.data().questionId,
+							answer: doc.data().answer,
+							...doc.data()
+						}))
+					);
+				})
+			);
+
 			const matchingAnswers: Array<{
 				question: string;
 				answer: string;
@@ -63,21 +97,16 @@
 				category: string;
 			}> = [];
 
-			// Compare answers with each family member
+			// Compare answers with cached data
 			for (const userAnswer of userAnswers) {
 				const sharedWith: string[] = [];
 
 				for (const member of familyMembers) {
-					const memberAnswersQuery = query(
-						collection(db, 'userAnswers', member.uid, 'answers'),
-						where('questionId', '==', userAnswer.questionId)
-					);
-					const memberAnswersSnapshot = await getDocs(memberAnswersQuery);
-
-					for (const memberAnswerDoc of memberAnswersSnapshot.docs) {
-						const memberAnswer = memberAnswerDoc.data();
-
-						// Compare answers - exact match for custom answers, otherwise direct comparison
+					const memberAnswers = allMemberAnswers.get(member.uid) || [];
+					
+					for (const memberAnswer of memberAnswers) {
+						if (memberAnswer.questionId === userAnswer.questionId) {
+							// Compare answers - exact match for custom answers, otherwise direct comparison
 						if (userAnswer.answer === memberAnswer.answer) {
 							sharedWith.push(member.displayName || member.email?.split('@')[0] || 'Family Member');
 						}
