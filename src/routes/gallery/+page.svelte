@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { collection, query, where, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
 	import { db, getFamilyId } from '$lib/firebase';
-	import { X, ArrowLeft, ArrowRight } from 'lucide-svelte';
+	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -12,6 +12,16 @@
 	let loading = $state(true);
 	let selectedPhoto = $state<any | null>(null);
 	let selectedIndex = $state(0);
+	
+	// Dynamic import for Lightbox component
+	let LightboxComponent = $state<any>(null);
+
+	async function loadLightbox() {
+		if (!LightboxComponent) {
+			const { default: Lightbox } = await import('$lib/components/Lightbox.svelte');
+			LightboxComponent = Lightbox;
+		}
+	}
 
 	onMount(async () => {
 		try {
@@ -73,7 +83,8 @@
 		}
 	});
 
-	function openLightbox(photo: any, index: number) {
+	async function openLightbox(photo: any, index: number) {
+		await loadLightbox(); // Load Lightbox component dynamically
 		selectedPhoto = photo;
 		selectedIndex = index;
 		document.body.style.overflow = 'hidden';
@@ -105,6 +116,38 @@
 		if (event.key === 'Escape') closeLightbox();
 		if (event.key === 'ArrowLeft') previousPhoto();
 		if (event.key === 'ArrowRight') nextPhoto();
+	}
+
+	// Touch/swipe gesture support
+	let touchStartX = $state(0);
+	let touchStartY = $state(0);
+	
+	function handleTouchStart(event: TouchEvent) {
+		if (!selectedPhoto || event.touches.length !== 1) return;
+		
+		touchStartX = event.touches[0].clientX;
+		touchStartY = event.touches[0].clientY;
+	}
+	
+	function handleTouchEnd(event: TouchEvent) {
+		if (!selectedPhoto || event.changedTouches.length !== 1) return;
+		
+		const touchEndX = event.changedTouches[0].clientX;
+		const touchEndY = event.changedTouches[0].clientY;
+		
+		const deltaX = touchEndX - touchStartX;
+		const deltaY = touchEndY - touchStartY;
+		
+		// Only trigger swipe if horizontal movement is greater than vertical
+		if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+			if (deltaX > 0) {
+				// Swipe right -> previous photo
+				previousPhoto();
+			} else {
+				// Swipe left -> next photo
+				nextPhoto();
+			}
+		}
 	}
 </script>
 
@@ -176,118 +219,15 @@
 	{/if}
 </div>
 
-<!-- Lightbox Modal -->
-{#if selectedPhoto}
-	<div
-		class="bg-opacity-90 fixed inset-0 z-50 flex items-center justify-center bg-black p-4"
-		onclick={closeLightbox}
-		onkeydown={(e) => {
-			if (e.key === 'Escape') {
-				closeLightbox();
-			}
-		}}
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="photo-dialog-title"
-		aria-describedby="photo-dialog-description"
-		tabindex="-1"
-	>
-		<!-- Close Button -->
-		<button
-			class="bg-opacity-50 hover:bg-opacity-70 absolute top-4 right-4 z-60 rounded-full bg-black p-2 text-white transition-all focus:ring-2 focus:ring-white focus:outline-none"
-			onclick={closeLightbox}
-			tabindex="0"
-			aria-label="Close photo viewer"
-		>
-			<X class="h-6 w-6" />
-		</button>
-
-		<!-- Navigation Buttons -->
-		{#if photos.length > 1}
-			<button
-				class="bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 left-4 z-60 -translate-y-1/2 rounded-full bg-black p-2 text-white transition-all focus:ring-2 focus:ring-white focus:outline-none disabled:opacity-30"
-				onclick={(e) => {
-					e.stopPropagation();
-					previousPhoto();
-				}}
-				onkeydown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						e.preventDefault();
-						e.stopPropagation();
-						previousPhoto();
-					}
-				}}
-				disabled={selectedIndex === 0}
-				tabindex="0"
-				aria-label="Previous photo"
-			>
-				<ArrowLeft class="h-6 w-6" />
-			</button>
-
-			<button
-				class="bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 right-4 z-60 -translate-y-1/2 rounded-full bg-black p-2 text-white transition-all focus:ring-2 focus:ring-white focus:outline-none disabled:opacity-30"
-				onclick={(e) => {
-					e.stopPropagation();
-					nextPhoto();
-				}}
-				onkeydown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						e.preventDefault();
-						e.stopPropagation();
-						nextPhoto();
-					}
-				}}
-				disabled={selectedIndex === photos.length - 1}
-				tabindex="0"
-				aria-label="Next photo"
-			>
-				<ArrowRight class="h-6 w-6" />
-			</button>
-		{/if}
-
-		<!-- Image Container -->
-		<div
-			class="flex max-h-full max-w-full flex-col items-center justify-center"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="button"
-			tabindex="0"
-			id="photo-dialog-title"
-		>
-			<img
-				src={selectedPhoto.displayUrl}
-				alt="Family photo by {selectedPhoto.author?.displayName || 'Unknown'}"
-				class="max-h-[80vh] max-w-full rounded-lg object-contain"
-			/>
-
-			<!-- Photo Info -->
-			<div class="mt-4 max-w-md text-center" id="photo-dialog-description">
-				<div class="flex items-center justify-center space-x-3 text-white">
-					{#if selectedPhoto.author?.avatarUrl}
-						<img
-							src={selectedPhoto.author.avatarUrl}
-							alt={selectedPhoto.author.displayName}
-							class="h-8 w-8 rounded-full"
-						/>
-					{:else}
-						<div class="h-8 w-8 rounded-full bg-gray-600"></div>
-					{/if}
-					<div>
-						<p class="font-medium">{selectedPhoto.author?.displayName || 'Unknown'}</p>
-						<p class="text-sm text-gray-300">
-							{dayjs(selectedPhoto.createdAt?.toDate()).fromNow()}
-						</p>
-					</div>
-				</div>
-				{#if selectedPhoto.text}
-					<p class="mt-2 text-sm text-gray-200">{selectedPhoto.text}</p>
-				{/if}
-				{#if photos.length > 1}
-					<p class="mt-2 text-xs text-gray-400">
-						{selectedIndex + 1} of {photos.length}
-					</p>
-				{/if}
-			</div>
-		</div>
-	</div>
+<!-- Dynamic Lightbox Component -->
+{#if LightboxComponent && selectedPhoto}
+	{@const DynamicLightbox = LightboxComponent}
+	<DynamicLightbox 
+		{photos}
+		{selectedPhoto}
+		{selectedIndex}
+		onClose={closeLightbox}
+		onPrevious={previousPhoto}
+		onNext={nextPhoto}
+	/>
 {/if}

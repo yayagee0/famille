@@ -28,12 +28,43 @@
 	let posts = $state<any[]>([]);
 	let loading = $state(true);
 	let unsubscribePosts: (() => void) | null = null;
+	
+	// Dynamic import for VideoPlayer component
+	let VideoPlayerComponent = $state<any>(null);
+
+	async function loadVideoPlayer() {
+		if (!VideoPlayerComponent) {
+			const { default: VideoPlayer } = await import('$lib/components/VideoPlayer.svelte');
+			VideoPlayerComponent = VideoPlayer;
+		}
+	}
 	// Cache for user display names
 	let userCache = $state<Map<string, string>>(new Map());
 	// Track which posts have comments section open
 	let openComments = $state<Set<string>>(new Set());
 	// Track comment input values for each post
 	let commentInputs = $state<Map<string, string>>(new Map());
+
+	// Simple text sanitization function
+	function sanitizeText(text: string): string {
+		if (!text) return '';
+		
+		return text
+			// Remove HTML tags
+			.replace(/<[^>]*>/g, '')
+			// Remove script content
+			.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+			// Convert HTML entities
+			.replace(/&lt;/g, '<')
+			.replace(/&gt;/g, '>')
+			.replace(/&amp;/g, '&')
+			.replace(/&quot;/g, '"')
+			.replace(/&#x27;/g, "'")
+			// Trim whitespace
+			.trim()
+			// Limit length to prevent spam
+			.substring(0, 500);
+	}
 
 	onMount(() => {
 		const unsubAuth = auth.onAuthStateChanged(async (firebaseUser) => {
@@ -61,6 +92,12 @@
 			postsQuery,
 			async (snapshot) => {
 				const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<any>;
+
+				// Preload VideoPlayer if there are video posts
+				const hasVideoPosts = rawPosts.some((post: any) => post.videoPath);
+				if (hasVideoPosts) {
+					loadVideoPlayer();
+				}
 
 				const enriched = await Promise.all(
 					rawPosts.map(async (post: any) => {
@@ -243,10 +280,17 @@
 		const commentText = commentInputs.get(postId)?.trim();
 		if (!commentText) return;
 
+		// Sanitize comment text before saving
+		const sanitizedText = sanitizeText(commentText);
+		if (!sanitizedText) {
+			console.warn('Comment was empty after sanitization');
+			return;
+		}
+
 		try {
 			const newComment = {
 				author: user.displayName || user.email?.split('@')[0] || 'Unknown User',
-				text: commentText,
+				text: sanitizedText, // Use sanitized text
 				createdAt: new Date()
 			};
 
@@ -357,11 +401,16 @@
 							{/if}
 
 							{#if post.videoPath}
-								<video controls class="mb-4 max-h-96 w-full rounded-lg bg-black">
-									<source src={post.videoPath} type="video/mp4" />
-									<track kind="captions" srclang="en" label="English" />
-									Your browser does not support the video tag.
-								</video>
+								{#if VideoPlayerComponent}
+									{@const DynamicVideoPlayer = VideoPlayerComponent}
+									<DynamicVideoPlayer src={post.videoPath} className="mb-4" />
+								{:else}
+									<video controls class="mb-4 max-h-96 w-full rounded-lg bg-black">
+										<source src={post.videoPath} type="video/mp4" />
+										<track kind="captions" srclang="en" label="English" />
+										Your browser does not support the video tag.
+									</video>
+								{/if}
 							{/if}
 
 							{#if post.youtubeId}

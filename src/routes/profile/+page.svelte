@@ -3,11 +3,11 @@
 	import { auth, storage, db } from '$lib/firebase';
 	import { updateProfile } from 'firebase/auth';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-	import { 
-		doc, 
-		setDoc, 
-		serverTimestamp, 
-		collection, 
+	import {
+		doc,
+		setDoc,
+		serverTimestamp,
+		collection,
 		getDocs,
 		query,
 		where,
@@ -33,7 +33,7 @@
 	let successMessage = $state<string | null>(null);
 	let errorMessage = $state<string | null>(null);
 	let previewUrl = $state<string | null>(null);
-	
+
 	// Question bank state
 	let userAnswers = $state<Array<any>>([]);
 	let totalQuestions = $state(40); // Based on seed data
@@ -46,8 +46,8 @@
 	// Categories for balanced rotation
 	const categories = ['fun', 'daily', 'family', 'values', 'dreams', 'hobbies', 'personality'];
 	const categoryOrder = [
-		['fun', 'daily'], 
-		['family', 'dreams'], 
+		['fun', 'daily'],
+		['family', 'dreams'],
 		['values', 'personality']
 	];
 
@@ -72,7 +72,7 @@
 				orderBy('createdAt', 'desc')
 			);
 			const answersSnapshot = await getDocs(answersQuery);
-			userAnswers = answersSnapshot.docs.map(doc => ({
+			userAnswers = answersSnapshot.docs.map((doc) => ({
 				id: doc.id,
 				...doc.data()
 			}));
@@ -86,18 +86,23 @@
 
 		try {
 			isLoadingQuestions = true;
-			
+
 			// Get all questions
 			const questionsQuery = query(collection(db, 'questions'));
 			const questionsSnapshot = await getDocs(questionsQuery);
-			const allQuestions = questionsSnapshot.docs.map(doc => ({
+			const allQuestions = questionsSnapshot.docs.map((doc) => ({
 				id: doc.id,
+				category: doc.data().category,
+				text: doc.data().text,
+				type: doc.data().type,
+				options: doc.data().options,
+				allowOther: doc.data().allowOther,
 				...doc.data()
 			}));
 
 			// Filter out already answered questions
-			const answeredQuestionIds = new Set(userAnswers.map(answer => answer.questionId));
-			const unansweredQuestions = allQuestions.filter(q => !answeredQuestionIds.has(q.id));
+			const answeredQuestionIds = new Set(userAnswers.map((answer) => answer.questionId));
+			const unansweredQuestions = allQuestions.filter((q) => !answeredQuestionIds.has(q.id));
 
 			if (unansweredQuestions.length === 0) {
 				currentQuestions = [];
@@ -111,17 +116,17 @@
 			// Try to get questions from different category groups
 			for (const categoryGroup of categoryOrder) {
 				for (const category of categoryGroup) {
-					const categoryQuestions = unansweredQuestions.filter(q => 
-						q.category === category && !selectedQuestions.some(sq => sq.id === q.id)
+					const categoryQuestions = unansweredQuestions.filter(
+						(q) => q.category === category && !selectedQuestions.some((sq) => sq.id === q.id)
 					);
-					
+
 					if (categoryQuestions.length > 0) {
 						// Add user offset for fairness (based on UID hash)
 						const userOffset = user.uid.charCodeAt(0) % categoryQuestions.length;
 						const selectedQuestion = categoryQuestions[userOffset] || categoryQuestions[0];
 						selectedQuestions.push(selectedQuestion);
 						usedCategories.add(category);
-						
+
 						if (selectedQuestions.length >= 3) break;
 					}
 				}
@@ -130,10 +135,10 @@
 
 			// If we don't have enough, fill from any remaining questions
 			if (selectedQuestions.length < 2) {
-				const remainingQuestions = unansweredQuestions.filter(q => 
-					!selectedQuestions.some(sq => sq.id === q.id)
+				const remainingQuestions = unansweredQuestions.filter(
+					(q) => !selectedQuestions.some((sq) => sq.id === q.id)
 				);
-				
+
 				while (selectedQuestions.length < Math.min(3, unansweredQuestions.length)) {
 					if (remainingQuestions.length === 0) break;
 					selectedQuestions.push(remainingQuestions.shift()!);
@@ -142,12 +147,11 @@
 
 			currentQuestions = selectedQuestions;
 			showQuestions = true;
-			
+
 			// Clear previous selections
 			selectedAnswers = {};
 			customAnswers = {};
 			showOtherInput = {};
-
 		} catch (error) {
 			console.error('Error loading questions:', error);
 			errorMessage = 'Failed to load questions. Please try again.';
@@ -158,7 +162,7 @@
 
 	async function handleAnswerSelection(questionId: string, answer: string, isCustom = false) {
 		selectedAnswers[questionId] = answer;
-		
+
 		if (isCustom) {
 			showOtherInput[questionId] = true;
 		} else {
@@ -208,13 +212,12 @@
 
 			// Refresh user answers
 			await loadUserAnswers();
-			
+
 			// Hide questions section
 			showQuestions = false;
 			currentQuestions = [];
-			
-			successMessage = `✅ ${answersToSave.length} answer${answersToSave.length > 1 ? 's' : ''} saved!`;
 
+			successMessage = `✅ ${answersToSave.length} answer${answersToSave.length > 1 ? 's' : ''} saved!`;
 		} catch (error) {
 			console.error('Error saving answers:', error);
 			errorMessage = 'Failed to save answers. Please try again.';
@@ -226,12 +229,12 @@
 	function showMotivationalMessage(totalAnswers: number) {
 		const milestones = [
 			{ count: 5, message: "You're starting to reveal your unique personality ✨" },
-			{ count: 10, message: "Your profile is really coming alive 🌟" },
-			{ count: 20, message: "Halfway there — your character identity is shining 💎" },
+			{ count: 10, message: 'Your profile is really coming alive 🌟' },
+			{ count: 20, message: 'Halfway there — your character identity is shining 💎' },
 			{ count: 40, message: "Incredible! You've built a complete family identity card 🎉" }
 		];
 
-		const milestone = milestones.find(m => m.count === totalAnswers);
+		const milestone = milestones.find((m) => m.count === totalAnswers);
 		if (milestone) {
 			// Create toast notification (simplified for now)
 			successMessage = milestone.message;
@@ -240,11 +243,11 @@
 		// Random compliments (5-10% chance)
 		if (Math.random() < 0.08) {
 			const compliments = [
-				"Cool choice! Someone in your family may agree 😉",
+				'Cool choice! Someone in your family may agree 😉',
 				"That's a bold pick 👊",
-				"Interesting — this makes your profile unique 🔑",
-				"Great taste 🏆",
-				"Love that answer 💖"
+				'Interesting — this makes your profile unique 🔑',
+				'Great taste 🏆',
+				'Love that answer 💖'
 			];
 			const randomCompliment = compliments[Math.floor(Math.random() * compliments.length)];
 			successMessage = randomCompliment;
@@ -435,7 +438,9 @@
 	}
 
 	// Calculate progress percentage
-	const progressPercentage = $derived(totalQuestions > 0 ? Math.round((userAnswers.length / totalQuestions) * 100) : 0);
+	const progressPercentage = $derived(
+		totalQuestions > 0 ? Math.round((userAnswers.length / totalQuestions) * 100) : 0
+	);
 </script>
 
 <div class="mx-auto max-w-4xl space-y-6">
@@ -459,7 +464,11 @@
 						<button onclick={dismissSuccess} class="text-green-500 hover:text-green-700">
 							<span class="sr-only">Dismiss</span>
 							<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-								<path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+								<path
+									fill-rule="evenodd"
+									d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+									clip-rule="evenodd"
+								/>
 							</svg>
 						</button>
 					</div>
@@ -496,7 +505,7 @@
 					<div class="flex-1 space-y-4">
 						<!-- Avatar Upload -->
 						<div>
-							<label for="avatarUpload" class="block text-sm font-medium text-gray-700 mb-2">
+							<label for="avatarUpload" class="mb-2 block text-sm font-medium text-gray-700">
 								Profile Picture
 							</label>
 							<input
@@ -505,11 +514,13 @@
 								accept="image/*"
 								onchange={handleAvatarUpload}
 								disabled={isUploading}
-								class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 disabled:opacity-50"
+								class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 disabled:opacity-50"
 							/>
 							{#if isUploading}
 								<div class="mt-2 flex items-center">
-									<div class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-indigo-600"></div>
+									<div
+										class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-indigo-600"
+									></div>
 									<span class="text-sm text-gray-500">Uploading...</span>
 								</div>
 							{/if}
@@ -517,7 +528,7 @@
 
 						<!-- Display Name -->
 						<div>
-							<label for="displayName" class="block text-sm font-medium text-gray-700 mb-1">
+							<label for="displayName" class="mb-1 block text-sm font-medium text-gray-700">
 								Nickname
 							</label>
 							<div class="flex space-x-3">
@@ -535,7 +546,9 @@
 									class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									{#if isSaving}
-										<div class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+										<div
+											class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"
+										></div>
 										Saving...
 									{:else}
 										<Save class="mr-2 h-4 w-4" />
@@ -552,26 +565,28 @@
 		<!-- 2. My Identity Traits Section -->
 		<div class="rounded-2xl bg-white shadow-sm">
 			<div class="px-6 py-5">
-				<div class="flex items-center justify-between mb-4">
+				<div class="mb-4 flex items-center justify-between">
 					<div>
 						<h3 class="text-lg font-semibold text-gray-900">My Identity Traits</h3>
 						<p class="text-sm text-gray-600">Build your character profile by answering questions</p>
 					</div>
 					<div class="text-right">
-						<div class="text-2xl font-bold text-indigo-600">{userAnswers.length}/{totalQuestions}</div>
+						<div class="text-2xl font-bold text-indigo-600">
+							{userAnswers.length}/{totalQuestions}
+						</div>
 						<div class="text-xs text-gray-500">Answered</div>
 					</div>
 				</div>
 
 				<!-- Progress Bar -->
 				<div class="mb-6">
-					<div class="flex items-center justify-between text-sm text-gray-600 mb-1">
+					<div class="mb-1 flex items-center justify-between text-sm text-gray-600">
 						<span>Profile Completion</span>
 						<span>{progressPercentage}%</span>
 					</div>
-					<div class="w-full bg-gray-200 rounded-full h-2">
-						<div 
-							class="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+					<div class="h-2 w-full rounded-full bg-gray-200">
+						<div
+							class="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-300"
 							style="width: {progressPercentage}%"
 						></div>
 					</div>
@@ -579,20 +594,26 @@
 
 				<!-- Answered Questions (Traits) -->
 				{#if userAnswers.length > 0}
-					<div class="space-y-3 mb-6">
+					<div class="mb-6 space-y-3">
 						{#each userAnswers as answer}
 							{#await renderTrait(answer)}
-								<div class="animate-pulse h-12 bg-gray-200 rounded-lg"></div>
+								<div class="h-12 animate-pulse rounded-lg bg-gray-200"></div>
 							{:then traitText}
-								<div class="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-gray-200">
+								<div
+									class="rounded-lg border border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 p-4"
+								>
 									<p class="text-sm text-gray-800">{traitText}</p>
 									<div class="mt-1 flex items-center space-x-2">
-										<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+										<span
+											class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700"
+										>
 											{answer.category}
 										</span>
 										{#if answer.custom}
-											<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-												<Star class="w-3 h-3 mr-1" />
+											<span
+												class="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700"
+											>
+												<Star class="mr-1 h-3 w-3" />
 												unique
 											</span>
 										{/if}
@@ -602,49 +623,60 @@
 						{/each}
 					</div>
 				{:else}
-					<div class="text-center py-8 mb-6">
-						<Trophy class="mx-auto h-12 w-12 text-gray-400 mb-3" />
-						<h4 class="text-lg font-medium text-gray-900 mb-2">Start Building Your Identity</h4>
-						<p class="text-gray-500 text-sm">Answer questions to discover and share your unique traits!</p>
+					<div class="mb-6 py-8 text-center">
+						<Trophy class="mx-auto mb-3 h-12 w-12 text-gray-400" />
+						<h4 class="mb-2 text-lg font-medium text-gray-900">Start Building Your Identity</h4>
+						<p class="text-sm text-gray-500">
+							Answer questions to discover and share your unique traits!
+						</p>
 					</div>
 				{/if}
 
 				<!-- Current Questions Section -->
 				{#if showQuestions && currentQuestions.length > 0}
 					<div class="border-t border-gray-200 pt-6">
-						<h4 class="text-md font-medium text-gray-900 mb-4">Answer These Questions</h4>
-						
+						<h4 class="text-md mb-4 font-medium text-gray-900">Answer These Questions</h4>
+
 						<div class="space-y-6">
 							{#each currentQuestions as question}
-								<div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
-									<h5 class="font-medium text-gray-900 mb-3">{question.text}</h5>
-									
+								<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+									<h5 class="mb-3 font-medium text-gray-900">{question.text}</h5>
+
 									{#if question.type === 'multiple-choice'}
-										<div class="space-y-2 mb-3">
+										<div class="mb-3 space-y-2">
 											{#each question.options || [] as option}
 												<button
 													onclick={() => handleAnswerSelection(question.id, option)}
-													class="w-full text-left p-3 rounded-lg border transition-colors {selectedAnswers[question.id] === option ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white hover:bg-gray-50'}"
+													class="w-full rounded-lg border p-3 text-left transition-colors {selectedAnswers[
+														question.id
+													] === option
+														? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+														: 'border-gray-200 bg-white hover:bg-gray-50'}"
 												>
 													{option}
 												</button>
 											{/each}
-											
+
 											{#if question.allowOther}
 												<button
 													onclick={() => handleAnswerSelection(question.id, 'Other', true)}
-													class="w-full text-left p-3 rounded-lg border transition-colors {selectedAnswers[question.id] === 'Other' || showOtherInput[question.id] ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white hover:bg-gray-50'}"
+													class="w-full rounded-lg border p-3 text-left transition-colors {selectedAnswers[
+														question.id
+													] === 'Other' || showOtherInput[question.id]
+														? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+														: 'border-gray-200 bg-white hover:bg-gray-50'}"
 												>
 													Other
 												</button>
-												
+
 												{#if showOtherInput[question.id]}
 													<input
 														type="text"
 														placeholder="Type your own answer..."
 														bind:value={customAnswers[question.id]}
-														onchange={() => handleCustomAnswer(question.id, customAnswers[question.id])}
-														class="w-full mt-2 p-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+														onchange={() =>
+															handleCustomAnswer(question.id, customAnswers[question.id])}
+														class="mt-2 w-full rounded-lg border border-gray-300 p-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
 													/>
 												{/if}
 											{/if}
@@ -654,13 +686,15 @@
 										<textarea
 											placeholder="Share your thoughts..."
 											bind:value={selectedAnswers[question.id]}
-											class="w-full p-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none"
+											class="w-full resize-none rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
 											rows="3"
 										></textarea>
 									{/if}
-									
-									<div class="flex items-center justify-between mt-3">
-										<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+
+									<div class="mt-3 flex items-center justify-between">
+										<span
+											class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800"
+										>
 											{question.category}
 										</span>
 									</div>
@@ -668,7 +702,7 @@
 							{/each}
 						</div>
 
-						<div class="flex items-center space-x-3 mt-6">
+						<div class="mt-6 flex items-center space-x-3">
 							<button
 								onclick={saveAnswers}
 								disabled={isAnswering || Object.keys(selectedAnswers).length === 0}
@@ -682,9 +716,12 @@
 									Save Answers
 								{/if}
 							</button>
-							
+
 							<button
-								onclick={() => { showQuestions = false; currentQuestions = []; }}
+								onclick={() => {
+									showQuestions = false;
+									currentQuestions = [];
+								}}
 								class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
 							>
 								Cancel
@@ -723,7 +760,7 @@
 				<dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
 					<div>
 						<dt class="text-sm font-medium text-gray-500">Email</dt>
-						<dd class="mt-1 text-sm text-gray-900 flex items-center">
+						<dd class="mt-1 flex items-center text-sm text-gray-900">
 							<Mail class="mr-2 h-4 w-4 text-gray-400" />
 							{user.email}
 						</dd>

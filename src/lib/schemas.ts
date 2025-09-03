@@ -17,7 +17,7 @@ export const questionSchema = z.object({
 	expiresAt: z.date().optional()
 });
 
-// User answer schema  
+// User answer schema
 export const userAnswerSchema = z.object({
 	questionId: z.string().min(1, 'Question ID is required'),
 	answer: z.string().min(1, 'Answer is required'),

@@ -33,11 +33,13 @@ The `seed-questions.ts` file contains:
 ## Execution Commands
 
 ### Primary Command (as specified in requirements)
+
 ```bash
 npx ts-node -r dotenv/config seed-questions.ts
 ```
 
 ### Alternative Command (works in Node.js ES modules)
+
 ```bash
 npx tsx seed-questions.ts
 ```
@@ -65,6 +67,7 @@ When successfully executed, the script will:
 5. Display final success message
 
 **Sample output:**
+
 ```
 ✅ Added: Favorite color?
 ✅ Added: Favorite fruit?
@@ -77,6 +80,7 @@ When successfully executed, the script will:
 ## Network Requirements
 
 The script requires:
+
 - Internet connectivity
 - Access to `firestore.googleapis.com`
 - Firebase project permissions for the configured service account
@@ -84,6 +88,7 @@ The script requires:
 ## Verification
 
 After successful execution, the Firestore `questions` collection should contain 40 documents, each with:
+
 - Auto-generated document ID
 - All question fields (text, category, type, etc.)
 - Server-generated `createdAt` timestamp
