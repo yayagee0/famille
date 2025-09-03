@@ -180,16 +180,24 @@ class FamilyHubAuditor {
 
 		// Collect evidence
 		this.addEvidence(`package.json analysis: ${this.metrics.dependencies} dependencies`);
-		this.addEvidence(`Build command: npm run build (${this.metrics.buildTime}s, ${this.metrics.buildSuccess ? '✅ PASS' : '❌ FAIL'})`);
-		this.addEvidence(`Test command: npm run test:run (${this.metrics.testPassRate}, ${this.metrics.testSuccess ? '✅ PASS' : '❌ FAIL'})`);
+		this.addEvidence(
+			`Build command: npm run build (${this.metrics.buildTime}s, ${this.metrics.buildSuccess ? '✅ PASS' : '❌ FAIL'})`
+		);
+		this.addEvidence(
+			`Test command: npm run test:run (${this.metrics.testPassRate}, ${this.metrics.testSuccess ? '✅ PASS' : '❌ FAIL'})`
+		);
 		this.addEvidence(
 			`Bundle analysis: ${this.metrics.bundleSize} (${this.metrics.gzipSize} gzipped)`
 		);
 		this.addEvidence(`LOC count: find src -name "*.svelte" -o -name "*.ts" -exec wc -l`);
 		this.addEvidence(`Route discovery: find src/routes -name "+page.svelte"`);
 		this.addEvidence(`Component count: find src -name "*.svelte"`);
-		this.addEvidence(`ESLint check: npm run lint (${this.metrics.lintSuccess ? '✅ PASS' : '❌ FAIL'})`);
-		this.addEvidence(`TypeScript check: npm run check (${this.metrics.typeCheckSuccess ? '✅ PASS' : '❌ FAIL'})`);
+		this.addEvidence(
+			`ESLint check: npm run lint (${this.metrics.lintSuccess ? '✅ PASS' : '❌ FAIL'})`
+		);
+		this.addEvidence(
+			`TypeScript check: npm run check (${this.metrics.typeCheckSuccess ? '✅ PASS' : '❌ FAIL'})`
+		);
 		this.addEvidence(`Firebase rules: firestore.rules, storage.rules`);
 		this.addEvidence(`Environment config: .env validation`);
 		this.addEvidence(`Security scan: package-lock.json audit`);
@@ -226,9 +234,11 @@ class FamilyHubAuditor {
 		if (!typeCheckSuccess) issues.push('❌ TypeScript errors found');
 		if (!testSuccess) issues.push('❌ Tests failed');
 
-		const criticalIssues = issues.length > 0 
-			? issues.join('  \n') + '  \n\n**Immediate Action Required**: Fix above issues before deployment.'
-			: 'No critical issues found.  \nValidation note: Build, type checks, security audit, runtime check = all clean.';
+		const criticalIssues =
+			issues.length > 0
+				? issues.join('  \n') +
+					'  \n\n**Immediate Action Required**: Fix above issues before deployment.'
+				: 'No critical issues found.  \nValidation note: Build, type checks, security audit, runtime check = all clean.';
 
 		return `# APP STATUS REVIEW – Family Hub
 
