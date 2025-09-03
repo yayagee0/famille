@@ -54,7 +54,7 @@
 					/>
 				</svg>
 			</div>
-			<h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">Welcome to Family Hub</h2>
+			<h1 class="mt-6 text-center text-3xl font-extrabold text-gray-900">Welcome to Family Hub</h1>
 			<p class="mt-2 text-center text-sm text-gray-600">
 				Sign in to access your family's private space
 			</p>
