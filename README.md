@@ -38,7 +38,7 @@ A private, secure family social platform built with SvelteKit 2, TypeScript, and
 
 ## 📋 Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 20+ and npm
 - Firebase project with the following services enabled:
   - Authentication (Google provider)
   - Cloud Firestore
