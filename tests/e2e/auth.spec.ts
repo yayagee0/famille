@@ -17,7 +17,7 @@ test.describe('Authentication Flow', () => {
 		await expect(page.locator('text=Sign in')).toBeVisible();
 		
 		// The page should have Family Hub branding
-		await expect(page.locator('text=Family Hub')).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Welcome to Family Hub' })).toBeVisible();
 	});
 
 	test('should have proper page title and meta tags', async ({ page }) => {
