@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { browser } from '$app/environment';
 import { validateEnv } from './schemas';
@@ -26,6 +26,19 @@ export const app = initializeApp(firebaseConfig);
 // Initialize Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Enable offline persistence for Firestore
+if (browser) {
+	enableIndexedDbPersistence(db).catch((err) => {
+		if (err.code === 'failed-precondition') {
+			// Multiple tabs open, persistence can only be enabled in one tab at a time
+			console.warn('Firestore persistence failed: Multiple tabs open');
+		} else if (err.code === 'unimplemented') {
+			// The current browser doesn't support persistence
+			console.warn('Firestore persistence not supported by this browser');
+		}
+	});
+}
 
 // ✅ Force storage to use the correct bucket explicitly
 export const storage = getStorage(app, `gs://${import.meta.env.VITE_FB_STORAGE_BUCKET}`);
