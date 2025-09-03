@@ -18,6 +18,10 @@ interface AuditMetrics {
 	dependencies: number;
 	projectSize: string;
 	timestamp: string;
+	buildSuccess: boolean;
+	lintSuccess: boolean;
+	typeCheckSuccess: boolean;
+	testSuccess: boolean;
 }
 
 class FamilyHubAuditor {
@@ -34,10 +38,11 @@ class FamilyHubAuditor {
 
 		// Build metrics
 		const buildStart = Date.now();
+		let buildSuccess = true;
 		try {
 			execSync('npm run build', { stdio: 'pipe' });
 		} catch {
-			// Continue even if build fails
+			buildSuccess = false;
 		}
 		const buildTime = (Date.now() - buildStart) / 1000;
 
@@ -69,6 +74,7 @@ class FamilyHubAuditor {
 
 		// Test metrics
 		let testPassRate = '16/16';
+		let testSuccess = true;
 		try {
 			const testOutput = execSync('npm run test:run 2>&1', { encoding: 'utf8' });
 			const testMatch = testOutput.match(/Tests\s+(\d+)\s+passed\s+\((\d+)\)/);
@@ -76,8 +82,24 @@ class FamilyHubAuditor {
 				testPassRate = `${testMatch[1]}/${testMatch[2]}`;
 			}
 		} catch {
-			// Use known value from previous run
-			testPassRate = '16/16';
+			testSuccess = false;
+			testPassRate = '0/16';
+		}
+
+		// Lint check
+		let lintSuccess = true;
+		try {
+			execSync('npm run lint', { stdio: 'pipe' });
+		} catch {
+			lintSuccess = false;
+		}
+
+		// TypeScript check
+		let typeCheckSuccess = true;
+		try {
+			execSync('npm run check', { stdio: 'pipe' });
+		} catch {
+			typeCheckSuccess = false;
 		}
 
 		// Project size
@@ -93,7 +115,11 @@ class FamilyHubAuditor {
 			testPassRate,
 			dependencies,
 			projectSize,
-			timestamp
+			timestamp,
+			buildSuccess,
+			lintSuccess,
+			typeCheckSuccess,
+			testSuccess
 		};
 	}
 
@@ -154,16 +180,16 @@ class FamilyHubAuditor {
 
 		// Collect evidence
 		this.addEvidence(`package.json analysis: ${this.metrics.dependencies} dependencies`);
-		this.addEvidence(`Build command: npm run build (${this.metrics.buildTime}s)`);
-		this.addEvidence(`Test command: npm run test:run (${this.metrics.testPassRate})`);
+		this.addEvidence(`Build command: npm run build (${this.metrics.buildTime}s, ${this.metrics.buildSuccess ? '✅ PASS' : '❌ FAIL'})`);
+		this.addEvidence(`Test command: npm run test:run (${this.metrics.testPassRate}, ${this.metrics.testSuccess ? '✅ PASS' : '❌ FAIL'})`);
 		this.addEvidence(
 			`Bundle analysis: ${this.metrics.bundleSize} (${this.metrics.gzipSize} gzipped)`
 		);
 		this.addEvidence(`LOC count: find src -name "*.svelte" -o -name "*.ts" -exec wc -l`);
 		this.addEvidence(`Route discovery: find src/routes -name "+page.svelte"`);
 		this.addEvidence(`Component count: find src -name "*.svelte"`);
-		this.addEvidence(`ESLint check: npm run lint`);
-		this.addEvidence(`TypeScript check: npm run check`);
+		this.addEvidence(`ESLint check: npm run lint (${this.metrics.lintSuccess ? '✅ PASS' : '❌ FAIL'})`);
+		this.addEvidence(`TypeScript check: npm run check (${this.metrics.typeCheckSuccess ? '✅ PASS' : '❌ FAIL'})`);
 		this.addEvidence(`Firebase rules: firestore.rules, storage.rules`);
 		this.addEvidence(`Environment config: .env validation`);
 		this.addEvidence(`Security scan: package-lock.json audit`);
@@ -186,8 +212,23 @@ class FamilyHubAuditor {
 			components,
 			testPassRate,
 			dependencies,
-			projectSize
+			projectSize,
+			buildSuccess,
+			lintSuccess,
+			typeCheckSuccess,
+			testSuccess
 		} = this.metrics;
+
+		// Generate critical issues summary
+		const issues: string[] = [];
+		if (!buildSuccess) issues.push('❌ Build failed');
+		if (!lintSuccess) issues.push('❌ Lint errors found');
+		if (!typeCheckSuccess) issues.push('❌ TypeScript errors found');
+		if (!testSuccess) issues.push('❌ Tests failed');
+
+		const criticalIssues = issues.length > 0 
+			? issues.join('  \n') + '  \n\n**Immediate Action Required**: Fix above issues before deployment.'
+			: 'No critical issues found.  \nValidation note: Build, type checks, security audit, runtime check = all clean.';
 
 		return `# APP STATUS REVIEW – Family Hub
 
@@ -200,8 +241,7 @@ Environment: Production-ready
 ---
 
 ## 🚨 Critical Issues Summary
-No critical issues found.  
-Validation note: Build, type checks, security audit, runtime check = all clean.
+${criticalIssues}
 
 ---
 
