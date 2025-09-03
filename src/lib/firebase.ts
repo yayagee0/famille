@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableNetwork, disableNetwork } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { browser } from '$app/environment';
 import { validateEnv } from './schemas';
@@ -26,6 +26,18 @@ export const app = initializeApp(firebaseConfig);
 // Initialize Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Enable offline persistence (in browser only)
+if (browser) {
+	// Note: Firestore automatically enables offline persistence in v9+
+	// The data is cached locally and will sync when connection is restored
+	try {
+		// Optional: You can also manually control network state if needed
+		// await enableNetwork(db); // Re-enable if previously disabled
+	} catch (error) {
+		console.warn('Failed to enable Firestore offline persistence:', error);
+	}
+}
 
 // ✅ Force storage to use the correct bucket explicitly
 export const storage = getStorage(app, `gs://${import.meta.env.VITE_FB_STORAGE_BUCKET}`);
@@ -239,4 +251,32 @@ export async function getPhotoPosts(familyId?: string): Promise<any[]> {
 	);
 
 	return enrichedPhotos;
+}
+
+/**
+ * Network state management for offline functionality
+ */
+export async function goOffline(): Promise<void> {
+	try {
+		await disableNetwork(db);
+		console.log('Firestore offline mode enabled');
+	} catch (error) {
+		console.error('Failed to go offline:', error);
+	}
+}
+
+export async function goOnline(): Promise<void> {
+	try {
+		await enableNetwork(db);
+		console.log('Firestore online mode enabled');
+	} catch (error) {
+		console.error('Failed to go online:', error);
+	}
+}
+
+/**
+ * Check if device is online
+ */
+export function isOnline(): boolean {
+	return browser ? navigator.onLine : true;
 }

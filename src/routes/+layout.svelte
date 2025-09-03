@@ -8,8 +8,10 @@
 	import { auth } from '$lib/firebase';
 	import { onAuthStateChanged, type User } from 'firebase/auth';
 	import { validateFamilyMember } from '$lib/allowlist';
+	import { initializeOfflineSupport } from '$lib/offline';
 	import Nav from '$lib/Nav.svelte';
 	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
+	import NetworkStatus from '$lib/components/NetworkStatus.svelte';
 
 	let { children } = $props();
 	let user: User | null = $state(null);
@@ -18,6 +20,9 @@
 
 	onMount(() => {
 		if (!browser) return;
+
+		// Initialize offline support
+		initializeOfflineSupport().catch(console.error);
 
 		const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
 			authLoading = false;
@@ -112,4 +117,7 @@
 			{/if}
 		</div>
 	</ErrorBoundary>
+	
+	<!-- Network status indicator -->
+	<NetworkStatus />
 {/if}
