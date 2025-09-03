@@ -76,53 +76,68 @@
 	});
 </script>
 
-<div class="w-64 h-64 mx-auto rounded-2xl bg-gradient-to-br from-yellow-50 to-orange-50 p-4 shadow-sm">
-	<h3 class="mb-3 text-base font-semibold text-orange-800">🌟 Daily Mood</h3>
+<!-- Responsive: full width on mobile (sm and below), compact card on larger screens -->
+<div class="mx-auto w-full rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:max-w-sm">
+	<div class="mb-4 flex items-center justify-center">
+		<h3 class="text-lg font-semibold text-gray-900">🌟 Daily Mood</h3>
+	</div>
 
 	{#if loading}
-		<LoadingSpinner size="small" message="Loading moods..." />
+		<div class="flex justify-center py-8">
+			<LoadingSpinner size="small" message="Loading moods..." />
+		</div>
 	{:else}
-		<!-- Family members mood display -->
-		<div class="mb-3 space-y-2">
-			{#each birthdays as member}
-				{@const memberMood = familyMoods[member.email]}
-				<div class="flex items-center space-x-2 rounded-lg bg-white/50 p-2">
-					<div class="text-lg">
-						{#if memberMood}
-							{memberMood.emoji}
-						{:else}
-							<div class="h-6 w-6 rounded-full bg-gray-200"></div>
-						{/if}
-					</div>
-					<div class="flex-1 min-w-0">
-						<p class="text-xs font-medium text-gray-900 truncate">{member.name}</p>
-						<p class="text-xs text-gray-600">
+		<!-- Family members mood display with overflow handling -->
+		<div class="mb-6 max-h-48 overflow-y-auto">
+			<div class="space-y-3">
+				{#each birthdays as member}
+					{@const memberMood = familyMoods[member.email]}
+					<div class="flex items-center space-x-3 rounded-xl bg-gray-50 p-3">
+						<div class="flex-shrink-0">
 							{#if memberMood}
-								{memberMood.label}
+								<span class="text-2xl">{memberMood.emoji}</span>
 							{:else}
-								Not set
+								<div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
+									<span class="text-xs text-gray-400">?</span>
+								</div>
 							{/if}
-						</p>
+						</div>
+						<div class="min-w-0 flex-1">
+							<div class="flex items-center justify-between">
+								<p class="truncate text-sm font-medium text-gray-900">{member.name}</p>
+								{#if auth.currentUser?.email === member.email}
+									<span class="rounded-full bg-indigo-100 px-2 py-1 text-xs text-indigo-700"
+										>You</span
+									>
+								{/if}
+							</div>
+							<p class="mt-1 text-sm text-gray-600">
+								{#if memberMood}
+									{memberMood.label}
+								{:else}
+									<span class="text-gray-400">Not set today</span>
+								{/if}
+							</p>
+						</div>
 					</div>
-					{#if auth.currentUser?.email === member.email}
-						<span class="text-xs text-orange-600">You</span>
-					{/if}
-				</div>
-			{/each}
+				{/each}
+			</div>
 		</div>
 
 		<!-- Mood selection for current user -->
 		{#if auth.currentUser}
-			<div class="border-t border-orange-200 pt-3">
-				<p class="mb-2 text-xs font-medium text-orange-800">How are you feeling?</p>
-				<div class="grid grid-cols-4 gap-1">
+			<div class="border-t border-gray-200 pt-4">
+				<p class="mb-3 text-center text-sm font-medium text-gray-700">How are you feeling today?</p>
+				<div class="grid grid-cols-4 gap-2">
 					{#each moods as mood}
 						<button
-							class="flex flex-col items-center space-y-1 rounded-lg bg-white p-2 shadow-sm transition-all hover:scale-105 hover:shadow-md active:scale-95"
+							class="flex flex-col items-center justify-center space-y-1 rounded-lg border border-gray-200 bg-gray-50 p-3 transition-all hover:scale-105 hover:bg-gray-100 active:scale-95"
 							onclick={() => selectMood(mood)}
 						>
-							<span class="text-sm">{mood.emoji}</span>
-							<span class="text-xs font-medium text-gray-700">{mood.label}</span>
+							<span class="text-lg">{mood.emoji}</span>
+							<span class="text-center text-xs leading-tight font-medium text-gray-700"
+								>{mood.label}</span
+							>
 						</button>
 					{/each}
 				</div>
