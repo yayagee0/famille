@@ -28,7 +28,7 @@
 	let posts = $state<any[]>([]);
 	let loading = $state(true);
 	let unsubscribePosts: (() => void) | null = null;
-	
+
 	// Dynamic import for VideoPlayer component
 	let VideoPlayerComponent = $state<any>(null);
 
@@ -48,22 +48,24 @@
 	// Simple text sanitization function
 	function sanitizeText(text: string): string {
 		if (!text) return '';
-		
-		return text
-			// Remove HTML tags
-			.replace(/<[^>]*>/g, '')
-			// Remove script content
-			.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-			// Convert HTML entities
-			.replace(/&lt;/g, '<')
-			.replace(/&gt;/g, '>')
-			.replace(/&amp;/g, '&')
-			.replace(/&quot;/g, '"')
-			.replace(/&#x27;/g, "'")
-			// Trim whitespace
-			.trim()
-			// Limit length to prevent spam
-			.substring(0, 500);
+
+		return (
+			text
+				// Remove HTML tags
+				.replace(/<[^>]*>/g, '')
+				// Remove script content
+				.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+				// Convert HTML entities
+				.replace(/&lt;/g, '<')
+				.replace(/&gt;/g, '>')
+				.replace(/&amp;/g, '&')
+				.replace(/&quot;/g, '"')
+				.replace(/&#x27;/g, "'")
+				// Trim whitespace
+				.trim()
+				// Limit length to prevent spam
+				.substring(0, 500)
+		);
 	}
 
 	onMount(() => {

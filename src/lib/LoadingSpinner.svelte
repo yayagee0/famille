@@ -27,17 +27,17 @@
 		<div class="flex space-x-1">
 			{#each Array(3) as _, i}
 				<div
-					class="{dotSizeClasses[size]} bg-indigo-600 rounded-full animate-bounce"
+					class="{dotSizeClasses[size]} animate-bounce rounded-full bg-indigo-600"
 					style="animation-delay: {i * 0.2}s"
 				></div>
 			{/each}
 		</div>
 	{:else if type === 'pulse'}
-		<div class="{sizeClasses[size]} bg-indigo-600 rounded-full animate-pulse"></div>
+		<div class="{sizeClasses[size]} animate-pulse rounded-full bg-indigo-600"></div>
 	{:else}
 		<div class="{sizeClasses[size]} animate-spin rounded-full border-b-2 border-indigo-600"></div>
 	{/if}
-	
+
 	{#if message}
 		<p class="mt-2 text-sm text-gray-600">{message}</p>
 	{/if}

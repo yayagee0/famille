@@ -51,15 +51,15 @@ export const getFamilyId = () => import.meta.env.VITE_FAMILY_ID;
 export const getReturnUrl = () => import.meta.env.VITE_FB_RETURN_URL;
 
 // Firebase utility functions
-import { 
-	collection, 
-	query, 
-	where, 
-	orderBy, 
-	getDocs, 
-	doc, 
-	getDoc, 
-	addDoc, 
+import {
+	collection,
+	query,
+	where,
+	orderBy,
+	getDocs,
+	doc,
+	getDoc,
+	addDoc,
 	updateDoc,
 	deleteDoc,
 	onSnapshot,
@@ -71,11 +71,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 /**
  * Upload a file to Firebase Storage
  */
-export async function uploadFile(
-	file: File, 
-	folder: string, 
-	userId: string
-): Promise<string> {
+export async function uploadFile(file: File, folder: string, userId: string): Promise<string> {
 	const filename = `${Date.now()}-${file.name}`;
 	const fileRef = ref(storage, `${folder}/${userId}/${filename}`);
 	const uploadSnapshot = await uploadBytes(fileRef, file);
@@ -87,7 +83,7 @@ export async function uploadFile(
  */
 export async function getPosts(familyId?: string): Promise<any[]> {
 	const familyIdToUse = familyId || getFamilyId();
-	
+
 	const postsQuery = query(
 		collection(db, 'posts'),
 		...(familyIdToUse ? [where('familyId', '==', familyIdToUse)] : []),
@@ -95,7 +91,7 @@ export async function getPosts(familyId?: string): Promise<any[]> {
 	);
 
 	const snapshot = await getDocs(postsQuery);
-	const rawPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+	const rawPosts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
 	// Enrich posts with author data
 	const enrichedPosts = await Promise.all(
@@ -124,12 +120,9 @@ export async function getPosts(familyId?: string): Promise<any[]> {
 /**
  * Subscribe to posts with real-time updates
  */
-export function subscribeToPosts(
-	callback: (posts: any[]) => void,
-	familyId?: string
-): Unsubscribe {
+export function subscribeToPosts(callback: (posts: any[]) => void, familyId?: string): Unsubscribe {
 	const familyIdToUse = familyId || getFamilyId();
-	
+
 	const postsQuery = query(
 		collection(db, 'posts'),
 		...(familyIdToUse ? [where('familyId', '==', familyIdToUse)] : []),
@@ -137,7 +130,7 @@ export function subscribeToPosts(
 	);
 
 	return onSnapshot(postsQuery, async (snapshot) => {
-		const rawPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+		const rawPosts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
 		// Enrich posts with author data
 		const enrichedPosts = await Promise.all(
@@ -208,7 +201,7 @@ export async function deletePost(postId: string): Promise<void> {
  */
 export async function getPhotoPosts(familyId?: string): Promise<any[]> {
 	const familyIdToUse = familyId || getFamilyId();
-	
+
 	const photosQuery = query(
 		collection(db, 'posts'),
 		where('familyId', '==', familyIdToUse),
@@ -217,7 +210,7 @@ export async function getPhotoPosts(familyId?: string): Promise<any[]> {
 	);
 
 	const snapshot = await getDocs(photosQuery);
-	const rawPhotos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+	const rawPhotos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
 	// Enrich with author data
 	const enrichedPhotos = await Promise.all(
@@ -237,8 +230,8 @@ export async function getPhotoPosts(familyId?: string): Promise<any[]> {
 					};
 				}
 			}
-			return { 
-				...photo, 
+			return {
+				...photo,
 				author: { displayName: 'Unknown User', avatarUrl: null },
 				displayUrl: photo.imagePaths?.[0] || photo.imagePath || ''
 			};

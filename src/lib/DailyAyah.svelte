@@ -37,37 +37,43 @@
 </script>
 
 <div class="rounded-2xl bg-white p-6 text-center shadow-sm">
-	<div class="flex items-center justify-between mb-2">
+	<div class="mb-2 flex items-center justify-between">
 		<h3 class="flex items-center justify-center text-lg font-semibold text-green-600">
 			📖 Daily Ayah
 		</h3>
-		
+
 		<!-- Font size controls -->
 		<div class="flex items-center space-x-1">
 			<button
 				onclick={() => adjustFontSize('small')}
-				class="px-2 py-1 text-xs rounded transition-colors {fontSize === 'small' ? 'bg-green-100 text-green-700' : 'text-gray-500 hover:text-gray-700'}"
+				class="rounded px-2 py-1 text-xs transition-colors {fontSize === 'small'
+					? 'bg-green-100 text-green-700'
+					: 'text-gray-500 hover:text-gray-700'}"
 				aria-label="Small font size"
 			>
 				A-
 			</button>
 			<button
 				onclick={() => adjustFontSize('medium')}
-				class="px-2 py-1 text-sm rounded transition-colors {fontSize === 'medium' ? 'bg-green-100 text-green-700' : 'text-gray-500 hover:text-gray-700'}"
+				class="rounded px-2 py-1 text-sm transition-colors {fontSize === 'medium'
+					? 'bg-green-100 text-green-700'
+					: 'text-gray-500 hover:text-gray-700'}"
 				aria-label="Medium font size"
 			>
 				A
 			</button>
 			<button
 				onclick={() => adjustFontSize('large')}
-				class="px-2 py-1 text-base rounded transition-colors {fontSize === 'large' ? 'bg-green-100 text-green-700' : 'text-gray-500 hover:text-gray-700'}"
+				class="rounded px-2 py-1 text-base transition-colors {fontSize === 'large'
+					? 'bg-green-100 text-green-700'
+					: 'text-gray-500 hover:text-gray-700'}"
 				aria-label="Large font size"
 			>
 				A+
 			</button>
 		</div>
 	</div>
-	
+
 	<p class="font-arabic mb-3 {fontSizeClasses[fontSize]} leading-relaxed text-gray-900">
 		{todayAyah.arabic}
 	</p>

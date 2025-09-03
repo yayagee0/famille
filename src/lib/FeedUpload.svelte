@@ -29,7 +29,7 @@
 			useWebWorker: true,
 			fileType: 'image/jpeg' // Convert to JPEG for better compression
 		};
-		
+
 		try {
 			return await imageCompression(file, options);
 		} catch (error) {
@@ -116,14 +116,14 @@
 			// For photo posts, create immediate placeholders and dispatch post right away
 			if (selectedFiles && postType === 'photo') {
 				uploadProgress = 'Creating post with placeholders...';
-				
+
 				// Create placeholder URLs from file objects for immediate display
 				for (const file of Array.from(selectedFiles)) {
 					const validation = validateImageFile(file);
 					if (!validation.success) {
 						throw new Error(`Invalid image file: ${file.name}`);
 					}
-					
+
 					// Create blob URL for immediate preview
 					const placeholderUrl = URL.createObjectURL(file);
 					placeholderPaths.push(placeholderUrl);
@@ -145,14 +145,14 @@
 
 				// Now upload actual images in background and dispatch update
 				uploadProgress = 'Uploading optimized images...';
-				
+
 				for (let i = 0; i < selectedFiles.length; i++) {
 					const file = selectedFiles[i];
 					uploadProgress = `Optimizing and uploading image ${i + 1}/${selectedFiles.length}...`;
-					
+
 					// Process and compress image
 					const processedFile = await processImage(file);
-					
+
 					const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
 					const uploadSnapshot = await uploadBytes(fileRef, processedFile);
 					const downloadURL = await getDownloadURL(uploadSnapshot.ref);
@@ -160,7 +160,7 @@
 				}
 
 				// Clean up placeholder URLs
-				placeholderPaths.forEach(url => URL.revokeObjectURL(url));
+				placeholderPaths.forEach((url) => URL.revokeObjectURL(url));
 
 				// Create final post data with real images
 				const finalPostData = {
@@ -176,7 +176,6 @@
 
 				uploadProgress = 'Finalizing post...';
 				dispatch('post-updated', finalPostData);
-
 			} else if (selectedFiles && postType === 'video') {
 				// Handle video uploads (no placeholders for videos due to size)
 				uploadProgress = 'Validating and processing files...';
