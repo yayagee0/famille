@@ -45,6 +45,27 @@
 	// Track comment input values for each post
 	let commentInputs = $state<Map<string, string>>(new Map());
 
+	// Simple text sanitization function
+	function sanitizeText(text: string): string {
+		if (!text) return '';
+		
+		return text
+			// Remove HTML tags
+			.replace(/<[^>]*>/g, '')
+			// Remove script content
+			.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+			// Convert HTML entities
+			.replace(/&lt;/g, '<')
+			.replace(/&gt;/g, '>')
+			.replace(/&amp;/g, '&')
+			.replace(/&quot;/g, '"')
+			.replace(/&#x27;/g, "'")
+			// Trim whitespace
+			.trim()
+			// Limit length to prevent spam
+			.substring(0, 500);
+	}
+
 	onMount(() => {
 		const unsubAuth = auth.onAuthStateChanged(async (firebaseUser) => {
 			user = firebaseUser;
@@ -259,10 +280,17 @@
 		const commentText = commentInputs.get(postId)?.trim();
 		if (!commentText) return;
 
+		// Sanitize comment text before saving
+		const sanitizedText = sanitizeText(commentText);
+		if (!sanitizedText) {
+			console.warn('Comment was empty after sanitization');
+			return;
+		}
+
 		try {
 			const newComment = {
 				author: user.displayName || user.email?.split('@')[0] || 'Unknown User',
-				text: commentText,
+				text: sanitizedText, // Use sanitized text
 				createdAt: new Date()
 			};
 
@@ -374,7 +402,8 @@
 
 							{#if post.videoPath}
 								{#if VideoPlayerComponent}
-									<svelte:component this={VideoPlayerComponent} src={post.videoPath} className="mb-4" />
+									{@const DynamicVideoPlayer = VideoPlayerComponent}
+									<DynamicVideoPlayer src={post.videoPath} className="mb-4" />
 								{:else}
 									<video controls class="mb-4 max-h-96 w-full rounded-lg bg-black">
 										<source src={post.videoPath} type="video/mp4" />

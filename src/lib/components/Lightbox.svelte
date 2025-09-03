@@ -22,6 +22,38 @@
 		if (event.key === 'ArrowLeft') onPrevious();
 		if (event.key === 'ArrowRight') onNext();
 	}
+
+	// Touch/swipe gesture support
+	let touchStartX = $state(0);
+	let touchStartY = $state(0);
+	
+	function handleTouchStart(event: TouchEvent) {
+		if (event.touches.length !== 1) return;
+		
+		touchStartX = event.touches[0].clientX;
+		touchStartY = event.touches[0].clientY;
+	}
+	
+	function handleTouchEnd(event: TouchEvent) {
+		if (event.changedTouches.length !== 1) return;
+		
+		const touchEndX = event.changedTouches[0].clientX;
+		const touchEndY = event.changedTouches[0].clientY;
+		
+		const deltaX = touchEndX - touchStartX;
+		const deltaY = touchEndY - touchStartY;
+		
+		// Only trigger swipe if horizontal movement is greater than vertical
+		if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+			if (deltaX > 0) {
+				// Swipe right -> previous photo
+				onPrevious();
+			} else {
+				// Swipe left -> next photo
+				onNext();
+			}
+		}
+	}
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -30,11 +62,16 @@
 	<div
 		class="bg-opacity-90 fixed inset-0 z-50 flex items-center justify-center bg-black p-4"
 		onclick={onClose}
+		onkeydown={(e) => {
+			if (e.key === 'Escape') onClose();
+		}}
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="photo-dialog-title"
 		aria-describedby="photo-dialog-description"
 		tabindex="-1"
+		ontouchstart={handleTouchStart}
+		ontouchend={handleTouchEnd}
 	>
 		<!-- Close Button -->
 		<button
@@ -79,6 +116,12 @@
 		<div
 			class="flex max-h-full max-w-full flex-col items-center justify-center"
 			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					e.stopPropagation();
+				}
+			}}
 			role="button"
 			tabindex="0"
 			id="photo-dialog-title"
