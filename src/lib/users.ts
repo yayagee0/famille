@@ -4,6 +4,7 @@
 
 import { ALLOWED_EMAILS, BIRTHDAYS } from './config';
 import dayjs from 'dayjs';
+import { getDisplayName } from './getDisplayName';
 
 /**
  * Normalize email to lowercase
@@ -39,7 +40,7 @@ export function buildMemberSkeleton(email: string): {
 	const normalizedEmail = normalizeEmail(email);
 	return {
 		email: normalizedEmail,
-		displayName: defaultDisplayName(normalizedEmail),
+		displayName: getDisplayName(normalizedEmail, { nickname: undefined }),
 		birthday: BIRTHDAYS[normalizedEmail],
 		avatarUrl: undefined
 	};

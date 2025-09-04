@@ -1,7 +1,8 @@
-import { auth, db } from '$lib/firebase';
+import { db } from '$lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { getDisplayName } from '$lib/getDisplayName';
 
-export async function ensureUserProfile(user: any) {
+export async function ensureUserProfile(user: { uid: string; email?: string | null; displayName?: string | null; photoURL?: string | null }) {
 	if (!user) return;
 
 	const userRef = doc(db, 'users', user.uid);
@@ -9,7 +10,7 @@ export async function ensureUserProfile(user: any) {
 
 	const profileData = {
 		email: user.email || '',
-		displayName: user.displayName || user.email?.split('@')[0] || 'Unknown',
+		displayName: getDisplayName(user.email, { nickname: undefined }),
 		avatarUrl: user.photoURL || ''
 	};
 

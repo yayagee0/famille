@@ -4,6 +4,7 @@
 	import { auth } from '$lib/firebase';
 	import { signOut } from 'firebase/auth';
 	import { Home, User, Rss, LogOut, Menu, X, Gamepad2 } from 'lucide-svelte';
+	import { getDisplayName } from '$lib/getDisplayName';
 
 	let { user } = $props<{ user: any }>();
 	let mobileMenuOpen = $state(false);
@@ -116,7 +117,9 @@
 								<div class="h-8 w-8 rounded-full bg-gray-300"></div>
 							{/if}
 							<span class="sr-only">Your profile</span>
-							<span aria-hidden="true">{user.displayName || user.email}</span>
+							<span aria-hidden="true"
+								>{getDisplayName(user?.email, { nickname: user?.nickname })}</span
+							>
 						</div>
 						<button
 							onclick={handleSignOut}
@@ -218,7 +221,9 @@
 											<div class="h-8 w-8 rounded-full bg-gray-300"></div>
 										{/if}
 										<span class="sr-only">Your profile</span>
-										<span aria-hidden="true">{user.displayName || user.email}</span>
+										<span aria-hidden="true"
+											>{getDisplayName(user?.email, { nickname: user?.nickname })}</span
+										>
 									</div>
 									<button
 										onclick={handleSignOut}

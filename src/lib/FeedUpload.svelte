@@ -6,6 +6,7 @@
 	import { storage, db } from '$lib/firebase';
 	import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 	import { FAMILY_ID } from '$lib/config';
+	import { getDisplayName } from '$lib/getDisplayName';
 
 	const dispatch = createEventDispatcher();
 
@@ -216,7 +217,9 @@
 			<div class="h-10 w-10 rounded-full bg-gray-300"></div>
 		{/if}
 		<div>
-			<p class="font-medium text-gray-900">{user.displayName || user.email}</p>
+			<p class="font-medium text-gray-900">
+				{getDisplayName(user?.email, { nickname: user?.nickname })}
+			</p>
 		</div>
 	</div>
 

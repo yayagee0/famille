@@ -4,6 +4,7 @@
 	import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 	import Button from '$lib/components/Button.svelte';
 	import { RotateCcw, Trophy, Bot, User } from 'lucide-svelte';
+	import { getDisplayName } from '$lib/getDisplayName';
 
 	type Player = 'X' | 'O' | null;
 	type Board = Player[];
@@ -158,7 +159,7 @@
 		try {
 			await addDoc(collection(db, 'games', 'tic-tac', 'matches'), {
 				playerUid: user.uid,
-				playerName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
+				playerName: getDisplayName(user?.email, { nickname: user?.nickname }),
 				result: gameResult,
 				difficulty,
 				board: board.slice(), // Save final board state
