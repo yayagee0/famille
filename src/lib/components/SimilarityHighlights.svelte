@@ -4,6 +4,8 @@
 	import { collection, query, getDocs } from 'firebase/firestore';
 	import { Users, Sparkles } from 'lucide-svelte';
 	import { getDisplayName } from '../getDisplayName';
+	import PlayCard from './PlayCard.svelte';
+	import { playSound } from '$lib/sound';
 	import type { User } from 'firebase/auth';
 
 	let user = $state<User | null>(auth.currentUser);
@@ -16,6 +18,28 @@
 		}>
 	>([]);
 	let loading = $state(true);
+
+	// Map categories to emojis
+	const categoryEmojis: Record<string, string> = {
+		'Travel': '🌍',
+		'Car': '🚗',
+		'Entertainment': '📚',
+		'Gaming': '🎮',
+		'Food': '🍕',
+		'Sports': '⚽',
+		'Music': '🎵',
+		'Movies': '🎬',
+		'Technology': '💻',
+		'default': '❓'
+	};
+
+	function getCategoryEmoji(category: string): string {
+		return categoryEmojis[category] || categoryEmojis.default;
+	}
+
+	function playMatchSound() {
+		playSound('/static/sounds/chime.mp3');
+	}
 
 	onMount(() => {
 		const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
@@ -140,19 +164,7 @@
 </script>
 
 {#if user}
-	<div class="rounded-2xl bg-white p-6 shadow-sm">
-		<div class="mb-4 flex items-center space-x-3">
-			<div class="flex-shrink-0">
-				<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100">
-					<Users class="h-4 w-4 text-purple-600" />
-				</div>
-			</div>
-			<div>
-				<h3 class="text-lg font-semibold text-gray-900">Family Similarities</h3>
-				<p class="text-sm text-gray-600">Discover what you have in common</p>
-			</div>
-		</div>
-
+	<PlayCard header="👨‍👩‍👧 Family Similarities">
 		{#if loading}
 			<!-- Skeleton Loader -->
 			<div class="animate-pulse space-y-3">
@@ -185,24 +197,40 @@
 				</p>
 			</div>
 		{:else}
-			<div class="space-y-3">
-				{#each similarities as similarity}
+			<div class="space-y-4">
+				{#each similarities as similarity, i}
 					<div
-						class="rounded-lg border border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4"
+						class="rounded-lg border border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4 transition-all duration-300 hover:shadow-md hover:scale-105"
+						style="animation-delay: {i * 150}ms"
 					>
 						<div class="flex items-start justify-between">
 							<div class="flex-1">
-								<p class="mb-1 text-sm font-medium text-gray-900">
-									{similarity.question}
-								</p>
-								<p class="mb-2 text-sm text-gray-700">
+								<div class="flex items-center gap-2 mb-2">
+									<span class="text-lg">{getCategoryEmoji(similarity.category)}</span>
+									<p class="text-sm font-medium text-gray-900">
+										{similarity.question}
+									</p>
+								</div>
+								<p class="mb-3 text-sm text-gray-700">
 									<span class="font-medium">"{similarity.answer}"</span>
 								</p>
-								<div class="flex items-center space-x-2">
-									<Users class="h-4 w-4 text-purple-600" />
-									<span class="text-xs text-purple-700">
-										Also chosen by: {similarity.sharedWith.join(', ')}
-									</span>
+								<div class="flex items-center justify-between">
+									<div class="flex items-center space-x-2">
+										<Users class="h-4 w-4 text-purple-600" />
+										<span class="text-xs text-purple-700">
+											Also chosen by: {similarity.sharedWith.join(', ')}
+										</span>
+									</div>
+									<div class="flex items-center gap-2">
+										<span class="text-xl animate-pulse">✨</span>
+										<button
+											onclick={playMatchSound}
+											class="text-purple-600 hover:text-purple-800 transition-colors"
+											title="Celebrate match!"
+										>
+											🏅
+										</button>
+									</div>
 								</div>
 							</div>
 							<div class="ml-3">
@@ -217,5 +245,5 @@
 				{/each}
 			</div>
 		{/if}
-	</div>
+	</PlayCard>
 {/if}

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { members } from './widget-context';
 	import { getDisplayName } from './getDisplayName';
+	import PlayCard from './components/PlayCard.svelte';
+	import { playSound } from './sound';
 	import dayjs from 'dayjs';
 
 	// Calculate the next upcoming birthday from widget context members
@@ -47,11 +49,23 @@
 	});
 
 	const isToday = $derived(nextBirthday?.daysUntil === 0);
+	const isUpcoming = $derived(nextBirthday && nextBirthday.daysUntil <= 7);
+
+	// Play birthday sound for upcoming birthdays
+	$effect(() => {
+		if (isUpcoming && typeof window !== 'undefined') {
+			// Small delay to avoid playing sound immediately on load
+			setTimeout(() => {
+				playSound('/static/sounds/birthday.mp3');
+			}, 1000);
+		}
+	});
 </script>
 
-<div
-	class="relative overflow-hidden rounded-xl border border-pink-200 bg-gradient-to-br from-pink-50 to-purple-50 p-4 shadow-sm"
->
+<PlayCard header="🎂 Next Birthday">
+	<div
+		class="relative overflow-hidden text-center"
+	>
 	{#if nextBirthday && isToday}
 		<!-- Enhanced confetti animation for today's birthday -->
 		<div class="pointer-events-none absolute inset-0 overflow-hidden">
@@ -88,17 +102,16 @@
 		</div>
 	{/if}
 
-	<div class="relative z-10 text-center">
-		<div class="mb-2 text-2xl">🎂</div>
-		<h3 class="mb-2 text-sm font-semibold text-purple-700">Next Birthday</h3>
+	<div class="relative z-10">
+		<div class="mb-3 text-4xl {isUpcoming ? 'animate-bounce-slow' : ''}">🎂</div>
 
 		{#if nextBirthday}
 			<!-- New format: "{Name} turns {Age} on {Date}" -->
-			<p class="mb-1 text-lg font-bold text-gray-900">
+			<p class="mb-2 text-lg font-bold text-gray-900">
 				{nextBirthday.displayName} turns {ageTheyWillTurn()} on {formattedDate}
 			</p>
 
-			<p class="mt-1 text-sm font-medium text-purple-600">
+			<p class="text-2xl font-bold {isUpcoming ? 'text-pink-600' : 'text-purple-600'}">
 				{#if nextBirthday.daysUntil === 0}
 					🎉 Today! Happy Birthday! 🎉
 				{:else if nextBirthday.daysUntil === 1}
@@ -111,4 +124,5 @@
 			<p class="text-gray-600">No upcoming birthdays configured</p>
 		{/if}
 	</div>
-</div>
+	</div>
+</PlayCard>
