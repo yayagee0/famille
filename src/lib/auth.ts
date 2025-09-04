@@ -2,7 +2,12 @@ import { db } from '$lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { getDisplayName } from '$lib/getDisplayName';
 
-export async function ensureUserProfile(user: { uid: string; email?: string | null; displayName?: string | null; photoURL?: string | null }) {
+export async function ensureUserProfile(user: {
+	uid: string;
+	email?: string | null;
+	displayName?: string | null;
+	photoURL?: string | null;
+}) {
 	if (!user) return;
 
 	const userRef = doc(db, 'users', user.uid);

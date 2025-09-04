@@ -168,6 +168,33 @@ export async function getUserProfile(userId: string): Promise<any | null> {
 }
 
 /**
+ * Get all family member profiles by email
+ */
+export async function getAllUserProfiles(emails: string[]): Promise<Record<string, any>> {
+	const profiles: Record<string, any> = {};
+
+	// Load profiles for all family members
+	const profilePromises = emails.map(async (email) => {
+		const normalizedEmail = email.toLowerCase().trim();
+		try {
+			// Query users collection by email field
+			const usersQuery = query(collection(db, 'users'), where('email', '==', normalizedEmail));
+			const snapshot = await getDocs(usersQuery);
+
+			if (!snapshot.empty) {
+				const userData = snapshot.docs[0].data();
+				profiles[normalizedEmail] = userData;
+			}
+		} catch (error) {
+			console.warn(`Failed to load profile for ${email}:`, error);
+		}
+	});
+
+	await Promise.all(profilePromises);
+	return profiles;
+}
+
+/**
  * Create a new post
  */
 export async function createPost(postData: any): Promise<string> {

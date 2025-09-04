@@ -4,7 +4,7 @@
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { auth } from '$lib/firebase';
+	import { auth, getAllUserProfiles } from '$lib/firebase';
 	import { onAuthStateChanged, type User } from 'firebase/auth';
 	import { validateFamilyMember } from '$lib/allowlist';
 	import { getAllowedEmails } from '$lib/users';
@@ -21,7 +21,7 @@
 	onMount(() => {
 		if (!browser) return;
 
-		const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+		const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
 			authLoading = false;
 
 			if (firebaseUser) {
@@ -31,10 +31,15 @@
 
 					// Initialize widget context for authenticated user
 					try {
+						const allowedEmails = getAllowedEmails();
+
+						// Load all family member profiles from Firestore
+						const profiles = await getAllUserProfiles(allowedEmails);
+
 						initializeWidgetContext({
 							authUser: { email: firebaseUser.email! },
-							profiles: undefined, // TODO: Load from Firestore if needed
-							allowedEmails: getAllowedEmails()
+							profiles,
+							allowedEmails
 						});
 					} catch (error) {
 						console.error('Failed to initialize widget context:', error);

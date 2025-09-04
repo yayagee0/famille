@@ -198,12 +198,14 @@ src/
 **Rule**: Never show raw emails or use inline display name fallbacks. Always call `getDisplayName()`.
 
 **Priority Order**:
+
 1. Profile nickname (from Firestore `users/{uid}.nickname`)
 2. Environment nickname (from `VITE_NICKNAMES`)
 3. Email local-part (before @ symbol)
 4. "Unknown" (for null emails)
 
 **Usage Pattern**:
+
 ```svelte
 <!-- ✅ CORRECT: Use unified helper -->
 {getDisplayName(member.email, { nickname: member.nickname })}
@@ -215,6 +217,7 @@ src/
 ```
 
 **Examples**:
+
 - **Widgets**: `{getDisplayName(member.email, { nickname: member.nickname })}`
 - **Author enrichment**: `displayName: getDisplayName(userData.email, { nickname: userData.nickname })`
 - **Current user**: `{getDisplayName($user?.email, { nickname: $user?.nickname })}`
