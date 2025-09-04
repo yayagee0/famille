@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { doc, getDoc, setDoc, serverTimestamp, collection, getDocs } from 'firebase/firestore';
+	import { doc, setDoc, serverTimestamp, collection, getDocs } from 'firebase/firestore';
 	import { db } from './firebase';
 	import { auth } from './firebase';
-	import { members, currentUser } from './widget-context';
+	import { members } from './widget-context';
 	import { getDisplayName } from './getDisplayName';
 	import { moodSchema, moodEntrySchema } from './schemas';
 	import LoadingSpinner from './LoadingSpinner.svelte';
@@ -24,7 +24,6 @@
 	// State for family mood check-ins - now using the new structure
 	let familyMoods = $state<Record<string, { emoji: string; label: string; timestamp: Date }>>({});
 	let loading = $state(true);
-	let currentUserMood = $state<{ emoji: string; label: string } | null>(null);
 
 	// Get today's date string for document ID
 	const today = dayjs().format('YYYY-MM-DD');
@@ -32,13 +31,13 @@
 	async function loadTodaysMoods() {
 		try {
 			loading = true;
-			
+
 			// Load mood entries from the new structure: daily-moods/{date}/entries/{uid}
 			const entriesRef = collection(db, 'daily-moods', today, 'entries');
 			const entriesSnapshot = await getDocs(entriesRef);
-			
+
 			const moodsData: Record<string, { emoji: string; label: string; timestamp: Date }> = {};
-			
+
 			entriesSnapshot.forEach((doc) => {
 				try {
 					const data = doc.data();
@@ -49,16 +48,12 @@
 						label: validEntry.mood.label,
 						timestamp: validEntry.createdAt?.toDate?.() || new Date()
 					};
-					
-					// If this is the current user's mood, set it separately
-					if (auth.currentUser && validEntry.email === auth.currentUser.email) {
-						currentUserMood = validEntry.mood;
-					}
+
 				} catch (error) {
 					console.warn('Invalid mood entry data:', error);
 				}
 			});
-			
+
 			familyMoods = moodsData;
 		} catch (error) {
 			console.error('Error loading daily moods:', error);
@@ -76,9 +71,8 @@
 		try {
 			// Validate mood with Zod schema
 			const validMood = moodSchema.parse(selectedMood);
-			
+
 			// Optimistic update
-			currentUserMood = validMood;
 			familyMoods = {
 				...familyMoods,
 				[userEmail]: {
@@ -98,7 +92,6 @@
 		} catch (error) {
 			console.error('Error saving mood:', error);
 			// Revert optimistic update on error
-			currentUserMood = null;
 			loadTodaysMoods();
 		}
 	}
@@ -111,7 +104,9 @@
 	const currentUserDisplayName = $derived.by(() => {
 		if (!auth.currentUser?.email) return '';
 		// Get current user profile from members context
-		const currentMember = Object.values($members).find(member => member.email === auth.currentUser?.email);
+		const currentMember = Object.values($members).find(
+			(member) => member.email === auth.currentUser?.email
+		);
 		return getDisplayName(auth.currentUser.email, { nickname: currentMember?.nickname });
 	});
 </script>
@@ -132,7 +127,7 @@
 		<!-- Family members mood display with overflow handling -->
 		<div class="mb-6 max-h-48 overflow-y-auto">
 			<div class="space-y-3">
-				{#each Object.values(members) as member}
+				{#each Object.values(members) as member (member.email)}
 					{@const memberMood = familyMoods[member.email]}
 					<div class="flex items-center space-x-3 rounded-xl bg-gray-50 p-3">
 						<div class="flex-shrink-0">
@@ -146,7 +141,9 @@
 						</div>
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center justify-between">
-								<p class="truncate text-sm font-medium text-gray-900">{getDisplayName(member.email, { nickname: member.nickname })}</p>
+								<p class="truncate text-sm font-medium text-gray-900">
+									{getDisplayName(member.email, { nickname: member.nickname })}
+								</p>
 								{#if auth.currentUser?.email === member.email}
 									<span class="rounded-full bg-indigo-100 px-2 py-1 text-xs text-indigo-700"
 										>You</span
@@ -171,7 +168,7 @@
 			<div class="border-t border-gray-200 pt-4">
 				<p class="mb-3 text-center text-sm font-medium text-gray-700">How are you feeling today?</p>
 				<div class="grid grid-cols-4 gap-2">
-					{#each moods as mood}
+					{#each moods as mood (mood.label)}
 						<button
 							class="flex flex-col items-center justify-center space-y-1 rounded-lg border border-gray-200 bg-gray-50 p-3 transition-all hover:scale-105 hover:bg-gray-100 active:scale-95"
 							onclick={() => selectMood(mood)}

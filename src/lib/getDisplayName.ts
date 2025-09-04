@@ -1,16 +1,13 @@
 /**
  * Unified display name resolution for family members
- * 
+ *
  * Priority order:
  * 1. profile.nickname if set
  * 2. fallback from VITE_NICKNAMES env var
  * 3. local-part of email (before @)
  */
 
-export function getDisplayName(
-	email: string,
-	profile?: { nickname?: string }
-): string {
+export function getDisplayName(email: string, profile?: { nickname?: string }): string {
 	// Priority 1: Profile nickname
 	if (profile?.nickname?.trim()) {
 		return profile.nickname.trim();
