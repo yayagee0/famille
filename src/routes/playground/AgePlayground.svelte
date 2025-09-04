@@ -26,7 +26,7 @@
 
 	// Helper function to format age display
 	function formatAge(years: number) {
-		if (years < 0) return "Not born yet 🍼";
+		if (years < 0) return 'Not born yet 🍼';
 		return `${years} years old 🎂`;
 	}
 
@@ -38,15 +38,17 @@
 	});
 
 	// Calculate age differences for selected member and target age
-	let ageCalculations = $state<Array<{
-		email: string;
-		displayName: string;
-		nickname?: string;
-		birthday?: string;
-		avatarUrl?: string;
-		ageAtTarget: number;
-		ageDifference: number;
-	}>>([]);
+	let ageCalculations = $state<
+		Array<{
+			email: string;
+			displayName: string;
+			nickname?: string;
+			birthday?: string;
+			avatarUrl?: string;
+			ageAtTarget: number;
+			ageDifference: number;
+		}>
+	>([]);
 
 	// Update calculations when selectedMember or targetAge changes
 	$effect(() => {
@@ -60,19 +62,21 @@
 		const targetDate = new Date();
 		targetDate.setFullYear(targetDate.getFullYear() + (targetAge - selectedCurrentAge));
 
-		ageCalculations = membersWithBirthdays.map((member) => {
-			if (!member.birthday) return null;
+		ageCalculations = membersWithBirthdays
+			.map((member) => {
+				if (!member.birthday) return null;
 
-			const age = ageOn(member.birthday, targetDate);
-			const currentAge = ageOn(member.birthday);
-			const ageDiff = age - currentAge;
+				const age = ageOn(member.birthday, targetDate);
+				const currentAge = ageOn(member.birthday);
+				const ageDiff = age - currentAge;
 
-			return {
-				...member,
-				ageAtTarget: age,
-				ageDifference: ageDiff
-			};
-		}).filter((m): m is NonNullable<typeof m> => m !== null);
+				return {
+					...member,
+					ageAtTarget: age,
+					ageDifference: ageDiff
+				};
+			})
+			.filter((m): m is NonNullable<typeof m> => m !== null);
 	});
 
 	function decreaseAge() {
@@ -97,16 +101,19 @@
 
 <div class="space-y-6">
 	<!-- Member selector -->
-	<div class="flex flex-wrap gap-2 justify-center">
+	<div class="flex flex-wrap justify-center gap-2">
 		{#each membersWithBirthdays as member (member.email)}
 			<button
 				onclick={() => selectMember(member)}
-				class="flex items-center space-x-2 rounded-full border-2 px-4 py-2 transition-all duration-200 hover:scale-105 {selectedMember?.email === member.email
+				class="flex items-center space-x-2 rounded-full border-2 px-4 py-2 transition-all duration-200 hover:scale-105 {selectedMember?.email ===
+				member.email
 					? 'border-purple-400 bg-purple-100 text-purple-700'
 					: 'border-gray-300 bg-white text-gray-700 hover:border-purple-300'}"
 			>
 				<span class="text-lg">{memberEmojis[member.email] || '👤'}</span>
-				<span class="text-sm font-medium">{getDisplayName(member.email, { nickname: member.nickname })}</span>
+				<span class="text-sm font-medium"
+					>{getDisplayName(member.email, { nickname: member.nickname })}</span
+				>
 			</button>
 		{/each}
 	</div>

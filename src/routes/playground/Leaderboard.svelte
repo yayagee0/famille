@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { auth, db } from '$lib/firebase';
-	import { collection, doc, getDoc, setDoc, increment, serverTimestamp } from 'firebase/firestore';
+	import { collection, getDocs } from 'firebase/firestore';
 	import { Trophy, Medal, Award, TrendingUp, Target } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { playSound } from '$lib/sound';
@@ -27,8 +27,6 @@
 	let loading = $state(true);
 	let expandedMembers = $state<Set<string>>(new Set());
 
-	const user = $state(auth.currentUser);
-
 	onMount(async () => {
 		await loadLeaderboard();
 		loading = false;
@@ -36,58 +34,66 @@
 	});
 
 	async function loadLeaderboard() {
-		// In a real implementation, we would query all leaderboard entries
-		// For now, we'll create a sample structure to demonstrate the UI
-		
-		// Sample family members from the existing codebase
-		const familyMembers = [
-			{ uid: 'user1', email: 'nilezat@gmail.com', nickname: 'Daddy' },
-			{ uid: 'user2', email: 'abdessamia.mariem@gmail.com', nickname: 'Mama' },
-			{ uid: 'user3', email: 'yazidgeemail@gmail.com', nickname: 'Yazid' },
-			{ uid: 'user4', email: 'yahyageemail@gmail.com', nickname: 'Yahya' }
-		];
+		try {
+			// Query all leaderboard entries
+			const leaderboardQuery = collection(db, 'leaderboard');
+			const leaderboardSnapshot = await getDocs(leaderboardQuery);
 
-		// Generate sample leaderboard data
-		leaderboard = familyMembers.map((member, index) => ({
-			uid: member.uid,
-			displayName: getDisplayName(member.email, { nickname: member.nickname }),
-			wins: Math.floor(Math.random() * 20) + index * 3,
-			losses: Math.floor(Math.random() * 15) + index * 2,
-			games: {
-				tictactoe: {
-					wins: Math.floor(Math.random() * 10) + index,
-					losses: Math.floor(Math.random() * 8) + index
-				},
-				memory: {
-					wins: Math.floor(Math.random() * 8) + index,
-					losses: Math.floor(Math.random() * 6) + index
+			// Get all users data to enrich with profile information
+			const usersQuery = collection(db, 'users');
+			const usersSnapshot = await getDocs(usersQuery);
+			const usersMap = new Map<string, any>();
+			usersSnapshot.forEach((doc) => {
+				usersMap.set(doc.id, doc.data());
+			});
+
+			// Process leaderboard entries
+			const entries: LeaderboardEntry[] = [];
+
+			leaderboardSnapshot.forEach((doc) => {
+				const data = doc.data();
+				const userData = usersMap.get(doc.id);
+
+				entries.push({
+					uid: doc.id,
+					displayName: getDisplayName(userData?.email, { nickname: userData?.nickname }),
+					wins: data.wins || 0,
+					losses: data.losses || 0,
+					games: {
+						tictactoe: {
+							wins: data.games?.tictactoe?.wins || 0,
+							losses: data.games?.tictactoe?.losses || 0
+						},
+						memory: {
+							wins: data.games?.memory?.wins || 0,
+							losses: data.games?.memory?.losses || 0
+						}
+					}
+				});
+			});
+
+			// Add family members who don't have leaderboard entries yet
+			for (const userData of usersMap.values()) {
+				if (!entries.find((entry) => entry.uid === userData.uid)) {
+					entries.push({
+						uid: userData.uid,
+						displayName: getDisplayName(userData.email, { nickname: userData.nickname }),
+						wins: 0,
+						losses: 0,
+						games: {
+							tictactoe: { wins: 0, losses: 0 },
+							memory: { wins: 0, losses: 0 }
+						}
+					});
 				}
 			}
-		})).sort((a, b) => b.wins - a.wins); // Sort by total wins
-	}
 
-	async function updateLeaderboard(gameType: 'tictactoe' | 'memory', result: 'win' | 'loss') {
-		if (!user?.uid) return;
-
-		try {
-			const leaderboardRef = doc(db, 'leaderboard', user.uid);
-			
-			// Get current user data to ensure displayName is from profile
-			const userDoc = await getDoc(doc(db, 'users', user.uid));
-			const userData = userDoc.data();
-			const displayName = getDisplayName(userData?.email, { nickname: userData?.nickname });
-
-			await setDoc(leaderboardRef, {
-				displayName,
-				[result === 'win' ? 'wins' : 'losses']: increment(1),
-				[`games.${gameType}.${result === 'win' ? 'wins' : 'losses'}`]: increment(1),
-				lastUpdated: serverTimestamp()
-			}, { merge: true });
-
-			// Reload leaderboard
-			await loadLeaderboard();
+			// Sort by total wins (descending)
+			leaderboard = entries.sort((a, b) => b.wins - a.wins);
 		} catch (error) {
-			console.error('Error updating leaderboard:', error);
+			console.error('Error loading leaderboard:', error);
+			// Fallback to empty leaderboard on error
+			leaderboard = [];
 		}
 	}
 
@@ -133,8 +139,10 @@
 				{@const rank = getRankIcon(index)}
 				{@const winStreak = getWinStreak(member)}
 				{@const isExpanded = expandedMembers.has(member.uid)}
-				
-				<div class="rounded-xl border-2 border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+
+				<div
+					class="rounded-xl border-2 border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md"
+				>
 					<!-- Main row -->
 					<div class="flex items-center justify-between">
 						<div class="flex items-center space-x-3">
@@ -143,7 +151,7 @@
 								<span class="text-2xl">{rank.emoji}</span>
 								<div class="text-sm font-medium text-gray-500">#{index + 1}</div>
 							</div>
-							
+
 							<!-- Member info -->
 							<div>
 								<div class="font-bold text-gray-900">{member.displayName}</div>
@@ -179,7 +187,7 @@
 					{#if isExpanded}
 						<div class="mt-4 space-y-2 border-t border-gray-100 pt-4">
 							<h5 class="text-sm font-medium text-gray-700">Game Breakdown</h5>
-							
+
 							<div class="grid grid-cols-2 gap-3">
 								<!-- Tic-Tac-Toe stats -->
 								<div class="rounded-lg bg-indigo-50 p-3 text-center">
@@ -207,8 +215,8 @@
 
 		<!-- Fun family message -->
 		<div class="rounded-xl bg-gradient-to-r from-yellow-100 to-orange-100 p-4 text-center">
-			<div class="text-2xl mb-2">🎉</div>
-			<p class="text-sm text-gray-700 font-medium">
+			<div class="mb-2 text-2xl">🎉</div>
+			<p class="text-sm font-medium text-gray-700">
 				Keep playing together! Every game makes our family stronger! 💪
 			</p>
 		</div>

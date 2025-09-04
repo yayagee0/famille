@@ -21,7 +21,7 @@
 				Fun simulations and activities for everyone in the family
 			</p>
 		</div>
-		
+
 		<!-- Sound toggle -->
 		<button
 			onclick={handleSoundToggle}
@@ -50,7 +50,7 @@
 				<PlayCard header="⏳ Age Simulator">
 					<AgePlayground />
 				</PlayCard>
-				
+
 				<PlayCard header="🌟 Build a Dream 🌟">
 					<BuildADream />
 				</PlayCard>
@@ -67,7 +67,7 @@
 				<PlayCard header="🎮 Tic-Tac-Toe">
 					<TicTacToe />
 				</PlayCard>
-				
+
 				<PlayCard header="🏆 Family Leaderboard">
 					<Leaderboard />
 				</PlayCard>

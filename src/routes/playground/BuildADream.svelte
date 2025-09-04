@@ -77,7 +77,7 @@
 	let isCompleted = $state(false);
 
 	// Reset state when selecting a new dream
-	function chooseDream(dream: typeof dreams[0]) {
+	function chooseDream(dream: (typeof dreams)[0]) {
 		selected = dream;
 		step = 0;
 		isCompleted = false;
@@ -86,7 +86,7 @@
 
 	function nextStep() {
 		if (!selected) return;
-		
+
 		if (step < selected.facts.length - 1) {
 			step++;
 			playSound('/sounds/select.mp3');
@@ -114,11 +114,11 @@
 		<div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
 			{#each dreams as dream (dream.name)}
 				<button
-					class="flex flex-col items-center rounded-2xl bg-gradient-to-br {dream.background} border-2 border-transparent p-4 transition-all duration-300 hover:scale-105 hover:border-white hover:shadow-lg animate-bounce-slow"
+					class="flex flex-col items-center rounded-2xl bg-gradient-to-br {dream.background} animate-bounce-slow border-2 border-transparent p-4 transition-all duration-300 hover:scale-105 hover:border-white hover:shadow-lg"
 					onclick={() => chooseDream(dream)}
 					onmouseenter={handleDreamHover}
 				>
-					<span class="mb-2 text-3xl hover:animate-wiggle">{dream.icon}</span>
+					<span class="hover:animate-wiggle mb-2 text-3xl">{dream.icon}</span>
 					<div class="text-sm font-bold text-gray-800">{dream.name}</div>
 				</button>
 			{/each}
@@ -130,7 +130,7 @@
 				class="rounded-2xl bg-gradient-to-br {selected.background} border-2 border-white p-4 text-center"
 			>
 				<h3 class="flex items-center justify-center text-xl font-bold text-gray-800">
-					<span class="mr-3 text-3xl animate-wiggle">{selected.icon}</span>
+					<span class="animate-wiggle mr-3 text-3xl">{selected.icon}</span>
 					{selected.name}
 				</h3>
 			</div>
@@ -153,7 +153,7 @@
 					in:fly={{ y: 20, duration: 300 }}
 				>
 					<div class="mb-3 text-center">
-						<div class="mb-2 text-2xl animate-bounce-slow">{selected.facts[step].emoji}</div>
+						<div class="animate-bounce-slow mb-2 text-2xl">{selected.facts[step].emoji}</div>
 						<h4 class="text-lg font-bold text-purple-700">{selected.facts[step].role}</h4>
 					</div>
 					<p class="text-center text-gray-600">{selected.facts[step].description}</p>
@@ -162,7 +162,7 @@
 				<!-- Next button -->
 				<div class="flex justify-center">
 					<button
-						class="rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 text-white font-bold transition-all duration-200 hover:scale-105 hover:from-purple-600 hover:to-pink-600"
+						class="rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 font-bold text-white transition-all duration-200 hover:scale-105 hover:from-purple-600 hover:to-pink-600"
 						onclick={nextStep}
 					>
 						{step < selected.facts.length - 1 ? 'Next Step' : 'Complete Journey'} ✨
@@ -171,7 +171,7 @@
 			{:else}
 				<!-- Completion celebration -->
 				<div
-					class="rounded-2xl border-2 border-green-200 bg-green-50 p-6 text-center animate-confetti"
+					class="animate-confetti rounded-2xl border-2 border-green-200 bg-green-50 p-6 text-center"
 					in:fly={{ y: -20, duration: 500 }}
 				>
 					<h4 class="mb-3 text-xl font-bold text-green-700">Dream Journey Complete!</h4>
@@ -183,7 +183,7 @@
 					<div class="relative mb-4 h-16 overflow-hidden">
 						{#each ['⭐', '🌟', '✨', '🎊', '🎈'] as emoji, i}
 							<div
-								class="absolute animate-pulse text-2xl animate-confetti"
+								class="animate-confetti absolute animate-pulse text-2xl"
 								style="left: {20 + i * 15}%; animation-delay: {i * 0.2}s;"
 							>
 								{emoji}

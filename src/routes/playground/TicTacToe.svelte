@@ -1,7 +1,14 @@
 <script lang="ts">
 	import { auth, db } from '$lib/firebase';
-	import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-	import Button from '$lib/components/Button.svelte';
+	import {
+		addDoc,
+		collection,
+		doc,
+		getDoc,
+		setDoc,
+		increment,
+		serverTimestamp
+	} from 'firebase/firestore';
 	import { RotateCcw, Trophy, Bot, User } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { playSound } from '$lib/sound';
@@ -12,7 +19,6 @@
 	type Difficulty = 'easy' | 'hard';
 
 	let board = $state<Board>(Array(9).fill(null));
-	let currentPlayer = $state<Player>('X');
 	let gameResult = $state<GameResult>(null);
 	let isPlayerTurn = $state(true);
 	let difficulty = $state<Difficulty>('hard');
@@ -22,7 +28,6 @@
 
 	function resetGame() {
 		board = Array(9).fill(null);
-		currentPlayer = 'X';
 		gameResult = null;
 		isPlayerTurn = true;
 		isThinking = false;
@@ -163,6 +168,7 @@
 		if (!user?.uid || !gameResult) return;
 
 		try {
+			// Save game record
 			await addDoc(collection(db, 'games', 'tic-tac', 'matches'), {
 				playerUid: user.uid,
 				playerName: getDisplayName(user?.email, { nickname: undefined }),
@@ -170,10 +176,42 @@
 				difficulty,
 				board: board.slice(), // Save final board state
 				timestamp: serverTimestamp(),
-				moves: board.reduce((moves, cell, index) => (cell ? moves + 1 : moves), 0)
+				moves: board.reduce((moves, cell) => (cell ? moves + 1 : moves), 0)
 			});
+
+			// Update leaderboard
+			await updateLeaderboard(gameResult);
 		} catch (error) {
 			console.error('Error saving game:', error);
+		}
+	}
+
+	async function updateLeaderboard(result: GameResult) {
+		if (!user?.uid || !result || result === 'draw') return;
+
+		try {
+			const leaderboardRef = doc(db, 'leaderboard', user.uid);
+
+			// Get current user data to ensure displayName is from profile
+			const userDoc = await getDoc(doc(db, 'users', user.uid));
+			const userData = userDoc.data();
+			const displayName = getDisplayName(userData?.email, { nickname: userData?.nickname });
+
+			// Convert game result to leaderboard result
+			const leaderboardResult = result === 'win' ? 'win' : 'loss';
+
+			await setDoc(
+				leaderboardRef,
+				{
+					displayName,
+					[leaderboardResult === 'win' ? 'wins' : 'losses']: increment(1),
+					[`games.tictactoe.${leaderboardResult === 'win' ? 'wins' : 'losses'}`]: increment(1),
+					lastUpdated: serverTimestamp()
+				},
+				{ merge: true }
+			);
+		} catch (error) {
+			console.error('Error updating leaderboard:', error);
 		}
 	}
 
@@ -284,7 +322,7 @@
 
 	<!-- Game Board -->
 	<div class="mx-auto mb-6 grid max-w-xs grid-cols-3 gap-2">
-		{#each board as cell, index}
+		{#each board as cell, index (index)}
 			<button
 				class={getCellClass(index)}
 				onclick={() => makePlayerMove(index)}
@@ -298,7 +336,7 @@
 	<!-- Controls -->
 	<div class="flex justify-center">
 		<button
-			class="bg-primary text-white rounded-lg px-4 py-2 hover:bg-primary-dark transition-colors duration-200 flex items-center space-x-2"
+			class="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2 text-white transition-colors duration-200 hover:bg-primary-dark"
 			onclick={resetGame}
 		>
 			<RotateCcw class="h-4 w-4" />

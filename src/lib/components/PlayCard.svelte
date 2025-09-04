@@ -9,17 +9,21 @@
 </script>
 
 <!-- PlayCard - Reusable base layout for playground widgets -->
-<div class="bg-white rounded-card shadow-soft transition-transform hover:scale-105 duration-200 w-full">
+<div
+	class="shadow-soft w-full rounded-card bg-white transition-transform duration-200 hover:scale-105"
+>
 	<!-- Header slot with gradient strip -->
-	<div class="from-primary to-accent bg-gradient-to-r text-white font-bold rounded-t-card p-4 text-lg flex items-center gap-2">
+	<div
+		class="flex items-center gap-2 rounded-t-card bg-gradient-to-r from-primary to-accent p-4 text-lg font-bold text-white"
+	>
 		{header}
 	</div>
-	
+
 	<!-- Body slot with white background -->
 	<div class="bg-white p-6">
 		{@render children?.()}
 	</div>
-	
+
 	<!-- Footer slot for optional actions -->
 	<!-- Note: Footer can be added via children if needed -->
 </div>
