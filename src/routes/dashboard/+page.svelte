@@ -80,7 +80,7 @@
 			familyHighlights = enrichedPosts.slice(0, 3).map((post: any) => {
 				const authorName = post.author?.displayName || 'Someone';
 				const timeAgo = dayjs(post.createdAt?.toDate()).fromNow();
-				
+
 				let emoji = '📝';
 				if (post.kind === 'photo') emoji = '📷';
 				else if (post.kind === 'video') emoji = '🎥';
@@ -141,7 +141,7 @@
 			<span class="text-2xl">👨‍👩‍👧</span>
 			<h2 class="text-xl font-semibold text-gray-800">Family</h2>
 		</div>
-		
+
 		<div class="space-y-6">
 			<!-- Family Similarities -->
 			<SimilarityHighlights />
@@ -161,8 +161,8 @@
 				{:else}
 					<div class="space-y-3">
 						{#each familyHighlights as highlight, i}
-							<div 
-								class="flex items-center space-x-3 rounded-xl bg-gray-50 p-3 transition-all duration-300 hover:bg-gray-100 hover:shadow-sm hover:scale-105"
+							<div
+								class="flex items-center space-x-3 rounded-xl bg-gray-50 p-3 transition-all duration-300 hover:scale-105 hover:bg-gray-100 hover:shadow-sm"
 								style="animation: slideIn 0.5s ease-out {i * 150}ms both"
 							>
 								<div class="flex-shrink-0">
@@ -173,7 +173,9 @@
 											class="h-8 w-8 rounded-full"
 										/>
 									{:else}
-										<div class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 font-medium text-sm">
+										<div
+											class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-medium text-indigo-600"
+										>
 											{highlight.author.displayName.charAt(0).toUpperCase()}
 										</div>
 									{/if}
@@ -190,9 +192,9 @@
 				{/if}
 
 				<div class="mt-6 text-center">
-					<a 
-						href="/feed" 
-						class="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+					<a
+						href="/feed"
+						class="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-500"
 					>
 						View all activity →
 					</a>

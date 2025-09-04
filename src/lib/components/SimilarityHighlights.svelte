@@ -21,16 +21,16 @@
 
 	// Map categories to emojis
 	const categoryEmojis: Record<string, string> = {
-		'Travel': '🌍',
-		'Car': '🚗',
-		'Entertainment': '📚',
-		'Gaming': '🎮',
-		'Food': '🍕',
-		'Sports': '⚽',
-		'Music': '🎵',
-		'Movies': '🎬',
-		'Technology': '💻',
-		'default': '❓'
+		Travel: '🌍',
+		Car: '🚗',
+		Entertainment: '📚',
+		Gaming: '🎮',
+		Food: '🍕',
+		Sports: '⚽',
+		Music: '🎵',
+		Movies: '🎬',
+		Technology: '💻',
+		default: '❓'
 	};
 
 	function getCategoryEmoji(category: string): string {
@@ -200,12 +200,12 @@
 			<div class="space-y-4">
 				{#each similarities as similarity, i}
 					<div
-						class="rounded-lg border border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4 transition-all duration-300 hover:shadow-md hover:scale-105"
+						class="rounded-lg border border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4 transition-all duration-300 hover:scale-105 hover:shadow-md"
 						style="animation-delay: {i * 150}ms"
 					>
 						<div class="flex items-start justify-between">
 							<div class="flex-1">
-								<div class="flex items-center gap-2 mb-2">
+								<div class="mb-2 flex items-center gap-2">
 									<span class="text-lg">{getCategoryEmoji(similarity.category)}</span>
 									<p class="text-sm font-medium text-gray-900">
 										{similarity.question}
@@ -222,10 +222,10 @@
 										</span>
 									</div>
 									<div class="flex items-center gap-2">
-										<span class="text-xl animate-pulse">✨</span>
+										<span class="animate-pulse text-xl">✨</span>
 										<button
 											onclick={playMatchSound}
-											class="text-purple-600 hover:text-purple-800 transition-colors"
+											class="text-purple-600 transition-colors hover:text-purple-800"
 											title="Celebrate match!"
 										>
 											🏅

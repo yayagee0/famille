@@ -110,12 +110,6 @@
 	// Theme state
 	let isDarkTheme = $state(false);
 
-	const fontSizeClasses = {
-		small: 'text-lg',
-		medium: 'text-xl',
-		large: 'text-2xl'
-	};
-
 	function adjustFontSize(newSize: 'small' | 'medium' | 'large') {
 		fontSize = newSize;
 	}
@@ -229,13 +223,13 @@
 		</div>
 
 		<p
-			class="font-arabic mb-3 text-2xl md:text-3xl leading-relaxed {isDarkTheme
+			class="font-arabic mb-3 text-2xl leading-relaxed md:text-3xl {isDarkTheme
 				? 'text-white'
 				: 'text-gray-900'}"
 		>
 			{todayAyah.arabic}
 		</p>
-		<p class="text-gray-600 italic mb-2">
+		<p class="mb-2 text-gray-600 italic">
 			"{todayAyah.translation}"
 		</p>
 		<p class="mt-1 text-sm {isDarkTheme ? 'text-green-300' : 'text-green-600'}">
