@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { auth, storage, db } from '$lib/firebase';
+	import { FAMILY_ID } from '$lib/config';
 	import { updateProfile } from 'firebase/auth';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 	import {
@@ -396,7 +397,7 @@
 			// Create export data
 			const exportData = {
 				exportDate: new Date().toISOString(),
-				familyId: 'ghassan-family',
+				familyId: FAMILY_ID,
 				posts: posts,
 				totalPosts: posts.length
 			};

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Family Hub** is a private, secure family social platform that allows 4 specific family members to share photos, videos, polls, and YouTube links in a protected environment. Built with modern web technologies and strict security controls.
+**Family Hub** is a private, secure family social platform that allows family members to share photos, videos, polls, and YouTube links in a protected environment. Built with modern web technologies and strict security controls. Designed to be easily configurable for any family through environment variables.
 
 ## Technical Stack & Constraints
 
@@ -50,7 +50,7 @@
 ```typescript
 {
   authorUid: string;           // References users/{uid}
-  familyId: "ghassan-family";  // Family identifier
+  familyId: string;            // Family identifier (from env)
   kind: "text" | "photo" | "video" | "youtube" | "poll";
   text: string;                // Post content
   createdAt: Timestamp;        // Server timestamp
@@ -131,17 +131,13 @@
 ### Authentication
 
 - **ONLY Google OAuth** authentication allowed
-- **Email allowlist** restricts access to exactly 4 users:
-  - `nilezat@gmail.com`
-  - `abdessamia.mariem@gmail.com`
-  - `yazidgeemail@gmail.com`
-  - `yahyageemail@gmail.com`
+- **Email allowlist** restricts access to family members configured in environment variables
 - **No user registration** - only predefined family members
 - **Session persistence** handled by Firebase Auth
 
 ### Database Rules (Firestore)
 
-- **Family ID enforcement**: All documents must have `familyId: "ghassan-family"`
+- **Family ID enforcement**: All documents must have `familyId` matching your configured family identifier
 - **Read access**: Only allowlisted users can read any data
 - **Write access**: Users can only create posts with their own `uid`
 - **Update constraints**: Post authors can modify their posts; others can only update `likes` and `comments` arrays
@@ -214,8 +210,9 @@ VITE_FB_PROJECT_ID=      # Firebase project ID
 VITE_FB_STORAGE_BUCKET=  # Firebase storage bucket
 VITE_FB_APP_ID=          # Firebase app ID
 VITE_FB_RETURN_URL=      # OAuth return URL
-VITE_FAMILY_ID=          # Family identifier (ghassan-family)
+VITE_FAMILY_ID=          # Family identifier
 VITE_ALLOWED_EMAILS=     # Comma-separated email list
+VITE_BIRTHDAYS=          # JSON map of emails to birthdays
 ```
 
 ### Build Requirements

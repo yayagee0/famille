@@ -60,7 +60,24 @@ A private, secure family social platform built with SvelteKit 2, TypeScript, and
    ```
 
 3. **Configure environment variables**:
-   The `.env` file is already configured with the following variables:
+   Create a `.env` file with the following variables:
+
+   ```bash
+   # Firebase Configuration
+   VITE_FB_API_KEY=your_firebase_api_key
+   VITE_FB_AUTH_DOMAIN=your_project.firebaseapp.com
+   VITE_FB_PROJECT_ID=your_firebase_project_id
+   VITE_FB_STORAGE_BUCKET=your_project.firebasestorage.app
+   VITE_FB_APP_ID=your_firebase_app_id
+   VITE_FB_RETURN_URL=http://localhost:5173
+
+   # App Configuration
+   VITE_FAMILY_ID=your_family_identifier
+   VITE_ALLOWED_EMAILS=email1@example.com,email2@example.com,email3@example.com,email4@example.com
+
+   # Family Birthdays (JSON format)
+   VITE_BIRTHDAYS={"email1@example.com":"1990-01-01","email2@example.com":"1985-05-15","email3@example.com":"2010-03-10","email4@example.com":"2015-08-20"}
+   ```
 
 4. **Deploy Firebase rules** (optional for development):
 
@@ -81,7 +98,7 @@ A private, secure family social platform built with SvelteKit 2, TypeScript, and
    firebase deploy --only storage:rules
 
    # Configure CORS for Storage
-   gsutil cors set cors.json gs://familyg-719f2.appspot.com
+   gsutil cors set cors.json gs://your_storage_bucket_name
    ```
 
 ## 🏃‍♂️ Development
@@ -94,7 +111,7 @@ A private, secure family social platform built with SvelteKit 2, TypeScript, and
 
 2. **Open your browser** and navigate to `http://localhost:5173`
 
-3. **Sign in** with one of the allowed Google accounts:
+3. **Sign in** with one of the allowed Google accounts as configured in your environment variables
 
 ## 🏗 Building
 
@@ -163,12 +180,12 @@ npm run test:e2e:debug
 ### Authentication
 
 - Only allows Google OAuth authentication
-- Email allowlist restricts access to 4 specific family members
+- Email allowlist restricts access to specific family members configured in environment variables
 - Firebase Auth handles all authentication logic
 
 ### Database Rules
 
-- Firestore rules enforce `familyId` matching "ghassan-family"
+- Firestore rules enforce `familyId` matching your configured family ID
 - Users can only create posts with their own `uid`
 - Read access limited to allowlisted users
 - Update permissions restricted to post authors (except likes/comments)
@@ -225,7 +242,7 @@ Email allowlist validation for family member access control.
 ```typescript
 {
   authorUid: string;           // References users/{uid} - unified approach
-  familyId: "ghassan-family";  // Family identifier
+  familyId: string;            // Your configured family identifier
   kind: "text" | "photo" | "video" | "youtube" | "poll";
   text: string;                // Post content
   createdAt: Timestamp;        // Server timestamp
@@ -316,11 +333,15 @@ To modify the allowed family members, update the `VITE_ALLOWED_EMAILS` environme
 
 ### Firebase Configuration
 
-Update the Firebase configuration in `.env` with your own project details if needed.
+Update the Firebase configuration in `.env` with your own project details.
 
 ### Family ID
 
-The `VITE_FAMILY_ID` is set to "ghassan-family" and enforced in Firestore rules.
+The `VITE_FAMILY_ID` should be set to your family identifier and must match the enforcement in Firestore rules.
+
+### Birthdays Configuration
+
+Family member birthdays are configured in the `VITE_BIRTHDAYS` environment variable as a JSON map with email keys and ISO date values.
 
 ## 🐛 Troubleshooting
 
@@ -344,8 +365,8 @@ The `VITE_FAMILY_ID` is set to "ghassan-family" and enforced in Firestore rules.
 
 ## 🤝 Contributing
 
-This is a private family project. For feature requests or bug reports, please create an issue in the repository.
+This is a private family project template. Feel free to fork and adapt for your own family's needs.
 
 ## 📄 License
 
-Private family project - All rights reserved.
+MIT License - Feel free to use this template for your own family projects.
