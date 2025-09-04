@@ -73,8 +73,8 @@ export function initializeWidgetContext({
 		const profile = profiles?.[normalizedEmail];
 		if (profile) {
 			member.displayName = 
-				profile.nickname || 
 				profile.displayName || 
+				profile.nickname || 
 				member.displayName;
 			member.nickname = profile.nickname;
 			member.avatarUrl = profile.avatarUrl || profile.photoURL;
