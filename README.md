@@ -143,36 +143,14 @@ npm run test
 npm run test:ui
 ```
 
-### End-to-End Tests
-
-Run E2E tests using Playwright:
-
-```bash
-# Install Playwright browsers (first time only)
-npx playwright install
-
-# Run E2E tests
-npm run test:e2e
-
-# Run E2E tests with UI mode
-npm run test:e2e:ui
-
-# Debug E2E tests
-npm run test:e2e:debug
-```
-
 ### Test Structure
 
 - **Unit tests**: Located in `src/tests/` using Vitest with jsdom environment
-- **E2E tests**: Located in `tests/e2e/` using Playwright
-- **Test configuration**:
-  - `vitest.config.ts` for unit tests
-  - `playwright.config.ts` for E2E tests
+- **Test configuration**: `vitest.config.ts` for unit tests
 
 ### Continuous Integration
 
 - Unit tests run on all pushes and pull requests
-- E2E tests run on pushes to main and pull requests
 - Test artifacts are uploaded on failures for debugging
 
 ## 🔒 Security
