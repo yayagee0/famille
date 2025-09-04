@@ -370,4 +370,67 @@ VITE_BIRTHDAYS=          # JSON map of emails to birthdays
 - **Field additions**: Must be optional for backward compatibility
 - **Index management**: Monitor Firestore console for required indexes
 
+## Audit & Maintenance
+
+### Regular Audit Process
+
+The Family Hub includes a comprehensive audit system that generates detailed `APP_STATUS_REVIEW.md` reports:
+
+```bash
+# Run full system audit
+npm run audit
+
+# Create Firestore backup
+npm run backup:firestore
+```
+
+### Audit Requirements
+
+- **Frequency**: Weekly automated audits recommended
+- **Evidence**: Minimum 15 evidence items per audit
+- **Critical Issues**: Must be addressed before deployment
+- **Cost Tracking**: Monitor Firebase usage and optimization opportunities
+- **User Consistency**: Verify standardized user object usage across all components
+
+### Maintenance Schedule
+
+#### Weekly Tasks
+- Run comprehensive audit (`npm run audit`)
+- Review and address critical issues
+- Check bundle size and performance metrics
+- Verify test coverage and passing status
+
+#### Monthly Tasks
+- Create Firestore backups
+- Review dependency security updates
+- Analyze cost optimization opportunities
+- Update family feedback in audit reports
+
+#### Quarterly Tasks
+- Major audit rule updates
+- Security rule review (Firestore and Storage)
+- Performance optimization assessment
+- Family satisfaction survey
+
+### Single Developer Guidelines
+
+The platform is designed for maintainability by a single developer (Ghassan):
+
+- **Simplicity First**: Minimal dependencies, clear patterns
+- **Self-Documenting**: TypeScript strict mode, clear naming
+- **Automated Quality**: Lint, test, and audit automation
+- **Recovery Ready**: 1-hour rebuild time from repository
+- **Cost Effective**: <$1/month for family usage
+
+### Quality Gates
+
+Before any deployment or major change:
+
+1. ✅ All tests passing (`npm run test:run`)
+2. ✅ TypeScript strict compliance (`npm run check`)
+3. ✅ Lint compliance (`npm run lint`)
+4. ✅ Build success (`npm run build`)
+5. ✅ Audit review (`npm run audit`)
+6. ✅ Backup verification (if data changes)
+
 This engineering contract ensures consistent development practices and maintains the security and performance requirements of the Family Hub platform.
