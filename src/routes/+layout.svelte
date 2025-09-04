@@ -1,6 +1,5 @@
 <script lang="ts">
 	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
@@ -59,7 +58,11 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href="/favicon.ico" />
+	<link rel="manifest" href="/site.webmanifest" />
+	<link rel="apple-touch-icon" sizes="192x192" href="/android-chrome-192x192.png" />
+	<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
+	<link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" />
 	<title>Family Hub</title>
 	<meta
 		name="description"
