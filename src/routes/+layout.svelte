@@ -7,6 +7,8 @@
 	import { auth } from '$lib/firebase';
 	import { onAuthStateChanged, type User } from 'firebase/auth';
 	import { validateFamilyMember } from '$lib/allowlist';
+	import { getAllowedEmails } from '$lib/users';
+	import { provideWidgetContext } from '$lib/widget-context';
 	import Nav from '$lib/Nav.svelte';
 	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
 	import { registerServiceWorker, isOnline } from '$lib/offline';
@@ -26,6 +28,18 @@
 				// Check if user is in allowlist
 				if (validateFamilyMember(firebaseUser.email)) {
 					user = firebaseUser;
+					
+					// Provide widget context for authenticated user
+					try {
+						provideWidgetContext({
+							authUser: { email: firebaseUser.email! },
+							profiles: undefined, // TODO: Load from Firestore if needed
+							allowedEmails: getAllowedEmails()
+						});
+					} catch (error) {
+						console.error('Failed to provide widget context:', error);
+					}
+					
 					// Redirect to dashboard if on login page
 					if ($page.url.pathname === '/login' || $page.url.pathname === '/') {
 						goto('/dashboard');

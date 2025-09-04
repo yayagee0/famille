@@ -3,25 +3,10 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { browser } from '$app/environment';
-import { validateEnv } from './schemas';
-
-// Validate environment variables
-const envValidation = validateEnv(import.meta.env);
-if (!envValidation.success) {
-	console.error('Invalid environment variables:', envValidation.error);
-	throw new Error('Invalid environment configuration');
-}
-
-const firebaseConfig = {
-	apiKey: import.meta.env.VITE_FB_API_KEY,
-	authDomain: import.meta.env.VITE_FB_AUTH_DOMAIN,
-	projectId: import.meta.env.VITE_FB_PROJECT_ID,
-	storageBucket: import.meta.env.VITE_FB_STORAGE_BUCKET, // ✅ now using firebasestorage.app
-	appId: import.meta.env.VITE_FB_APP_ID
-};
+import { FIREBASE_CONFIG, FAMILY_ID } from './config';
 
 // Initialize Firebase
-export const app = initializeApp(firebaseConfig);
+export const app = initializeApp(FIREBASE_CONFIG);
 
 // Initialize Firebase services
 export const auth = getAuth(app);
@@ -41,7 +26,7 @@ if (browser) {
 }
 
 // ✅ Force storage to use the correct bucket explicitly
-export const storage = getStorage(app, `gs://${import.meta.env.VITE_FB_STORAGE_BUCKET}`);
+export const storage = getStorage(app, `gs://${FIREBASE_CONFIG.storageBucket}`);
 
 // Configure Google Auth Provider
 export const googleProvider = new GoogleAuthProvider();
@@ -58,10 +43,10 @@ if (browser && import.meta.env.DEV) {
 }
 
 // Helper function to get current family ID
-export const getFamilyId = () => import.meta.env.VITE_FAMILY_ID;
+export const getFamilyId = () => FAMILY_ID;
 
 // Helper function to get return URL
-export const getReturnUrl = () => import.meta.env.VITE_FB_RETURN_URL;
+export const getReturnUrl = () => FIREBASE_CONFIG.returnUrl;
 
 // Firebase utility functions
 import { 
