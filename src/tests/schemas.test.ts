@@ -1,14 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-	validateEnv,
-	validateImageFile,
-	validateVideoFile,
-	validatePost,
-	envSchema,
-	imageFileSchema,
-	videoFileSchema,
-	textPostSchema
-} from '../lib/schemas';
+import { validateEnv, validateImageFile, validateVideoFile, validatePost } from '../lib/schemas';
 
 describe('Schema Validation', () => {
 	describe('Environment Variables', () => {

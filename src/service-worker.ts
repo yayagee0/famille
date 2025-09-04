@@ -109,7 +109,7 @@ self.addEventListener('fetch', (event) => {
 									console.log(`[Service Worker] Updating cache for: ${event.request.url}`);
 									await cache.put(event.request, networkResponse.clone());
 								}
-							} catch (error) {
+							} catch {
 								console.log(`[Service Worker] Background update failed for: ${event.request.url}`);
 							}
 						})()

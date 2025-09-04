@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { auth, db } from '$lib/firebase';
 	import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 	import Button from '$lib/components/Button.svelte';

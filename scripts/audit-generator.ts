@@ -180,7 +180,7 @@ class FamilyHubAuditor {
 
 		try {
 			// Check for consistent user object usage across components
-			const userUsagePatterns = execSync(
+			execSync(
 				'find src -name "*.svelte" -o -name "*.ts" | xargs grep -n "\\$user\\|user\\." | head -20',
 				{ encoding: 'utf8' }
 			);
@@ -204,7 +204,7 @@ class FamilyHubAuditor {
 			if (parseInt(widgetContextUsage.trim()) > 0) {
 				issues.push('Widget context system is being used for user standardization');
 			}
-		} catch (error) {
+		} catch {
 			issues.push('Unable to analyze user object consistency');
 		}
 
@@ -258,8 +258,6 @@ class FamilyHubAuditor {
 	}
 
 	public generateAudit(): string {
-		const { timestamp } = this.metrics;
-
 		// Check user object consistency
 		const userConsistencyIssues = this.checkUserObjectConsistency();
 

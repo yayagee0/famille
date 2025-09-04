@@ -4,15 +4,13 @@
 		collection,
 		query,
 		orderBy,
-		addDoc,
 		getDoc,
 		doc,
 		updateDoc,
 		deleteDoc,
 		arrayUnion,
 		arrayRemove,
-		onSnapshot,
-		serverTimestamp
+		onSnapshot
 	} from 'firebase/firestore';
 	import { auth, db } from '$lib/firebase';
 	import FeedUpload from '$lib/FeedUpload.svelte';
