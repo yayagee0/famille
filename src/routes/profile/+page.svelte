@@ -54,7 +54,7 @@
 			user = firebaseUser;
 			if (firebaseUser) {
 				displayName = firebaseUser.displayName || '';
-				
+
 				// Load existing user profile to get nickname
 				try {
 					const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
@@ -65,7 +65,7 @@
 				} catch (error) {
 					console.error('Error loading user profile:', error);
 				}
-				
+
 				loadUserAnswers();
 			}
 		});

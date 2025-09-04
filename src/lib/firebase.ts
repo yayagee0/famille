@@ -172,10 +172,10 @@ export async function getUserProfile(userId: string): Promise<any | null> {
  */
 export async function getAllUserProfiles(emails: string[]): Promise<Record<string, any>> {
 	const profiles: Record<string, any> = {};
-	
-	// Normalize emails to lowercase  
-	const normalizedEmails = emails.map(email => email.toLowerCase().trim());
-	
+
+	// Normalize emails to lowercase
+	const normalizedEmails = emails.map((email) => email.toLowerCase().trim());
+
 	// Use Firestore "in" queries in batches of 10 (Firestore limit)
 	const batches = [];
 	for (let i = 0; i < normalizedEmails.length; i += 10) {
