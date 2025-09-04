@@ -8,7 +8,7 @@
 	import { onAuthStateChanged, type User } from 'firebase/auth';
 	import { validateFamilyMember } from '$lib/allowlist';
 	import { getAllowedEmails } from '$lib/users';
-	import { provideWidgetContext } from '$lib/widget-context';
+	import { initializeWidgetContext, clearWidgetContext } from '$lib/widget-context';
 	import Nav from '$lib/Nav.svelte';
 	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
 	import { registerServiceWorker, isOnline } from '$lib/offline';
@@ -29,15 +29,15 @@
 				if (validateFamilyMember(firebaseUser.email)) {
 					user = firebaseUser;
 					
-					// Provide widget context for authenticated user
+					// Initialize widget context for authenticated user
 					try {
-						provideWidgetContext({
+						initializeWidgetContext({
 							authUser: { email: firebaseUser.email! },
 							profiles: undefined, // TODO: Load from Firestore if needed
 							allowedEmails: getAllowedEmails()
 						});
 					} catch (error) {
-						console.error('Failed to provide widget context:', error);
+						console.error('Failed to initialize widget context:', error);
 					}
 					
 					// Redirect to dashboard if on login page
@@ -48,11 +48,14 @@
 					// User not in allowlist
 					authError = 'Access denied. You are not authorized to access this family hub.';
 					user = null;
+					clearWidgetContext();
 					goto('/login');
 				}
 			} else {
 				user = null;
 				authError = null;
+				// Clear widget context on logout
+				clearWidgetContext();
 				// Redirect to login if not on login page
 				if ($page.url.pathname !== '/login') {
 					goto('/login');

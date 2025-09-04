@@ -3,12 +3,12 @@
 	import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 	import { db } from './firebase';
 	import { auth } from './firebase';
-	import { useWidgetContext } from './widget-context';
+	import { members, currentUser } from './widget-context';
 	import LoadingSpinner from './LoadingSpinner.svelte';
 	import dayjs from 'dayjs';
 
 	// Get widget context for family members
-	const { members, current } = useWidgetContext();
+	// const current = currentUser derived store provides current user
 
 	// Available mood emojis
 	const moods = [

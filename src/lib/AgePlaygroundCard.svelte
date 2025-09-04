@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { useWidgetContext } from './widget-context';
+	import { members } from './widget-context';
 	import { ageOn } from './users';
 	import dayjs from 'dayjs';
 
 	// Get widget context for family members
-	const { members } = useWidgetContext();
+	// members store now provides reactive access
 
 	// Member emojis for fun visual representation
 	const memberEmojis: Record<string, string> = {
@@ -15,7 +15,7 @@
 	};
 
 	// Get members who have birthdays as an array
-	const membersWithBirthdays = $derived(Object.values(members).filter(member => member.birthday));
+	const membersWithBirthdays = $derived(Object.values($members).filter(member => member.birthday));
 
 	// State for the selected family member and target age - initialize with first member when available
 	let selectedMember = $state(null as typeof membersWithBirthdays[0] | null);
