@@ -54,20 +54,6 @@ export const videoFileSchema = z.object({
 	type: z.string().min(1) // Allow any file type
 });
 
-// Daily mood validation schema
-export const moodSchema = z.object({
-	emoji: z.string().min(1, 'Mood emoji is required'),
-	label: z.string().min(1, 'Mood label is required')
-});
-
-// Daily mood entry schema for Firestore daily-moods/{date}/entries/{uid}
-export const moodEntrySchema = z.object({
-	uid: z.string().min(1, 'User ID is required'),
-	email: z.string().email('Valid email is required'),
-	mood: moodSchema,
-	createdAt: z.any() // Firestore Timestamp
-});
-
 // Post author schema (for inline author objects if needed)
 export const postAuthorSchema = z.object({
 	uid: z.string().min(1, 'User ID is required'),
