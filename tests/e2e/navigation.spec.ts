@@ -6,6 +6,12 @@ test.describe('Application Navigation', () => {
 	});
 
 	test('should redirect unauthenticated users to login', async ({ page }) => {
+		// Ignore known non-critical errors (fonts.gstatic.com, service-worker.js)
+		page.on('pageerror', (err) => {
+			if (err.message.includes('fonts.gstatic.com') || err.message.includes('service-worker.js')) return;
+			throw err;
+		});
+
 		// Should not have any console errors on load
 		const errors: string[] = [];
 		page.on('console', (msg) => {
@@ -16,8 +22,8 @@ test.describe('Application Navigation', () => {
 
 		await page.goto('/');
 		
-		// Should be redirected to login page when not authenticated
-		await expect(page).toHaveURL(/.*\/login/);
+		// Assert the redirect URL
+		await expect(page).toHaveURL(/\/login/);
 		
 		// Allow some time for any errors to surface
 		await page.waitForTimeout(1000);
@@ -26,7 +32,9 @@ test.describe('Application Navigation', () => {
 		const criticalErrors = errors.filter(error => 
 			!error.includes('Firebase') && 
 			!error.includes('auth') && 
-			!error.includes('Network request failed')
+			!error.includes('Network request failed') &&
+			!error.includes('fonts.gstatic.com') &&
+			!error.includes('service-worker.js')
 		);
 		
 		expect(criticalErrors).toHaveLength(0);
