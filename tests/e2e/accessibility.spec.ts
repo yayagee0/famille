@@ -16,22 +16,26 @@ test.describe('Accessibility and Performance', () => {
 	});
 
 	test('should have keyboard navigation support', async ({ page }) => {
-		// Focus on the first interactive element (Google sign-in button)
-		const signInButton = page.getByRole('button', { name: /continue with google/i });
-		await expect(signInButton).toBeVisible();
-		
-		// Focus the button and verify it's focused
-		await signInButton.focus();
-		await expect(signInButton).toBeFocused();
-		
-		// Test Tab navigation to ensure focus moves properly
+		// Simulate Tab key press to focus first interactive element
 		await page.keyboard.press('Tab');
 		
-		// Verify that some element has focus (more reliable than checking specific element)
-		const hasFocusedElement = await page.evaluate(() => {
-			return document.activeElement !== null && document.activeElement !== document.body;
+		// Check that some element is focused using CSS :focus selector
+		const focusedElement = page.locator(':focus');
+		await expect(focusedElement).toBeVisible();
+		
+		// Verify the focused element is interactive (button, input, link, etc.)
+		const isInteractive = await focusedElement.evaluate((element) => {
+			const tagName = element.tagName.toLowerCase();
+			const role = element.getAttribute('role');
+			return tagName === 'button' || 
+				   tagName === 'input' || 
+				   tagName === 'a' || 
+				   tagName === 'select' || 
+				   tagName === 'textarea' ||
+				   role === 'button' ||
+				   element.hasAttribute('tabindex');
 		});
-		expect(hasFocusedElement).toBe(true);
+		expect(isInteractive).toBe(true);
 	});
 
 	test('should have aria labels where appropriate', async ({ page }) => {
