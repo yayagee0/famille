@@ -21,7 +21,8 @@ describe('Schema Validation', () => {
 				VITE_FB_APP_ID: 'test-app-id',
 				VITE_FB_RETURN_URL: 'http://localhost:5173',
 				VITE_FAMILY_ID: 'test-family',
-				VITE_ALLOWED_EMAILS: 'test@example.com,test2@example.com'
+				VITE_ALLOWED_EMAILS: 'test@example.com,test2@example.com',
+				VITE_BIRTHDAYS: '{"test@example.com":"2000-01-01"}'
 			};
 
 			const result = validateEnv(validEnv);
@@ -52,26 +53,26 @@ describe('Schema Validation', () => {
 			expect(result.success).toBe(true);
 		});
 
-		it('should reject oversized image files', () => {
+		it('should accept oversized image files (no restrictions)', () => {
 			const mockImageFile = new File(['mock content'], 'test.jpg', {
 				type: 'image/jpeg',
 				lastModified: Date.now()
 			});
-			// Mock file size to be over 5MB
+			// Mock file size to be over 5MB - should now be accepted
 			Object.defineProperty(mockImageFile, 'size', { value: 6 * 1024 * 1024 }); // 6MB
 
 			const result = validateImageFile(mockImageFile);
-			expect(result.success).toBe(false);
+			expect(result.success).toBe(true);
 		});
 
-		it('should reject non-image files', () => {
+		it('should accept non-image files (no type restrictions)', () => {
 			const mockTextFile = new File(['mock content'], 'test.txt', {
 				type: 'text/plain',
 				lastModified: Date.now()
 			});
 
 			const result = validateImageFile(mockTextFile);
-			expect(result.success).toBe(false);
+			expect(result.success).toBe(true);
 		});
 
 		it('should validate valid video files', () => {
@@ -90,11 +91,13 @@ describe('Schema Validation', () => {
 	describe('Post Validation', () => {
 		it('should validate a text post', () => {
 			const textPost = {
-				type: 'text' as const,
-				content: 'This is a test post',
+				kind: 'text' as const,
+				text: 'This is a test post',
 				authorUid: 'test-uid',
 				familyId: 'test-family',
-				createdAt: new Date()
+				createdAt: new Date(),
+				likes: [],
+				comments: []
 			};
 
 			const result = validatePost(textPost);
@@ -103,11 +106,13 @@ describe('Schema Validation', () => {
 
 		it('should reject text post with empty content', () => {
 			const textPost = {
-				type: 'text' as const,
-				content: '', // empty content
+				kind: 'text' as const,
+				text: '', // empty content
 				authorUid: 'test-uid',
 				familyId: 'test-family',
-				createdAt: new Date()
+				createdAt: new Date(),
+				likes: [],
+				comments: []
 			};
 
 			const result = validatePost(textPost);
@@ -116,12 +121,14 @@ describe('Schema Validation', () => {
 
 		it('should validate a photo post with imagePaths', () => {
 			const photoPost = {
-				type: 'photo' as const,
-				content: 'Photo description',
+				kind: 'photo' as const,
+				text: 'Photo description',
 				authorUid: 'test-uid',
 				imagePaths: ['https://example.com/image1.jpg'],
 				familyId: 'test-family',
-				createdAt: new Date()
+				createdAt: new Date(),
+				likes: [],
+				comments: []
 			};
 
 			const result = validatePost(photoPost);
@@ -130,8 +137,8 @@ describe('Schema Validation', () => {
 
 		it('should validate a poll post', () => {
 			const pollPost = {
-				type: 'poll' as const,
-				content: 'Poll description',
+				kind: 'poll' as const,
+				text: 'Poll description',
 				authorUid: 'test-uid',
 				poll: {
 					title: 'What is your favorite color?',
@@ -141,7 +148,9 @@ describe('Schema Validation', () => {
 					]
 				},
 				familyId: 'test-family',
-				createdAt: new Date()
+				createdAt: new Date(),
+				likes: [],
+				comments: []
 			};
 
 			const result = validatePost(pollPost);
@@ -150,12 +159,14 @@ describe('Schema Validation', () => {
 
 		it('should validate a YouTube post', () => {
 			const youtubePost = {
-				type: 'youtube' as const,
-				content: 'Check out this video',
+				kind: 'youtube' as const,
+				text: 'Check out this video',
 				authorUid: 'test-uid',
-				youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+				youtubeId: 'dQw4w9WgXcQ',
 				familyId: 'test-family',
-				createdAt: new Date()
+				createdAt: new Date(),
+				likes: [],
+				comments: []
 			};
 
 			const result = validatePost(youtubePost);
@@ -164,12 +175,14 @@ describe('Schema Validation', () => {
 
 		it('should reject YouTube post with invalid URL', () => {
 			const youtubePost = {
-				type: 'youtube' as const,
-				content: 'Check out this video',
+				kind: 'youtube' as const,
+				text: 'Check out this video',
 				authorUid: 'test-uid',
-				youtubeUrl: 'https://example.com/not-youtube',
+				youtubeId: '', // empty ID
 				familyId: 'test-family',
-				createdAt: new Date()
+				createdAt: new Date(),
+				likes: [],
+				comments: []
 			};
 
 			const result = validatePost(youtubePost);

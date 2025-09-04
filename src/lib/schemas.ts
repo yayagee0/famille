@@ -40,17 +40,17 @@ export const envSchema = z.object({
 	VITE_BIRTHDAYS: z.string().min(1, 'Birthdays JSON is required')
 });
 
-// File upload metadata schemas
+// File upload metadata schemas - made permissive for any size and type
 export const imageFileSchema = z.object({
 	name: z.string().min(1, 'File name is required'),
-	size: z.number().max(5 * 1024 * 1024, 'Image file must be smaller than 5MB'),
-	type: z.string().refine((type) => type.startsWith('image/'), 'File must be an image')
+	size: z.number().min(0), // Allow any size
+	type: z.string().min(1) // Allow any file type
 });
 
 export const videoFileSchema = z.object({
 	name: z.string().min(1, 'File name is required'),
-	size: z.number().max(100 * 1024 * 1024, 'Video file must be smaller than 100MB'), // Permissive limit
-	type: z.string().refine((type) => type.startsWith('video/'), 'File must be a video')
+	size: z.number().min(0), // Allow any size
+	type: z.string().min(1) // Allow any file type
 });
 
 // Post author schema (for inline author objects if needed)
@@ -96,48 +96,62 @@ export const youtubeUrlSchema = z.string().refine((url) => {
 
 // Base post schema - unified to use authorUid only
 export const basePostSchema = z.object({
-	type: z.enum(['text', 'photo', 'video', 'youtube', 'poll']),
-	content: z.string(), // Permissive - allow empty content for some post types
+	kind: z.enum(['text', 'photo', 'video', 'youtube', 'poll']),
+	text: z.string(), // Renamed from content to match Firestore schema, allow empty for some post types
 	authorUid: z.string().min(1, 'Author UID is required'),
 	familyId: z.string().min(1, 'Family ID is required'),
 	createdAt: z.date(),
-	// Firestore schema fields for media
+	likes: z.array(z.string()).default([]),
+	comments: z.array(z.any()).default([]),
+	// Firestore schema fields for media - made more permissive
+	imagePath: z.string().url().optional(),
 	imagePaths: z.array(z.string().url()).optional(),
-	videoPaths: z.array(z.string().url()).optional()
+	videoPath: z.string().url().optional(),
+	youtubeId: z.string().optional(),
+	poll: z.object({
+		title: z.string(),
+		options: z.array(z.object({
+			text: z.string(),
+			votes: z.array(z.string())
+		}))
+	}).optional()
 });
 
 // Text post schema
 export const textPostSchema = basePostSchema.extend({
-	type: z.literal('text'),
-	content: z.string().min(1, 'Text post must have content')
+	kind: z.literal('text'),
+	text: z.string().min(1, 'Text post must have content')
 });
 
 // Photo post schema
 export const photoPostSchema = basePostSchema.extend({
-	type: z.literal('photo'),
-	imagePaths: z.array(z.string().url()).min(1, 'Photo post must have at least one image URL')
+	kind: z.literal('photo'),
+	imagePath: z.string().url().optional(),
+	imagePaths: z.array(z.string().url()).optional()
+}).refine(data => data.imagePath || (data.imagePaths && data.imagePaths.length > 0), {
+	message: 'Photo post must have at least one image URL'
 });
 
 // Video post schema
 export const videoPostSchema = basePostSchema.extend({
-	type: z.literal('video'),
-	videoPaths: z.array(z.string().url()).length(1, 'Video post must have exactly one video URL')
+	kind: z.literal('video'),
+	videoPath: z.string().url('Video post must have a valid video URL')
 });
 
 // YouTube post schema
 export const youtubePostSchema = basePostSchema.extend({
-	type: z.literal('youtube'),
-	youtubeUrl: youtubeUrlSchema
+	kind: z.literal('youtube'),
+	youtubeId: z.string().min(1, 'YouTube post must have a video ID')
 });
 
 // Poll post schema
 export const pollPostSchema = basePostSchema.extend({
-	type: z.literal('poll'),
+	kind: z.literal('poll'),
 	poll: pollSchema
 });
 
 // Union of all post types
-export const postSchema = z.discriminatedUnion('type', [
+export const postSchema = z.discriminatedUnion('kind', [
 	textPostSchema,
 	photoPostSchema,
 	videoPostSchema,

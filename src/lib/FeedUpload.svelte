@@ -6,7 +6,6 @@
 	import { storage, db } from '$lib/firebase';
 	import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 	import { FAMILY_ID } from '$lib/config';
-	import imageCompression from 'browser-image-compression';
 
 	const dispatch = createEventDispatcher();
 
@@ -23,23 +22,6 @@
 	let previewUrls: string[] = $state([]);
 	let uploadProgress = $state('');
 
-	// Helper function to resize and compress images
-	async function processImage(file: File): Promise<File> {
-		const options = {
-			maxSizeMB: 1, // Limit to 1MB
-			maxWidthOrHeight: 1280, // Resize to max 1280px
-			useWebWorker: true,
-			fileType: 'image/jpeg' // Convert to JPEG for better compression
-		};
-		
-		try {
-			return await imageCompression(file, options);
-		} catch (error) {
-			console.warn('Image compression failed, using original:', error);
-			return file;
-		}
-	}
-
 	function setPostType(type: typeof postType) {
 		postType = type;
 		// Reset form when changing type
@@ -55,10 +37,11 @@
 		const target = event.target as HTMLInputElement;
 		selectedFiles = target.files;
 
-		// Create preview URLs for images and videos
+		// Create preview URLs for any file type
 		if (selectedFiles) {
 			previewUrls = [];
 			Array.from(selectedFiles).forEach((file) => {
+				// Try to create preview for image and video files
 				if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
 					const url = URL.createObjectURL(file);
 					previewUrls.push(url);
@@ -121,31 +104,21 @@
 
 			// Handle file uploads FIRST before creating Firestore document
 			if (selectedFiles && (postType === 'photo' || postType === 'video')) {
-				uploadProgress = 'Validating and processing files...';
+				uploadProgress = 'Uploading files...';
 
 				for (const file of Array.from(selectedFiles)) {
 					if (postType === 'photo') {
-						const validation = validateImageFile(file);
-						if (!validation.success) {
-							throw new Error(`Invalid image file: ${file.name}`);
-						}
-
-						uploadProgress = `Optimizing and uploading image: ${file.name}`;
+						uploadProgress = `Uploading image: ${file.name}`;
 						
-						// Process and compress image
-						const processedFile = await processImage(file);
-						
+						// Upload file directly without compression or validation
 						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
-						const uploadSnapshot = await uploadBytes(fileRef, processedFile);
+						const uploadSnapshot = await uploadBytes(fileRef, file);
 						const downloadURL = await getDownloadURL(uploadSnapshot.ref);
 						imagePaths.push(downloadURL);
 					} else if (postType === 'video') {
-						const validation = validateVideoFile(file);
-						if (!validation.success) {
-							throw new Error(`Invalid video file: ${file.name}`);
-						}
-
 						uploadProgress = `Uploading video: ${file.name}`;
+						
+						// Upload file directly without validation
 						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
 						const uploadSnapshot = await uploadBytes(fileRef, file);
 						const downloadURL = await getDownloadURL(uploadSnapshot.ref);
@@ -309,9 +282,6 @@
 			<input
 				type="file"
 				multiple={postType === 'photo'}
-				accept={postType === 'photo'
-					? '.jpg,.jpeg,.png,.webp,.gif,.heic,.bmp,.tiff,.svg'
-					: '.mp4,.mov,.webm,.avi,.mkv,.flv,.wmv,.m4v,.3gp,.ogv'}
 				onchange={handleFileSelect}
 				class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
 			/>
