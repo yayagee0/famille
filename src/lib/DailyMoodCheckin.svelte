@@ -62,9 +62,13 @@
 	}
 
 	async function selectMood(selectedMood: { emoji: string; label: string }) {
-		if (!auth.currentUser?.email) return;
+		// Only call setDoc if uid and email exist
+		if (!auth.currentUser?.email || !auth.currentUser?.uid) {
+			console.error('Failed to save mood: No authenticated user');
+			return;
+		}
 
-		const userEmail = auth.currentUser.email;
+		const userEmail = auth.currentUser.email.toLowerCase(); // Normalize email to lowercase
 		const userUid = auth.currentUser.uid;
 
 		try {
@@ -81,15 +85,16 @@
 			};
 
 			// Save to Firestore using new structure: daily-moods/{date}/entries/{uid}
+			// Payload: { uid, email: email.toLowerCase(), mood, createdAt: serverTimestamp() }
 			const entryRef = doc(db, 'daily-moods', today, 'entries', userUid);
 			await setDoc(entryRef, {
 				uid: userUid,
-				email: userEmail,
+				email: userEmail, // Already normalized to lowercase
 				mood: validMood,
 				createdAt: serverTimestamp()
 			});
 		} catch (error) {
-			console.error('Error saving mood:', error);
+			console.error('Failed to save mood:', error);
 			// Revert optimistic update on error
 			loadTodaysMoods();
 		}
