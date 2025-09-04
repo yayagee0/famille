@@ -4,15 +4,13 @@
 		collection,
 		query,
 		orderBy,
-		addDoc,
 		getDoc,
 		doc,
 		updateDoc,
 		deleteDoc,
 		arrayUnion,
 		arrayRemove,
-		onSnapshot,
-		serverTimestamp
+		onSnapshot
 	} from 'firebase/firestore';
 	import { auth, db } from '$lib/firebase';
 	import FeedUpload from '$lib/FeedUpload.svelte';
@@ -286,7 +284,7 @@
 
 		try {
 			const newComment = {
-				author: getDisplayName(user?.email, { nickname: user?.nickname }),
+				author: getDisplayName(user?.email, { nickname: undefined }),
 				text: sanitizedText, // Use sanitized text
 				createdAt: new Date()
 			};

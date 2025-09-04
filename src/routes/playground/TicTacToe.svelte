@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { auth, db } from '$lib/firebase';
 	import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 	import Button from '$lib/components/Button.svelte';
@@ -159,7 +158,7 @@
 		try {
 			await addDoc(collection(db, 'games', 'tic-tac', 'matches'), {
 				playerUid: user.uid,
-				playerName: getDisplayName(user?.email, { nickname: user?.nickname }),
+				playerName: getDisplayName(user?.email, { nickname: undefined }),
 				result: gameResult,
 				difficulty,
 				board: board.slice(), // Save final board state

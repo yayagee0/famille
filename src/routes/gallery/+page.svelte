@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import { collection, query, where, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
 	import { db, getFamilyId } from '$lib/firebase';
-	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';

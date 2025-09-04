@@ -110,7 +110,8 @@
 				wins: games.filter((g) => g.result === 'win').length,
 				draws: games.filter((g) => g.result === 'draw').length,
 				losses: games.filter((g) => g.result === 'lose').length,
-				recentGames: games.slice(0, 5)
+				recentGames: games.slice(0, 5),
+				winRate: 0 // Initialize winRate property
 			};
 
 			stats.winRate = stats.games > 0 ? Math.round((stats.wins / stats.games) * 100) : 0;

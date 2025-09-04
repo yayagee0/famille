@@ -11,19 +11,15 @@
 		collection,
 		getDocs,
 		query,
-		where,
 		addDoc,
 		orderBy,
-		limit,
 		getDoc
 	} from 'firebase/firestore';
 	import { User, Save, Mail, Download, Plus, Trophy, Star, Heart } from 'lucide-svelte';
 	import imageCompression from 'browser-image-compression';
 	import ErrorMessage from '$lib/ErrorMessage.svelte';
-	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { validateImageFile } from '$lib/schemas';
-	import { browser } from '$app/environment';
 
 	let user = $state(auth.currentUser);
 	let displayName = $state('');
@@ -46,7 +42,6 @@
 	let showOtherInput = $state<Record<string, boolean>>({});
 
 	// Categories for balanced rotation
-	const categories = ['fun', 'daily', 'family', 'values', 'dreams', 'hobbies', 'personality'];
 	const categoryOrder = [
 		['fun', 'daily'],
 		['family', 'dreams'],
@@ -522,7 +517,7 @@
 							<img
 								class="h-20 w-20 rounded-full object-cover"
 								src={user.photoURL}
-								alt={getDisplayName(user?.email, { nickname: user?.nickname })}
+								alt={getDisplayName(user?.email, { nickname: undefined })}
 							/>
 						{:else}
 							<div class="flex h-20 w-20 items-center justify-center rounded-full bg-gray-300">

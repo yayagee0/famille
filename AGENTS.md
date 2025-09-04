@@ -395,18 +395,21 @@ npm run backup:firestore
 ### Maintenance Schedule
 
 #### Weekly Tasks
+
 - Run comprehensive audit (`npm run audit`)
 - Review and address critical issues
 - Check bundle size and performance metrics
 - Verify test coverage and passing status
 
 #### Monthly Tasks
+
 - Create Firestore backups
 - Review dependency security updates
 - Analyze cost optimization opportunities
 - Update family feedback in audit reports
 
 #### Quarterly Tasks
+
 - Major audit rule updates
 - Security rule review (Firestore and Storage)
 - Performance optimization assessment

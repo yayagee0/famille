@@ -144,7 +144,7 @@ describe('FeedUpload Integration', () => {
 		expect(result.success).toBe(false);
 		if (!result.success) {
 			// Verify it's specifically a date validation error
-			expect(result.error.toString()).toContain('date');
+			expect((result.error as Error).toString()).toContain('date');
 		}
 	});
 

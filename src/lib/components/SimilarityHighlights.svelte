@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { auth, db, getFamilyId } from '$lib/firebase';
-	import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+	import { auth, db } from '$lib/firebase';
+	import { collection, query, getDocs } from 'firebase/firestore';
 	import { Users, Sparkles } from 'lucide-svelte';
 	import { getDisplayName } from '../getDisplayName';
 	import type { User } from 'firebase/auth';
@@ -74,7 +74,7 @@
 				);
 				return {
 					memberUid: member.uid,
-					memberName: getDisplayName(member.email, { nickname: member.nickname }),
+					memberName: getDisplayName(member.email, { nickname: undefined }),
 					answers: memberAnswersSnapshot.docs.map((doc) => ({
 						questionId: doc.data().questionId,
 						answer: doc.data().answer,
