@@ -4,6 +4,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import { RotateCcw, Trophy, Bot, User } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
+	import { playSound } from '$lib/sound';
 
 	type Player = 'X' | 'O' | null;
 	type Board = Player[];
@@ -112,18 +113,23 @@
 	async function makePlayerMove(index: number) {
 		if (board[index] || !isPlayerTurn || gameResult) return;
 
-		// Player move
+		// Player move with click sound
 		board[index] = 'X';
+		playSound('/sounds/click.mp3');
 
 		const winner = checkWinner(board);
 		if (winner) {
 			gameResult = winner === 'X' ? 'win' : 'lose';
+			if (gameResult === 'win') {
+				playSound('/sounds/victory.mp3');
+			}
 			await saveGame();
 			return;
 		}
 
 		if (isBoardFull(board)) {
 			gameResult = 'draw';
+			playSound('/sounds/draw.mp3');
 			await saveGame();
 			return;
 		}
@@ -143,6 +149,7 @@
 				await saveGame();
 			} else if (isBoardFull(board)) {
 				gameResult = 'draw';
+				playSound('/sounds/draw.mp3');
 				await saveGame();
 			} else {
 				isPlayerTurn = true;
@@ -206,9 +213,13 @@
 				return '';
 		}
 	}
+
+	function getWinnerClass() {
+		return gameResult === 'win' ? 'animate-confetti' : '';
+	}
 </script>
 
-<div class="rounded-2xl bg-white p-6 shadow-sm">
+<div class="rounded-2xl bg-white p-6 shadow-sm {getWinnerClass()}">
 	<!-- Header -->
 	<div class="mb-6 flex items-center justify-between">
 		<div class="flex items-center space-x-3">
@@ -286,9 +297,12 @@
 
 	<!-- Controls -->
 	<div class="flex justify-center">
-		<Button variant="outline" size="medium" onclick={resetGame}>
-			<RotateCcw class="mr-2 h-4 w-4" />
-			New Game
-		</Button>
+		<button
+			class="bg-primary text-white rounded-lg px-4 py-2 hover:bg-primary-dark transition-colors duration-200 flex items-center space-x-2"
+			onclick={resetGame}
+		>
+			<RotateCcw class="h-4 w-4" />
+			<span>New Game</span>
+		</button>
 	</div>
 </div>
