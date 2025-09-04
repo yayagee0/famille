@@ -482,7 +482,7 @@ src/
 - Test files: 3 (LoadingSpinner, ErrorMessage, schemas)
 - Test results: ${testPassRate}
 - Coverage: Core utilities and components
-- Missing: E2E tests, Firebase functions
+- Missing: Firebase functions
 
 ---
 
@@ -529,7 +529,6 @@ src/
 3. **Medium**: Improve gallery navigation UX
 4. **Medium**: Add font size toggle for accessibility
 5. **Low**: Implement push notifications
-6. **Low**: Add comprehensive E2E tests
 
 ---
 

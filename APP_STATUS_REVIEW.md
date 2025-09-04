@@ -12,7 +12,7 @@ Environment: Production-ready
 
 - Bundle size still high (~554KB) → must code-split.
 - Missing automated Firestore backup/export process.
-- E2E test coverage added but limited to main flows only.
+- **UPDATED**: Playwright E2E tests removed - using Vitest unit tests only.
 - Some accessibility warnings remain.
 - Inconsistent use of `user` object (profile vs dashboard).
 
@@ -252,7 +252,7 @@ Validation note: same as previous audit (checked, no change).
 1. package.json → 32 deps
 2. npm run build → 18.4s
 3. npm run test → 19/19 pass
-4. playwright test:e2e → login, dashboard, profile covered
+4. **REMOVED**: Playwright E2E tests (now using Vitest only)
 5. du -sh → 340M
 6. find src/routes → 7 routes
 7. find src -name "\*.svelte" → 19 components
