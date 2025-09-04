@@ -108,13 +108,17 @@ export const basePostSchema = z.object({
 	imagePaths: z.array(z.string().url()).optional(),
 	videoPath: z.string().url().optional(),
 	youtubeId: z.string().optional(),
-	poll: z.object({
-		title: z.string(),
-		options: z.array(z.object({
-			text: z.string(),
-			votes: z.array(z.string())
-		}))
-	}).optional()
+	poll: z
+		.object({
+			title: z.string(),
+			options: z.array(
+				z.object({
+					text: z.string(),
+					votes: z.array(z.string())
+				})
+			)
+		})
+		.optional()
 });
 
 // Text post schema
@@ -124,13 +128,15 @@ export const textPostSchema = basePostSchema.extend({
 });
 
 // Photo post schema
-export const photoPostSchema = basePostSchema.extend({
-	kind: z.literal('photo'),
-	imagePath: z.string().url().optional(),
-	imagePaths: z.array(z.string().url()).optional()
-}).refine(data => data.imagePath || (data.imagePaths && data.imagePaths.length > 0), {
-	message: 'Photo post must have at least one image URL'
-});
+export const photoPostSchema = basePostSchema
+	.extend({
+		kind: z.literal('photo'),
+		imagePath: z.string().url().optional(),
+		imagePaths: z.array(z.string().url()).optional()
+	})
+	.refine((data) => data.imagePath || (data.imagePaths && data.imagePaths.length > 0), {
+		message: 'Photo post must have at least one image URL'
+	});
 
 // Video post schema
 export const videoPostSchema = basePostSchema.extend({

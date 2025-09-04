@@ -159,21 +159,21 @@
 					<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
 						<div class="flex items-start justify-between">
 							<div class="flex-1 space-y-2">
-								<div class="h-4 bg-gray-300 rounded w-3/4"></div>
-								<div class="h-3 bg-gray-200 rounded w-1/2"></div>
+								<div class="h-4 w-3/4 rounded bg-gray-300"></div>
+								<div class="h-3 w-1/2 rounded bg-gray-200"></div>
 								<div class="flex items-center space-x-2">
-									<div class="h-3 bg-gray-300 rounded w-16"></div>
-									<div class="h-5 bg-gray-200 rounded-full w-20"></div>
+									<div class="h-3 w-16 rounded bg-gray-300"></div>
+									<div class="h-5 w-20 rounded-full bg-gray-200"></div>
 								</div>
 							</div>
 							<div class="ml-3">
-								<div class="h-6 bg-gray-200 rounded-full w-16"></div>
+								<div class="h-6 w-16 rounded-full bg-gray-200"></div>
 							</div>
 						</div>
 					</div>
 				{/each}
-				<div class="text-center pt-2">
-					<div class="h-3 bg-gray-200 rounded w-32 mx-auto"></div>
+				<div class="pt-2 text-center">
+					<div class="mx-auto h-3 w-32 rounded bg-gray-200"></div>
 				</div>
 			</div>
 		{:else if similarities.length === 0}

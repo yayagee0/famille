@@ -26,9 +26,9 @@ export const FIREBASE_CONFIG = {
 export const FAMILY_ID = import.meta.env.VITE_FAMILY_ID;
 
 // Parse and normalize allowed emails (lowercase)
-export const ALLOWED_EMAILS = import.meta.env.VITE_ALLOWED_EMAILS
-	.split(',')
-	.map((email: string) => email.trim().toLowerCase());
+export const ALLOWED_EMAILS = import.meta.env.VITE_ALLOWED_EMAILS.split(',').map((email: string) =>
+	email.trim().toLowerCase()
+);
 
 // Parse birthdays from JSON
 export const BIRTHDAYS: Record<string, string> = (() => {

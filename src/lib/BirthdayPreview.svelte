@@ -9,7 +9,7 @@
 
 		// Calculate next birthday for each member who has a birthday
 		const upcomingBirthdays = Object.values($members)
-			.filter(member => member.birthday)
+			.filter((member) => member.birthday)
 			.map((member) => {
 				const birthDate = new Date(member.birthday!);
 

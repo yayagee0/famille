@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { Image, Video, Youtube, BarChart3, Send, X } from 'lucide-svelte';
-	import { validateImageFile, validateVideoFile, validatePost } from '$lib/schemas';
+	import { validatePost } from '$lib/schemas';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 	import { storage, db } from '$lib/firebase';
 	import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -65,7 +65,9 @@
 	}
 
 	function extractYouTubeId(url: string): string {
-		const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+		const match = url.match(
+			/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+		);
 		return match ? match[1] : url;
 	}
 
@@ -109,7 +111,7 @@
 				for (const file of Array.from(selectedFiles)) {
 					if (postType === 'photo') {
 						uploadProgress = `Uploading image: ${file.name}`;
-						
+
 						// Upload file directly without compression or validation
 						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
 						const uploadSnapshot = await uploadBytes(fileRef, file);
@@ -117,7 +119,7 @@
 						imagePaths.push(downloadURL);
 					} else if (postType === 'video') {
 						uploadProgress = `Uploading video: ${file.name}`;
-						
+
 						// Upload file directly without validation
 						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
 						const uploadSnapshot = await uploadBytes(fileRef, file);
@@ -136,7 +138,7 @@
 				familyId: FAMILY_ID,
 				kind: postType,
 				text: textContent.trim(),
-				createdAt: serverTimestamp(),
+				createdAt: new Date(), // Use Date object for validation, Firestore will convert to server timestamp
 				likes: [],
 				comments: [],
 				// Add image URLs
@@ -150,9 +152,10 @@
 					videoPath: videoPaths[0]
 				}),
 				// Add YouTube URL if present
-				...(postType === 'youtube' && youtubeUrl.trim() && { 
-					youtubeId: extractYouTubeId(youtubeUrl.trim()) 
-				}),
+				...(postType === 'youtube' &&
+					youtubeUrl.trim() && {
+						youtubeId: extractYouTubeId(youtubeUrl.trim())
+					}),
 				// Add poll data if present
 				...(postType === 'poll' && {
 					poll: {
@@ -174,10 +177,16 @@
 				throw new Error('Invalid post data');
 			}
 
+			// Replace client timestamp with server timestamp for Firestore
+			const firestorePostData = {
+				...postData,
+				createdAt: serverTimestamp()
+			};
+
 			// Add to Firestore
-			await addDoc(collection(db, 'posts'), postData);
+			await addDoc(collection(db, 'posts'), firestorePostData);
 			uploadProgress = 'Post created successfully!';
-			
+
 			// Dispatch success event to parent
 			dispatch('post-created');
 
@@ -334,7 +343,7 @@
 				class="w-full rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
 			/>
 
-			{#each pollOptions as pollOption, index (index)}
+			{#each pollOptions as _, index (index)}
 				<div class="flex items-center space-x-2">
 					<input
 						type="text"

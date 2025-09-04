@@ -12,7 +12,7 @@ if (browser) {
 		isOnline.set(true);
 		syncOfflineData();
 	});
-	
+
 	window.addEventListener('offline', () => {
 		console.log('[Offline Manager] Gone offline');
 		isOnline.set(false);
@@ -46,7 +46,7 @@ interface CacheItem {
  */
 export function cacheData(key: string, data: any, version = '1.0'): void {
 	if (!browser) return;
-	
+
 	try {
 		const cacheItem: CacheItem = {
 			data,
@@ -65,19 +65,19 @@ export function cacheData(key: string, data: any, version = '1.0'): void {
  */
 export function getCachedData(key: string, maxAge: number): any | null {
 	if (!browser) return null;
-	
+
 	try {
 		const cached = localStorage.getItem(key);
 		if (!cached) return null;
-		
+
 		const cacheItem: CacheItem = JSON.parse(cached);
 		const age = Date.now() - cacheItem.timestamp;
-		
+
 		if (age > maxAge) {
 			localStorage.removeItem(key);
 			return null;
 		}
-		
+
 		console.log(`[Offline Manager] Retrieved cached data for key: ${key}`);
 		return cacheItem.data;
 	} catch (error) {
@@ -155,8 +155,8 @@ export function getCachedGames(): any[] | null {
  */
 export function clearAllCache(): void {
 	if (!browser) return;
-	
-	Object.values(CACHE_KEYS).forEach(key => {
+
+	Object.values(CACHE_KEYS).forEach((key) => {
 		localStorage.removeItem(key);
 	});
 	hasOfflineData.set(false);
@@ -168,12 +168,12 @@ export function clearAllCache(): void {
  */
 export function getCacheStats(): { size: number; items: number; keys: string[] } {
 	if (!browser) return { size: 0, items: 0, keys: [] };
-	
+
 	let totalSize = 0;
 	let itemCount = 0;
 	const keys: string[] = [];
-	
-	Object.values(CACHE_KEYS).forEach(key => {
+
+	Object.values(CACHE_KEYS).forEach((key) => {
 		const item = localStorage.getItem(key);
 		if (item) {
 			totalSize += item.length;
@@ -181,7 +181,7 @@ export function getCacheStats(): { size: number; items: number; keys: string[] }
 			keys.push(key);
 		}
 	});
-	
+
 	return {
 		size: totalSize,
 		items: itemCount,
@@ -195,17 +195,17 @@ export function getCacheStats(): { size: number; items: number; keys: string[] }
  */
 async function syncOfflineData(): Promise<void> {
 	console.log('[Offline Manager] Starting offline data sync...');
-	
+
 	// This is where you would implement conflict resolution
 	// For now, we'll just invalidate cache to force fresh data fetch
 	// In a more sophisticated implementation, you would:
 	// 1. Compare local cached data with server data
 	// 2. Resolve conflicts (server wins according to requirements)
 	// 3. Upload any pending local changes
-	
+
 	// For this implementation, we'll clear cache to force fresh data fetch
 	clearAllCache();
-	
+
 	console.log('[Offline Manager] Offline data sync completed');
 }
 
@@ -217,15 +217,15 @@ export async function registerServiceWorker(): Promise<void> {
 		console.log('[Offline Manager] Service Worker not supported');
 		return;
 	}
-	
+
 	try {
 		console.log('[Offline Manager] Registering Service Worker...');
 		const registration = await navigator.serviceWorker.register('/service-worker.js');
-		
+
 		registration.addEventListener('updatefound', () => {
 			console.log('[Offline Manager] Service Worker update found');
 			const newWorker = registration.installing;
-			
+
 			if (newWorker) {
 				newWorker.addEventListener('statechange', () => {
 					if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
@@ -235,7 +235,7 @@ export async function registerServiceWorker(): Promise<void> {
 				});
 			}
 		});
-		
+
 		console.log('[Offline Manager] Service Worker registered successfully');
 	} catch (error) {
 		console.error('[Offline Manager] Service Worker registration failed:', error);

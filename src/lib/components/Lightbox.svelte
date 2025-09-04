@@ -26,23 +26,23 @@
 	// Touch/swipe gesture support
 	let touchStartX = $state(0);
 	let touchStartY = $state(0);
-	
+
 	function handleTouchStart(event: TouchEvent) {
 		if (event.touches.length !== 1) return;
-		
+
 		touchStartX = event.touches[0].clientX;
 		touchStartY = event.touches[0].clientY;
 	}
-	
+
 	function handleTouchEnd(event: TouchEvent) {
 		if (event.changedTouches.length !== 1) return;
-		
+
 		const touchEndX = event.changedTouches[0].clientX;
 		const touchEndY = event.changedTouches[0].clientY;
-		
+
 		const deltaX = touchEndX - touchStartX;
 		const deltaY = touchEndY - touchStartY;
-		
+
 		// Only trigger swipe if horizontal movement is greater than vertical
 		if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
 			if (deltaX > 0) {

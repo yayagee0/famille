@@ -165,7 +165,7 @@ npm run test:e2e:debug
 
 - **Unit tests**: Located in `src/tests/` using Vitest with jsdom environment
 - **E2E tests**: Located in `tests/e2e/` using Playwright
-- **Test configuration**: 
+- **Test configuration**:
   - `vitest.config.ts` for unit tests
   - `playwright.config.ts` for E2E tests
 
