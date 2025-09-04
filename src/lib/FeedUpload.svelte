@@ -3,7 +3,8 @@
 	import { Image, Video, Youtube, BarChart3, Send, X } from 'lucide-svelte';
 	import { validateImageFile, validateVideoFile, validatePost } from '$lib/schemas';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-	import { storage } from '$lib/firebase';
+	import { storage, db } from '$lib/firebase';
+	import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 	import imageCompression from 'browser-image-compression';
 
 	const dispatch = createEventDispatcher();
@@ -129,53 +130,71 @@
 					placeholderPaths.push(placeholderUrl);
 				}
 
-				// Create post data with placeholder images
-				const placeholderPostData = {
-					type: postType,
-					content: textContent,
+				// Create Firestore document immediately with placeholder and uploading status
+				const placeholderPostDoc = {
 					authorUid: user.uid,
+					createdAt: serverTimestamp(),
+					kind: postType,
+					text: textContent || '',
+					likes: [],
+					comments: [],
 					familyId: import.meta.env.VITE_FAMILY_ID,
-					createdAt: new Date(),
-					imagePaths: placeholderPaths,
-					isPlaceholder: true // Flag to indicate this needs real upload
+					status: 'uploading',
+					imageUrl: placeholderPaths[0], // First image as preview URL
+					imagePath: placeholderPaths[0], // For compatibility with existing schema
+					...(placeholderPaths.length > 1 && { imagePaths: placeholderPaths })
 				};
 
-				// Dispatch placeholder post immediately
-				dispatch('post-created', placeholderPostData);
+				// Add document to Firestore and get the document reference
+				const docRef = await addDoc(collection(db, 'posts'), placeholderPostDoc);
+				const postId = docRef.id;
 
-				// Now upload actual images in background and dispatch update
+				// Now upload actual images in background and update the same document
 				uploadProgress = 'Uploading optimized images...';
 				
-				for (let i = 0; i < selectedFiles.length; i++) {
-					const file = selectedFiles[i];
-					uploadProgress = `Optimizing and uploading image ${i + 1}/${selectedFiles.length}...`;
+				try {
+					for (let i = 0; i < selectedFiles.length; i++) {
+						const file = selectedFiles[i];
+						uploadProgress = `Optimizing and uploading image ${i + 1}/${selectedFiles.length}...`;
+						
+						// Process and compress image
+						const processedFile = await processImage(file);
+						
+						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
+						const uploadSnapshot = await uploadBytes(fileRef, processedFile);
+						const downloadURL = await getDownloadURL(uploadSnapshot.ref);
+						imagePaths.push(downloadURL);
+					}
+
+					// Clean up placeholder URLs
+					placeholderPaths.forEach(url => URL.revokeObjectURL(url));
+
+					// Update the same Firestore document with real URLs and success status
+					const updateData = {
+						status: 'uploaded',
+						imageUrl: imagePaths[0],
+						imagePath: imagePaths[0],
+						...(imagePaths.length > 1 && { imagePaths: imagePaths })
+					};
+
+					await updateDoc(doc(db, 'posts', postId), updateData);
+					uploadProgress = 'Post completed successfully!';
+
+				} catch (uploadError) {
+					console.error('Error uploading images:', uploadError);
+					// Update document with error status
+					await updateDoc(doc(db, 'posts', postId), {
+						status: 'error',
+						errorMessage: uploadError instanceof Error ? uploadError.message : 'Unknown upload error'
+					});
 					
-					// Process and compress image
-					const processedFile = await processImage(file);
-					
-					const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
-					const uploadSnapshot = await uploadBytes(fileRef, processedFile);
-					const downloadURL = await getDownloadURL(uploadSnapshot.ref);
-					imagePaths.push(downloadURL);
+					// Clean up placeholder URLs on error
+					placeholderPaths.forEach(url => URL.revokeObjectURL(url));
+					throw uploadError;
 				}
 
-				// Clean up placeholder URLs
-				placeholderPaths.forEach(url => URL.revokeObjectURL(url));
-
-				// Create final post data with real images
-				const finalPostData = {
-					type: postType,
-					content: textContent,
-					authorUid: user.uid,
-					familyId: import.meta.env.VITE_FAMILY_ID,
-					createdAt: new Date(),
-					imagePaths: imagePaths,
-					isUpdate: true, // Flag to indicate this is an update to existing post
-					placeholderPaths: placeholderPaths
-				};
-
-				uploadProgress = 'Finalizing post...';
-				dispatch('post-updated', finalPostData);
+				// Photo upload completed, exit early since we handled everything
+				return;
 
 			} else if (selectedFiles && postType === 'video') {
 				// Handle video uploads (no placeholders for videos due to size)
