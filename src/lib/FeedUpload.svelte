@@ -6,6 +6,7 @@
 	import { storage, db } from '$lib/firebase';
 	import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 	import { FAMILY_ID } from '$lib/config';
+	import { getDisplayName } from '$lib/getDisplayName';
 
 	const dispatch = createEventDispatcher();
 
@@ -211,12 +212,18 @@
 <div class="rounded-lg bg-white p-6 shadow">
 	<div class="mb-4 flex items-center space-x-3">
 		{#if user.photoURL}
-			<img src={user.photoURL} alt={user.displayName || 'User'} class="h-10 w-10 rounded-full" />
+			<img
+				src={user.photoURL}
+				alt={getDisplayName(user?.email, { nickname: user?.nickname })}
+				class="h-10 w-10 rounded-full"
+			/>
 		{:else}
 			<div class="h-10 w-10 rounded-full bg-gray-300"></div>
 		{/if}
 		<div>
-			<p class="font-medium text-gray-900">{user.displayName || user.email}</p>
+			<p class="font-medium text-gray-900">
+				{getDisplayName(user?.email, { nickname: user?.nickname })}
+			</p>
 		</div>
 	</div>
 

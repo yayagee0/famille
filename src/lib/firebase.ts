@@ -4,6 +4,7 @@ import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { browser } from '$app/environment';
 import { FIREBASE_CONFIG, FAMILY_ID } from './config';
+import { getDisplayName } from './getDisplayName';
 
 // Initialize Firebase
 export const app = initializeApp(FIREBASE_CONFIG);
@@ -101,14 +102,14 @@ export async function getPosts(familyId?: string): Promise<any[]> {
 					return {
 						...post,
 						author: {
-							displayName: userData.displayName || 'Unknown User',
+							displayName: getDisplayName(userData.email, { nickname: userData.nickname }),
 							avatarUrl: userData.avatarUrl || null,
 							email: userData.email || null
 						}
 					};
 				}
 			}
-			return { ...post, author: { displayName: 'Unknown User', avatarUrl: null } };
+			return { ...post, author: { displayName: getDisplayName(null), avatarUrl: null } };
 		})
 	);
 
@@ -140,14 +141,14 @@ export function subscribeToPosts(callback: (posts: any[]) => void, familyId?: st
 						return {
 							...post,
 							author: {
-								displayName: userData.displayName || 'Unknown User',
+								displayName: getDisplayName(userData.email, { nickname: userData.nickname }),
 								avatarUrl: userData.avatarUrl || null,
 								email: userData.email || null
 							}
 						};
 					}
 				}
-				return { ...post, author: { displayName: 'Unknown User', avatarUrl: null } };
+				return { ...post, author: { displayName: getDisplayName(null), avatarUrl: null } };
 			})
 		);
 
@@ -164,6 +165,33 @@ export async function getUserProfile(userId: string): Promise<any | null> {
 		return { id: userDoc.id, ...userDoc.data() };
 	}
 	return null;
+}
+
+/**
+ * Get all family member profiles by email
+ */
+export async function getAllUserProfiles(emails: string[]): Promise<Record<string, any>> {
+	const profiles: Record<string, any> = {};
+
+	// Load profiles for all family members
+	const profilePromises = emails.map(async (email) => {
+		const normalizedEmail = email.toLowerCase().trim();
+		try {
+			// Query users collection by email field
+			const usersQuery = query(collection(db, 'users'), where('email', '==', normalizedEmail));
+			const snapshot = await getDocs(usersQuery);
+
+			if (!snapshot.empty) {
+				const userData = snapshot.docs[0].data();
+				profiles[normalizedEmail] = userData;
+			}
+		} catch (error) {
+			console.warn(`Failed to load profile for ${email}:`, error);
+		}
+	});
+
+	await Promise.all(profilePromises);
+	return profiles;
 }
 
 /**
@@ -220,7 +248,7 @@ export async function getPhotoPosts(familyId?: string): Promise<any[]> {
 					return {
 						...photo,
 						author: {
-							displayName: userData.displayName || 'Unknown User',
+							displayName: getDisplayName(userData.email, { nickname: userData.nickname }),
 							avatarUrl: userData.avatarUrl || null
 						},
 						// Create display URL for gallery
@@ -230,7 +258,7 @@ export async function getPhotoPosts(familyId?: string): Promise<any[]> {
 			}
 			return {
 				...photo,
-				author: { displayName: 'Unknown User', avatarUrl: null },
+				author: { displayName: getDisplayName(null), avatarUrl: null },
 				displayUrl: photo.imagePaths?.[0] || photo.imagePath || ''
 			};
 		})

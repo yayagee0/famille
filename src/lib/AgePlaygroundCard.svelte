@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { members } from './widget-context';
 	import { ageOn } from './users';
-	import dayjs from 'dayjs';
+	import { getDisplayName } from './getDisplayName';
 
 	// Get widget context for family members
 	// members store now provides reactive access
@@ -62,7 +62,7 @@
 		if (targetAge < 70) targetAge++;
 	}
 
-	function selectMember(member: any) {
+	function selectMember(member: { email: string; displayName: string; birthday?: string }) {
 		selectedMember = member;
 	}
 </script>
@@ -85,7 +85,9 @@
 						: 'border-2 border-transparent bg-white shadow-md hover:scale-102 hover:bg-purple-100'}"
 				>
 					<div class="text-3xl">{memberEmojis[member.email] || '👤'}</div>
-					<span class="text-sm font-bold text-gray-800">{member.displayName}</span>
+					<span class="text-sm font-bold text-gray-800"
+						>{getDisplayName(member.email, { nickname: member.nickname })}</span
+					>
 					{#if selectedMember?.email === member.email}
 						<div class="text-xs font-medium text-purple-600">Selected! ✨</div>
 					{/if}
@@ -158,7 +160,8 @@
 	>
 		{#if selectedMember}
 			<p class="mb-4 text-center text-lg font-bold text-indigo-800">
-				✨ If {selectedMember.displayName} is {targetAge} years old: ✨
+				✨ If {getDisplayName(selectedMember.email, { nickname: selectedMember.nickname })} is {targetAge}
+				years old: ✨
 			</p>
 
 			<div class="space-y-3">
@@ -169,7 +172,10 @@
 						<div class="text-2xl">{memberEmojis[member.email] || '👤'}</div>
 						<div class="flex-1">
 							<p class="text-sm font-bold text-gray-800">
-								<span class="text-indigo-600">{member.displayName}</span> will be
+								<span class="text-indigo-600"
+									>{getDisplayName(member.email, { nickname: member.nickname })}</span
+								>
+								will be
 								<span class="text-lg text-purple-600">{member.futureAge}</span> years old
 							</p>
 							{#if showExactOffsets}

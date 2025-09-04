@@ -22,7 +22,8 @@ describe('Schema Validation', () => {
 				VITE_FB_RETURN_URL: 'http://localhost:5173',
 				VITE_FAMILY_ID: 'test-family',
 				VITE_ALLOWED_EMAILS: 'test@example.com,test2@example.com',
-				VITE_BIRTHDAYS: '{"test@example.com":"2000-01-01"}'
+				VITE_BIRTHDAYS: '{"test@example.com":"2000-01-01"}',
+				VITE_NICKNAMES: '{"test@example.com":"Tester"}'
 			};
 
 			const result = validateEnv(validEnv);

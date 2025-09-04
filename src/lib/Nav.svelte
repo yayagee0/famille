@@ -4,6 +4,7 @@
 	import { auth } from '$lib/firebase';
 	import { signOut } from 'firebase/auth';
 	import { Home, User, Rss, LogOut, Menu, X, Gamepad2 } from 'lucide-svelte';
+	import { getDisplayName } from '$lib/getDisplayName';
 
 	let { user } = $props<{ user: any }>();
 	let mobileMenuOpen = $state(false);
@@ -110,13 +111,15 @@
 								<img
 									class="h-8 w-8 rounded-full bg-gray-50"
 									src={user.photoURL}
-									alt={user.displayName || 'User'}
+									alt={getDisplayName(user?.email, { nickname: user?.nickname })}
 								/>
 							{:else}
 								<div class="h-8 w-8 rounded-full bg-gray-300"></div>
 							{/if}
 							<span class="sr-only">Your profile</span>
-							<span aria-hidden="true">{user.displayName || user.email}</span>
+							<span aria-hidden="true"
+								>{getDisplayName(user?.email, { nickname: user?.nickname })}</span
+							>
 						</div>
 						<button
 							onclick={handleSignOut}
@@ -151,7 +154,7 @@
 		<img
 			class="h-8 w-8 rounded-full bg-gray-50"
 			src={user.photoURL}
-			alt={user.displayName || 'User'}
+			alt={getDisplayName(user?.email, { nickname: user?.nickname })}
 		/>
 	{:else}
 		<div class="h-8 w-8 rounded-full bg-gray-300"></div>
@@ -212,13 +215,15 @@
 											<img
 												class="h-8 w-8 rounded-full bg-gray-50"
 												src={user.photoURL}
-												alt={user.displayName || 'User'}
+												alt={getDisplayName(user?.email, { nickname: user?.nickname })}
 											/>
 										{:else}
 											<div class="h-8 w-8 rounded-full bg-gray-300"></div>
 										{/if}
 										<span class="sr-only">Your profile</span>
-										<span aria-hidden="true">{user.displayName || user.email}</span>
+										<span aria-hidden="true"
+											>{getDisplayName(user?.email, { nickname: user?.nickname })}</span
+										>
 									</div>
 									<button
 										onclick={handleSignOut}

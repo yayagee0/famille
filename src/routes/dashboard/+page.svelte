@@ -19,6 +19,7 @@
 	import SimilarityHighlights from '$lib/components/SimilarityHighlights.svelte';
 	import BirthdayPreview from '$lib/BirthdayPreview.svelte';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
+	import { getDisplayName } from '$lib/getDisplayName';
 
 	dayjs.extend(relativeTime);
 
@@ -53,13 +54,13 @@
 							return {
 								...post,
 								author: {
-									displayName: userData.displayName || 'Unknown User',
+									displayName: getDisplayName(userData.email, { nickname: userData.nickname }),
 									avatarUrl: userData.avatarUrl || null
 								}
 							};
 						}
 					}
-					return { ...post, author: { displayName: 'Unknown User', avatarUrl: null } };
+					return { ...post, author: { displayName: getDisplayName(null), avatarUrl: null } };
 				})
 			);
 

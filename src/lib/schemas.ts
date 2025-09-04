@@ -37,7 +37,8 @@ export const envSchema = z.object({
 	VITE_FB_RETURN_URL: z.string().url('Return URL must be a valid URL'),
 	VITE_FAMILY_ID: z.string().min(1, 'Family ID is required'),
 	VITE_ALLOWED_EMAILS: z.string().min(1, 'Allowed emails list is required'),
-	VITE_BIRTHDAYS: z.string().min(1, 'Birthdays JSON is required')
+	VITE_BIRTHDAYS: z.string().min(1, 'Birthdays JSON is required'),
+	VITE_NICKNAMES: z.string().min(1, 'Nicknames JSON is required')
 });
 
 // File upload metadata schemas - made permissive for any size and type
@@ -51,6 +52,20 @@ export const videoFileSchema = z.object({
 	name: z.string().min(1, 'File name is required'),
 	size: z.number().min(0), // Allow any size
 	type: z.string().min(1) // Allow any file type
+});
+
+// Daily mood validation schema
+export const moodSchema = z.object({
+	emoji: z.string().min(1, 'Mood emoji is required'),
+	label: z.string().min(1, 'Mood label is required')
+});
+
+// Daily mood entry schema for Firestore daily-moods/{date}/entries/{uid}
+export const moodEntrySchema = z.object({
+	uid: z.string().min(1, 'User ID is required'),
+	email: z.string().email('Valid email is required'),
+	mood: moodSchema,
+	createdAt: z.any() // Firestore Timestamp
 });
 
 // Post author schema (for inline author objects if needed)

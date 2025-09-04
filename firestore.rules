@@ -22,6 +22,18 @@ service cloud.firestore {
         resource.data.authorUid == request.auth.uid;
     }
 
+    // Daily mood entries - users can only write/update their own entries
+    match /daily-moods/{dateId}/entries/{uid} {
+      // All family can read mood entries
+      allow read: if isFamily();
+      
+      // Users can only write/update their own mood entry
+      allow write, update: if isFamily() && 
+        uid == request.auth.uid &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.email == request.auth.token.email;
+    }
+
     // Everything else (users, families, etc.)
     match /{doc=**} {
       allow read, write: if isFamily();

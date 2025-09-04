@@ -18,6 +18,7 @@
 	import FeedUpload from '$lib/FeedUpload.svelte';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import { ensureUserProfile } from '$lib/auth';
+	import { getDisplayName } from '$lib/getDisplayName';
 	import { Heart, MessageCircle, Trash2, WifiOff } from 'lucide-svelte';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
@@ -126,13 +127,13 @@
 									return {
 										...post,
 										author: {
-											displayName: u.displayName || 'Unknown User',
+											displayName: getDisplayName(u.email, { nickname: u.nickname }),
 											avatarUrl: u.avatarUrl || null
 										}
 									};
 								}
 							}
-							return { ...post, author: { displayName: 'Unknown User', avatarUrl: null } };
+							return { ...post, author: { displayName: getDisplayName(null), avatarUrl: null } };
 						})
 					);
 
@@ -190,7 +191,7 @@
 			const userDoc = await getDoc(doc(db, 'users', uid));
 			if (userDoc.exists()) {
 				const userData = userDoc.data();
-				const displayName = userData.displayName || userData.email?.split('@')[0] || 'Unknown';
+				const displayName = getDisplayName(userData.email, { nickname: userData.nickname });
 				userCache.set(uid, displayName);
 				return displayName;
 			}
@@ -285,7 +286,7 @@
 
 		try {
 			const newComment = {
-				author: user.displayName || user.email?.split('@')[0] || 'Unknown User',
+				author: getDisplayName(user?.email, { nickname: user?.nickname }),
 				text: sanitizedText, // Use sanitized text
 				createdAt: new Date()
 			};

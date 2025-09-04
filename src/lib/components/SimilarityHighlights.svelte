@@ -3,6 +3,7 @@
 	import { auth, db, getFamilyId } from '$lib/firebase';
 	import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 	import { Users, Sparkles } from 'lucide-svelte';
+	import { getDisplayName } from '../getDisplayName';
 	import type { User } from 'firebase/auth';
 
 	let user = $state<User | null>(auth.currentUser);
@@ -73,7 +74,7 @@
 				);
 				return {
 					memberUid: member.uid,
-					memberName: member.displayName || member.email?.split('@')[0] || 'Family Member',
+					memberName: getDisplayName(member.email, { nickname: member.nickname }),
 					answers: memberAnswersSnapshot.docs.map((doc) => ({
 						questionId: doc.data().questionId,
 						answer: doc.data().answer,

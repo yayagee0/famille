@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+	import { doc, setDoc, serverTimestamp, collection, getDocs } from 'firebase/firestore';
 	import { db } from './firebase';
 	import { auth } from './firebase';
-	import { members, currentUser } from './widget-context';
+	import { members } from './widget-context';
+	import { getDisplayName } from './getDisplayName';
+	import { moodSchema, moodEntrySchema } from './schemas';
 	import LoadingSpinner from './LoadingSpinner.svelte';
 	import dayjs from 'dayjs';
-
-	// Get widget context for family members
-	// const current = currentUser derived store provides current user
 
 	// Available mood emojis
 	const moods = [
@@ -22,7 +21,7 @@
 		{ emoji: '🤔', label: 'Thoughtful' }
 	];
 
-	// State for family mood check-ins
+	// State for family mood check-ins - now using the new structure
 	let familyMoods = $state<Record<string, { emoji: string; label: string; timestamp: Date }>>({});
 	let loading = $state(true);
 
@@ -31,11 +30,30 @@
 
 	async function loadTodaysMoods() {
 		try {
-			const moodDoc = await getDoc(doc(db, 'daily-moods', today));
-			if (moodDoc.exists()) {
-				const data = moodDoc.data();
-				familyMoods = data.moods || {};
-			}
+			loading = true;
+
+			// Load mood entries from the new structure: daily-moods/{date}/entries/{uid}
+			const entriesRef = collection(db, 'daily-moods', today, 'entries');
+			const entriesSnapshot = await getDocs(entriesRef);
+
+			const moodsData: Record<string, { emoji: string; label: string; timestamp: Date }> = {};
+
+			entriesSnapshot.forEach((doc) => {
+				try {
+					const data = doc.data();
+					// Validate the data with Zod schema
+					const validEntry = moodEntrySchema.parse(data);
+					moodsData[validEntry.email] = {
+						emoji: validEntry.mood.emoji,
+						label: validEntry.mood.label,
+						timestamp: validEntry.createdAt?.toDate?.() || new Date()
+					};
+				} catch (error) {
+					console.warn('Invalid mood entry data:', error);
+				}
+			});
+
+			familyMoods = moodsData;
 		} catch (error) {
 			console.error('Error loading daily moods:', error);
 		} finally {
@@ -44,45 +62,60 @@
 	}
 
 	async function selectMood(selectedMood: { emoji: string; label: string }) {
-		if (!auth.currentUser) return;
+		if (!auth.currentUser?.email) return;
 
 		const userEmail = auth.currentUser.email;
-		if (!userEmail) return;
+		const userUid = auth.currentUser.uid;
 
 		try {
-			// Update family moods state
+			// Validate mood with Zod schema
+			const validMood = moodSchema.parse(selectedMood);
+
+			// Optimistic update
 			familyMoods = {
 				...familyMoods,
 				[userEmail]: {
-					...selectedMood,
+					...validMood,
 					timestamp: new Date()
 				}
 			};
 
-			// Save to Firestore
-			await setDoc(
-				doc(db, 'daily-moods', today),
-				{
-					date: today,
-					moods: familyMoods,
-					updatedAt: serverTimestamp()
-				},
-				{ merge: true }
-			);
+			// Save to Firestore using new structure: daily-moods/{date}/entries/{uid}
+			const entryRef = doc(db, 'daily-moods', today, 'entries', userUid);
+			await setDoc(entryRef, {
+				uid: userUid,
+				email: userEmail,
+				mood: validMood,
+				createdAt: serverTimestamp()
+			});
 		} catch (error) {
 			console.error('Error saving mood:', error);
+			// Revert optimistic update on error
+			loadTodaysMoods();
 		}
 	}
 
 	onMount(() => {
 		loadTodaysMoods();
 	});
+
+	// Get current user display name for heading
+	const currentUserDisplayName = $derived.by(() => {
+		if (!auth.currentUser?.email) return '';
+		// Get current user profile from members context
+		const currentMember = Object.values($members).find(
+			(member) => member.email === auth.currentUser?.email
+		);
+		return getDisplayName(auth.currentUser?.email, { nickname: currentMember?.nickname });
+	});
 </script>
 
 <!-- Responsive: full width on mobile (sm and below), compact card on larger screens -->
 <div class="mx-auto w-full rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:max-w-sm">
 	<div class="mb-4 flex items-center justify-center">
-		<h3 class="text-lg font-semibold text-gray-900">🌟 Daily Mood</h3>
+		<h3 class="text-lg font-semibold text-gray-900">
+			🌟 Daily Mood — {currentUserDisplayName}
+		</h3>
 	</div>
 
 	{#if loading}
@@ -93,7 +126,7 @@
 		<!-- Family members mood display with overflow handling -->
 		<div class="mb-6 max-h-48 overflow-y-auto">
 			<div class="space-y-3">
-				{#each Object.values(members) as member}
+				{#each Object.values(members) as member (member.email)}
 					{@const memberMood = familyMoods[member.email]}
 					<div class="flex items-center space-x-3 rounded-xl bg-gray-50 p-3">
 						<div class="flex-shrink-0">
@@ -107,7 +140,9 @@
 						</div>
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center justify-between">
-								<p class="truncate text-sm font-medium text-gray-900">{member.displayName}</p>
+								<p class="truncate text-sm font-medium text-gray-900">
+									{getDisplayName(member.email, { nickname: member.nickname })}
+								</p>
 								{#if auth.currentUser?.email === member.email}
 									<span class="rounded-full bg-indigo-100 px-2 py-1 text-xs text-indigo-700"
 										>You</span
@@ -132,7 +167,7 @@
 			<div class="border-t border-gray-200 pt-4">
 				<p class="mb-3 text-center text-sm font-medium text-gray-700">How are you feeling today?</p>
 				<div class="grid grid-cols-4 gap-2">
-					{#each moods as mood}
+					{#each moods as mood (mood.label)}
 						<button
 							class="flex flex-col items-center justify-center space-y-1 rounded-lg border border-gray-200 bg-gray-50 p-3 transition-all hover:scale-105 hover:bg-gray-100 active:scale-95"
 							onclick={() => selectMood(mood)}
