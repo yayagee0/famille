@@ -158,45 +158,9 @@
 		}
 	}
 
-	// ➕ Create post
-	async function handlePostCreated(event: CustomEvent) {
-		const postData = event.detail;
-
-		try {
-			const youtubeId = postData.youtubeUrl ? getYouTubeVideoId(postData.youtubeUrl) : null;
-
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const postDoc: any = {
-				authorUid: user?.uid,
-				createdAt: serverTimestamp(),
-				kind: postData.type,
-				text: postData.content || '',
-				likes: [],
-				comments: [],
-				familyId: postData.familyId
-			};
-
-			if (youtubeId) postDoc.youtubeId = youtubeId;
-
-			// Handle image paths from uploaded files
-			if (postData.imagePaths && postData.imagePaths.length > 0) {
-				postDoc.imagePath = postData.imagePaths[0];
-				if (postData.imagePaths.length > 1) {
-					postDoc.imagePaths = postData.imagePaths;
-				}
-			}
-
-			// Handle video paths from uploaded files
-			if (postData.videoPaths && postData.videoPaths.length > 0) {
-				postDoc.videoPath = postData.videoPaths[0];
-			}
-
-			if (postData.poll && postData.poll.title) postDoc.poll = postData.poll;
-
-			await addDoc(collection(db, 'posts'), postDoc);
-		} catch (err) {
-			console.error('Error creating post:', err);
-		}
+	// ➕ Handle post creation completion
+	function handlePostCreated() {
+		// Post was already created by FeedUpload, real-time subscription will update the feed automatically
 	}
 
 	// ❤️ Likes

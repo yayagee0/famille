@@ -2,15 +2,15 @@
  * Email allowlist validation for family members
  */
 
-const ALLOWED_EMAILS =
-	import.meta.env.VITE_ALLOWED_EMAILS?.split(',').map((email: string) => email.trim()) || [];
+import { ALLOWED_EMAILS } from './config';
+import { normalizeEmail } from './users';
 
 /**
  * Check if an email is in the allowed list
  */
 export function isEmailAllowed(email: string): boolean {
 	if (!email) return false;
-	return ALLOWED_EMAILS.includes(email.toLowerCase());
+	return ALLOWED_EMAILS.includes(normalizeEmail(email));
 }
 
 /**

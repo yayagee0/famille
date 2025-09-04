@@ -36,7 +36,8 @@ export const envSchema = z.object({
 	VITE_FB_APP_ID: z.string().min(1, 'Firebase app ID is required'),
 	VITE_FB_RETURN_URL: z.string().url('Return URL must be a valid URL'),
 	VITE_FAMILY_ID: z.string().min(1, 'Family ID is required'),
-	VITE_ALLOWED_EMAILS: z.string().min(1, 'Allowed emails list is required')
+	VITE_ALLOWED_EMAILS: z.string().min(1, 'Allowed emails list is required'),
+	VITE_BIRTHDAYS: z.string().min(1, 'Birthdays JSON is required')
 });
 
 // File upload metadata schemas

@@ -4,7 +4,8 @@
 	import { validateImageFile, validateVideoFile, validatePost } from '$lib/schemas';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 	import { storage, db } from '$lib/firebase';
-	import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+	import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+	import { FAMILY_ID } from '$lib/config';
 	import imageCompression from 'browser-image-compression';
 
 	const dispatch = createEventDispatcher();
@@ -80,6 +81,11 @@
 		}
 	}
 
+	function extractYouTubeId(url: string): string {
+		const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+		return match ? match[1] : url;
+	}
+
 	async function handleSubmit() {
 		// Early validation checks to prevent unnecessary processing
 		if (isUploading) return;
@@ -112,50 +118,19 @@
 		try {
 			let imagePaths: string[] = [];
 			let videoPaths: string[] = [];
-			let placeholderPaths: string[] = [];
 
-			// For photo posts, create immediate placeholders and dispatch post right away
-			if (selectedFiles && postType === 'photo') {
-				uploadProgress = 'Creating post with placeholders...';
-				
-				// Create placeholder URLs from file objects for immediate display
+			// Handle file uploads FIRST before creating Firestore document
+			if (selectedFiles && (postType === 'photo' || postType === 'video')) {
+				uploadProgress = 'Validating and processing files...';
+
 				for (const file of Array.from(selectedFiles)) {
-					const validation = validateImageFile(file);
-					if (!validation.success) {
-						throw new Error(`Invalid image file: ${file.name}`);
-					}
-					
-					// Create blob URL for immediate preview
-					const placeholderUrl = URL.createObjectURL(file);
-					placeholderPaths.push(placeholderUrl);
-				}
+					if (postType === 'photo') {
+						const validation = validateImageFile(file);
+						if (!validation.success) {
+							throw new Error(`Invalid image file: ${file.name}`);
+						}
 
-				// Create Firestore document immediately with placeholder and uploading status
-				const placeholderPostDoc = {
-					authorUid: user.uid,
-					createdAt: serverTimestamp(),
-					kind: postType,
-					text: textContent || '',
-					likes: [],
-					comments: [],
-					familyId: import.meta.env.VITE_FAMILY_ID,
-					status: 'uploading',
-					imageUrl: placeholderPaths[0], // First image as preview URL
-					imagePath: placeholderPaths[0], // For compatibility with existing schema
-					...(placeholderPaths.length > 1 && { imagePaths: placeholderPaths })
-				};
-
-				// Add document to Firestore and get the document reference
-				const docRef = await addDoc(collection(db, 'posts'), placeholderPostDoc);
-				const postId = docRef.id;
-
-				// Now upload actual images in background and update the same document
-				uploadProgress = 'Uploading optimized images...';
-				
-				try {
-					for (let i = 0; i < selectedFiles.length; i++) {
-						const file = selectedFiles[i];
-						uploadProgress = `Optimizing and uploading image ${i + 1}/${selectedFiles.length}...`;
+						uploadProgress = `Optimizing and uploading image: ${file.name}`;
 						
 						// Process and compress image
 						const processedFile = await processImage(file);
@@ -164,96 +139,74 @@
 						const uploadSnapshot = await uploadBytes(fileRef, processedFile);
 						const downloadURL = await getDownloadURL(uploadSnapshot.ref);
 						imagePaths.push(downloadURL);
-					}
-
-					// Clean up placeholder URLs
-					placeholderPaths.forEach(url => URL.revokeObjectURL(url));
-
-					// Update the same Firestore document with real URLs and success status
-					const updateData = {
-						status: 'uploaded',
-						imageUrl: imagePaths[0],
-						imagePath: imagePaths[0],
-						...(imagePaths.length > 1 && { imagePaths: imagePaths })
-					};
-
-					await updateDoc(doc(db, 'posts', postId), updateData);
-					uploadProgress = 'Post completed successfully!';
-
-				} catch (uploadError) {
-					console.error('Error uploading images:', uploadError);
-					// Update document with error status
-					await updateDoc(doc(db, 'posts', postId), {
-						status: 'error',
-						errorMessage: uploadError instanceof Error ? uploadError.message : 'Unknown upload error'
-					});
-					
-					// Clean up placeholder URLs on error
-					placeholderPaths.forEach(url => URL.revokeObjectURL(url));
-					throw uploadError;
-				}
-
-				// Photo upload completed, exit early since we handled everything
-				return;
-
-			} else if (selectedFiles && postType === 'video') {
-				// Handle video uploads (no placeholders for videos due to size)
-				uploadProgress = 'Validating and processing files...';
-
-				for (const file of Array.from(selectedFiles)) {
-					const validation = validateVideoFile(file);
-					if (!validation.success) {
-						throw new Error(`Invalid video file: ${file.name}`);
-					}
-
-					uploadProgress = `Uploading video: ${file.name}`;
-					const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
-					const uploadSnapshot = await uploadBytes(fileRef, file);
-					const downloadURL = await getDownloadURL(uploadSnapshot.ref);
-					videoPaths.push(downloadURL);
-				}
-			}
-
-			// For non-photo posts or if no placeholders were created, handle normally
-			if (postType !== 'photo' || !selectedFiles) {
-				uploadProgress = 'Validating post data...';
-
-				// Create post object following unified Firestore schema
-				const postData = {
-					type: postType,
-					content: textContent.trim(),
-					authorUid: user?.uid,
-					familyId: 'ghassan-family',
-					createdAt: new Date(),
-					// Add media URLs if present
-					...(imagePaths.length > 0 && { imagePaths }),
-					...(videoPaths.length > 0 && { videoPaths }),
-					// Add YouTube URL if present
-					...(postType === 'youtube' && youtubeUrl.trim() && { youtubeUrl: youtubeUrl.trim() }),
-					// Add poll data if present
-					...(postType === 'poll' && {
-						poll: {
-							title: pollTitle.trim(),
-							options: pollOptions
-								.filter((opt) => opt.trim())
-								.map((opt) => ({
-									text: opt.trim(),
-									votes: []
-								}))
+					} else if (postType === 'video') {
+						const validation = validateVideoFile(file);
+						if (!validation.success) {
+							throw new Error(`Invalid video file: ${file.name}`);
 						}
-					})
-				};
 
-				// Validate complete post data with Zod schema
-				const postValidation = validatePost(postData);
-				if (!postValidation.success) {
-					console.error('Post validation failed:', postValidation.error);
-					throw new Error('Invalid post data');
+						uploadProgress = `Uploading video: ${file.name}`;
+						const fileRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
+						const uploadSnapshot = await uploadBytes(fileRef, file);
+						const downloadURL = await getDownloadURL(uploadSnapshot.ref);
+						videoPaths.push(downloadURL);
+					}
 				}
-
-				uploadProgress = 'Creating post...';
-				dispatch('post-created', postData);
 			}
+
+			// Now create Firestore document with uploaded URLs
+			uploadProgress = 'Creating post...';
+
+			// Create post object following unified Firestore schema
+			const postData = {
+				authorUid: user.uid,
+				familyId: FAMILY_ID,
+				kind: postType,
+				text: textContent.trim(),
+				createdAt: serverTimestamp(),
+				likes: [],
+				comments: [],
+				// Add image URLs
+				...(imagePaths.length > 0 && {
+					imageUrl: imagePaths[0],
+					imagePath: imagePaths[0],
+					...(imagePaths.length > 1 && { imagePaths })
+				}),
+				// Add video URL
+				...(videoPaths.length > 0 && {
+					videoPath: videoPaths[0]
+				}),
+				// Add YouTube URL if present
+				...(postType === 'youtube' && youtubeUrl.trim() && { 
+					youtubeId: extractYouTubeId(youtubeUrl.trim()) 
+				}),
+				// Add poll data if present
+				...(postType === 'poll' && {
+					poll: {
+						title: pollTitle.trim(),
+						options: pollOptions
+							.filter((opt) => opt.trim())
+							.map((opt) => ({
+								text: opt.trim(),
+								votes: []
+							}))
+					}
+				})
+			};
+
+			// Validate complete post data with Zod schema
+			const postValidation = validatePost(postData);
+			if (!postValidation.success) {
+				console.error('Post validation failed:', postValidation.error);
+				throw new Error('Invalid post data');
+			}
+
+			// Add to Firestore
+			await addDoc(collection(db, 'posts'), postData);
+			uploadProgress = 'Post created successfully!';
+			
+			// Dispatch success event to parent
+			dispatch('post-created');
 
 			// Reset form
 			textContent = '';

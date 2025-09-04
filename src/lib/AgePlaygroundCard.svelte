@@ -1,6 +1,10 @@
 <script lang="ts">
-	import { birthdays } from './birthdays';
+	import { useWidgetContext } from './widget-context';
+	import { ageOn } from './users';
 	import dayjs from 'dayjs';
+
+	// Get widget context for family members
+	const { members } = useWidgetContext();
 
 	// Member emojis for fun visual representation
 	const memberEmojis: Record<string, string> = {
@@ -10,22 +14,32 @@
 		'yahyageemail@gmail.com': '🧒'
 	};
 
-	// State for the selected family member and target age
-	let selectedMember = $state(birthdays[0]);
+	// Get members who have birthdays as an array
+	const membersWithBirthdays = $derived(Object.values(members).filter(member => member.birthday));
+
+	// State for the selected family member and target age - initialize with first member when available
+	let selectedMember = $state(null as typeof membersWithBirthdays[0] | null);
 	let targetAge = $state(10);
 	let showExactOffsets = $state(false);
 
+	// Initialize selectedMember when members are available
+	$effect(() => {
+		if (membersWithBirthdays.length > 0 && !selectedMember) {
+			selectedMember = membersWithBirthdays[0];
+		}
+	});
+
 	// Calculate how old everyone would be when the selected member reaches target age
 	const futureAges = $derived.by(() => {
-		const selectedBirthDate = dayjs(selectedMember.date);
-		const selectedCurrentAge = dayjs().diff(selectedBirthDate, 'year');
+		if (!selectedMember?.birthday) return [];
+		
+		const selectedCurrentAge = ageOn(selectedMember.birthday);
 		const yearsToAdd = targetAge - selectedCurrentAge;
 
-		return birthdays
-			.filter((member) => member.email !== selectedMember.email)
+		return membersWithBirthdays
+			.filter((member) => member.email !== selectedMember!.email)
 			.map((member) => {
-				const memberBirthDate = dayjs(member.date);
-				const memberCurrentAge = dayjs().diff(memberBirthDate, 'year');
+				const memberCurrentAge = ageOn(member.birthday!);
 				const memberFutureAge = memberCurrentAge + yearsToAdd;
 				const ageDifference = selectedCurrentAge - memberCurrentAge;
 
@@ -60,17 +74,17 @@
 	<div class="mb-6">
 		<p class="mb-3 text-center text-lg font-semibold text-purple-600">Pick a family member:</p>
 		<div class="grid grid-cols-2 gap-3">
-			{#each birthdays as member (member.email)}
+			{#each membersWithBirthdays as member (member.email)}
 				<button
 					onclick={() => selectMember(member)}
 					class="flex flex-col items-center space-y-2 rounded-2xl p-4 transition-all duration-200
-					{selectedMember.email === member.email
+					{selectedMember?.email === member.email
 						? 'scale-105 border-2 border-purple-400 bg-purple-200 shadow-lg'
 						: 'border-2 border-transparent bg-white shadow-md hover:scale-102 hover:bg-purple-100'}"
 				>
 					<div class="text-3xl">{memberEmojis[member.email] || '👤'}</div>
-					<span class="text-sm font-bold text-gray-800">{member.name}</span>
-					{#if selectedMember.email === member.email}
+					<span class="text-sm font-bold text-gray-800">{member.displayName}</span>
+					{#if selectedMember?.email === member.email}
 						<div class="text-xs font-medium text-purple-600">Selected! ✨</div>
 					{/if}
 				</button>
@@ -140,32 +154,36 @@
 	<div
 		class="rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 p-4"
 	>
-		<p class="mb-4 text-center text-lg font-bold text-indigo-800">
-			✨ If {selectedMember.name} is {targetAge} years old: ✨
-		</p>
+		{#if selectedMember}
+			<p class="mb-4 text-center text-lg font-bold text-indigo-800">
+				✨ If {selectedMember.displayName} is {targetAge} years old: ✨
+			</p>
 
-		<div class="space-y-3">
-			{#each futureAges as member (member.email)}
-				<div
-					class="flex items-center space-x-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm"
-				>
-					<div class="text-2xl">{memberEmojis[member.email] || '👤'}</div>
-					<div class="flex-1">
-						<p class="text-sm font-bold text-gray-800">
-							<span class="text-indigo-600">{member.name}</span> will be
-							<span class="text-lg text-purple-600">{member.futureAge}</span> years old
-						</p>
-						{#if showExactOffsets}
-							<p class="mt-1 text-xs text-gray-500">
-								({member.isOlder ? '+' : '-'}{member.ageDifference}
-								{member.ageDifference === 1 ? 'year' : 'years'}
-								{member.isOlder ? 'older' : 'younger'})
+			<div class="space-y-3">
+				{#each futureAges as member (member.email)}
+					<div
+						class="flex items-center space-x-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm"
+					>
+						<div class="text-2xl">{memberEmojis[member.email] || '👤'}</div>
+						<div class="flex-1">
+							<p class="text-sm font-bold text-gray-800">
+								<span class="text-indigo-600">{member.displayName}</span> will be
+								<span class="text-lg text-purple-600">{member.futureAge}</span> years old
 							</p>
-						{/if}
+							{#if showExactOffsets}
+								<p class="mt-1 text-xs text-gray-500">
+									({member.isOlder ? '+' : '-'}{member.ageDifference}
+									{member.ageDifference === 1 ? 'year' : 'years'}
+									{member.isOlder ? 'older' : 'younger'})
+								</p>
+							{/if}
+						</div>
 					</div>
-				</div>
-			{/each}
-		</div>
+				{/each}
+			</div>
+		{:else}
+			<p class="text-center text-gray-600">Select a family member to see age calculations</p>
+		{/if}
 	</div>
 </div>
 

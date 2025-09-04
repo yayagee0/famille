@@ -3,9 +3,12 @@
 	import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 	import { db } from './firebase';
 	import { auth } from './firebase';
-	import { birthdays } from './birthdays';
+	import { useWidgetContext } from './widget-context';
 	import LoadingSpinner from './LoadingSpinner.svelte';
 	import dayjs from 'dayjs';
+
+	// Get widget context for family members
+	const { members, current } = useWidgetContext();
 
 	// Available mood emojis
 	const moods = [
@@ -90,7 +93,7 @@
 		<!-- Family members mood display with overflow handling -->
 		<div class="mb-6 max-h-48 overflow-y-auto">
 			<div class="space-y-3">
-				{#each birthdays as member}
+				{#each Object.values(members) as member}
 					{@const memberMood = familyMoods[member.email]}
 					<div class="flex items-center space-x-3 rounded-xl bg-gray-50 p-3">
 						<div class="flex-shrink-0">
@@ -104,7 +107,7 @@
 						</div>
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center justify-between">
-								<p class="truncate text-sm font-medium text-gray-900">{member.name}</p>
+								<p class="truncate text-sm font-medium text-gray-900">{member.displayName}</p>
 								{#if auth.currentUser?.email === member.email}
 									<span class="rounded-full bg-indigo-100 px-2 py-1 text-xs text-indigo-700"
 										>You</span
