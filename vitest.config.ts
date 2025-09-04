@@ -6,6 +6,8 @@ export default defineConfig({
 	test: {
 		environment: 'node',
 		globals: true,
-		setupFiles: ['./src/tests/setup.ts']
+		setupFiles: ['./src/tests/setup.ts'],
+		// Exclude Playwright E2E tests from Vitest
+		exclude: ['**/node_modules/**', '**/tests/e2e/**']
 	}
 });

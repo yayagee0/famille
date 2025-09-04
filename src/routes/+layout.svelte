@@ -112,7 +112,9 @@
 					</main>
 				</div>
 			{:else}
-				{@render children?.()}
+				<main>
+					{@render children?.()}
+				</main>
 			{/if}
 		</div>
 	</ErrorBoundary>
