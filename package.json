@@ -15,7 +15,8 @@
 		"test": "vitest",
 		"test:ui": "vitest --ui",
 		"test:run": "vitest run",
-		"audit": "npx tsx scripts/audit-generator.ts"
+		"audit": "npx tsx scripts/audit-generator.ts",
+		"backup:firestore": "npx tsx scripts/firestore-backup.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
