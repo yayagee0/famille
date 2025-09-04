@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { auth, db } from '$lib/firebase';
+	import { db } from '$lib/firebase';
 	import { collection, getDocs } from 'firebase/firestore';
 	import { Trophy, Medal, Award, TrendingUp, Target } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
@@ -35,60 +35,58 @@
 
 	async function loadLeaderboard() {
 		try {
-			// Query all leaderboard entries
-			const leaderboardQuery = collection(db, 'leaderboard');
-			const leaderboardSnapshot = await getDocs(leaderboardQuery);
-
-			// Get all users data to enrich with profile information
+			// Always start with users collection (4 allowlisted accounts)
 			const usersQuery = collection(db, 'users');
 			const usersSnapshot = await getDocs(usersQuery);
-			const usersMap = new Map<string, any>();
-			usersSnapshot.forEach((doc) => {
-				usersMap.set(doc.id, doc.data());
+
+			// Get all leaderboard entries for lookup
+			const leaderboardQuery = collection(db, 'leaderboard');
+			const leaderboardSnapshot = await getDocs(leaderboardQuery);
+			const leaderboardMap = new Map<string, any>();
+			leaderboardSnapshot.forEach((doc) => {
+				leaderboardMap.set(doc.id, doc.data());
 			});
 
-			// Process leaderboard entries
+			// Process each family member from users collection
 			const entries: LeaderboardEntry[] = [];
 
-			leaderboardSnapshot.forEach((doc) => {
-				const data = doc.data();
-				const userData = usersMap.get(doc.id);
+			usersSnapshot.forEach((doc) => {
+				const userData = doc.data();
+				const userUid = doc.id;
+
+				// Look up their leaderboard doc
+				const leaderboardData = leaderboardMap.get(userUid);
+
+				// If missing → default to { totalWins: 0, totalLosses: 0, streak: 0, games: {} }
+				const defaultStats = {
+					wins: 0,
+					losses: 0,
+					games: {
+						tictactoe: { wins: 0, losses: 0 },
+						memory: { wins: 0, losses: 0 }
+					}
+				};
 
 				entries.push({
-					uid: doc.id,
-					displayName: getDisplayName(userData?.email, { nickname: userData?.nickname }),
-					wins: data.wins || 0,
-					losses: data.losses || 0,
+					uid: userUid,
+					displayName: getDisplayName(userData.email, { nickname: userData.nickname }),
+					wins: leaderboardData?.wins || defaultStats.wins,
+					losses: leaderboardData?.losses || defaultStats.losses,
 					games: {
 						tictactoe: {
-							wins: data.games?.tictactoe?.wins || 0,
-							losses: data.games?.tictactoe?.losses || 0
+							wins: leaderboardData?.games?.tictactoe?.wins || defaultStats.games.tictactoe.wins,
+							losses:
+								leaderboardData?.games?.tictactoe?.losses || defaultStats.games.tictactoe.losses
 						},
 						memory: {
-							wins: data.games?.memory?.wins || 0,
-							losses: data.games?.memory?.losses || 0
+							wins: leaderboardData?.games?.memory?.wins || defaultStats.games.memory.wins,
+							losses: leaderboardData?.games?.memory?.losses || defaultStats.games.memory.losses
 						}
 					}
 				});
 			});
 
-			// Add family members who don't have leaderboard entries yet
-			for (const userData of usersMap.values()) {
-				if (!entries.find((entry) => entry.uid === userData.uid)) {
-					entries.push({
-						uid: userData.uid,
-						displayName: getDisplayName(userData.email, { nickname: userData.nickname }),
-						wins: 0,
-						losses: 0,
-						games: {
-							tictactoe: { wins: 0, losses: 0 },
-							memory: { wins: 0, losses: 0 }
-						}
-					});
-				}
-			}
-
-			// Sort by total wins (descending)
+			// Sort by totalWins desc
 			leaderboard = entries.sort((a, b) => b.wins - a.wins);
 		} catch (error) {
 			console.error('Error loading leaderboard:', error);

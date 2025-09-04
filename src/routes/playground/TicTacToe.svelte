@@ -24,8 +24,6 @@
 	let difficulty = $state<Difficulty>('hard');
 	let isThinking = $state(false);
 
-	const user = $state(auth.currentUser);
-
 	function resetGame() {
 		board = Array(9).fill(null);
 		gameResult = null;
@@ -165,13 +163,13 @@
 	}
 
 	async function saveGame() {
-		if (!user?.uid || !gameResult) return;
+		if (!auth.currentUser?.uid || !gameResult) return;
 
 		try {
 			// Save game record
 			await addDoc(collection(db, 'games', 'tic-tac', 'matches'), {
-				playerUid: user.uid,
-				playerName: getDisplayName(user?.email, { nickname: undefined }),
+				playerUid: auth.currentUser.uid,
+				playerName: getDisplayName(auth.currentUser?.email, { nickname: undefined }),
 				result: gameResult,
 				difficulty,
 				board: board.slice(), // Save final board state
@@ -187,13 +185,13 @@
 	}
 
 	async function updateLeaderboard(result: GameResult) {
-		if (!user?.uid || !result || result === 'draw') return;
+		if (!auth.currentUser?.uid || !result || result === 'draw') return;
 
 		try {
-			const leaderboardRef = doc(db, 'leaderboard', user.uid);
+			const leaderboardRef = doc(db, 'leaderboard', auth.currentUser.uid);
 
 			// Get current user data to ensure displayName is from profile
-			const userDoc = await getDoc(doc(db, 'users', user.uid));
+			const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
 			const userData = userDoc.data();
 			const displayName = getDisplayName(userData?.email, { nickname: userData?.nickname });
 
