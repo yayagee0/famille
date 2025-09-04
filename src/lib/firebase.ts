@@ -168,29 +168,45 @@ export async function getUserProfile(userId: string): Promise<any | null> {
 }
 
 /**
- * Get all family member profiles by email
+ * Get all family member profiles by email using batched queries
  */
 export async function getAllUserProfiles(emails: string[]): Promise<Record<string, any>> {
 	const profiles: Record<string, any> = {};
 
-	// Load profiles for all family members
-	const profilePromises = emails.map(async (email) => {
-		const normalizedEmail = email.toLowerCase().trim();
-		try {
-			// Query users collection by email field
-			const usersQuery = query(collection(db, 'users'), where('email', '==', normalizedEmail));
+	// Normalize emails to lowercase
+	const normalizedEmails = emails.map((email) => email.toLowerCase().trim());
+
+	// Use Firestore "in" queries in batches of 10 (Firestore limit)
+	const batches = [];
+	for (let i = 0; i < normalizedEmails.length; i += 10) {
+		batches.push(normalizedEmails.slice(i, i + 10));
+	}
+
+	try {
+		for (const batch of batches) {
+			const usersQuery = query(collection(db, 'users'), where('email', 'in', batch));
 			const snapshot = await getDocs(usersQuery);
 
-			if (!snapshot.empty) {
-				const userData = snapshot.docs[0].data();
-				profiles[normalizedEmail] = userData;
-			}
-		} catch (error) {
-			console.warn(`Failed to load profile for ${email}:`, error);
+			snapshot.forEach((doc) => {
+				const userData = doc.data();
+				if (userData.email) {
+					const normalizedEmail = userData.email.toLowerCase().trim();
+					// Always return { email, nickname } if available
+					profiles[normalizedEmail] = {
+						email: userData.email,
+						nickname: userData.nickname,
+						displayName: userData.displayName,
+						avatarUrl: userData.avatarUrl,
+						photoURL: userData.photoURL,
+						uid: userData.uid
+					};
+				}
+			});
 		}
-	});
+	} catch (error) {
+		console.error('Failed to load user profiles:', error);
+	}
 
-	await Promise.all(profilePromises);
 	return profiles;
 }
 

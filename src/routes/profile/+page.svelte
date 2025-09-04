@@ -23,6 +23,7 @@
 
 	let user = $state(auth.currentUser);
 	let displayName = $state('');
+	let nickname = $state(''); // Add dedicated nickname field
 	let isUploading = $state(false);
 	let isSaving = $state(false);
 	let isExporting = $state(false);
@@ -49,10 +50,22 @@
 	];
 
 	onMount(() => {
-		const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+		const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
 			user = firebaseUser;
 			if (firebaseUser) {
 				displayName = firebaseUser.displayName || '';
+
+				// Load existing user profile to get nickname
+				try {
+					const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+					if (userDoc.exists()) {
+						const userData = userDoc.data();
+						nickname = userData.nickname || '';
+					}
+				} catch (error) {
+					console.error('Error loading user profile:', error);
+				}
+
 				loadUserAnswers();
 			}
 		});
@@ -350,7 +363,7 @@
 				displayName: displayName.trim()
 			});
 
-			// Update user document in Firestore
+			// Update user document in Firestore with structure: { uid: string, email: string, nickname?: string }
 			const userDocRef = doc(db, 'users', user.uid);
 			await setDoc(
 				userDocRef,
@@ -358,6 +371,7 @@
 					uid: user.uid,
 					displayName: displayName.trim(),
 					email: user.email,
+					nickname: nickname.trim() || undefined, // Save nickname field specifically
 					avatarUrl: user.photoURL || null,
 					photoURL: user.photoURL || null,
 					lastUpdatedAt: serverTimestamp()
@@ -553,14 +567,29 @@
 						<!-- Display Name -->
 						<div>
 							<label for="displayName" class="mb-1 block text-sm font-medium text-gray-700">
+								Display Name
+							</label>
+							<input
+								id="displayName"
+								type="text"
+								bind:value={displayName}
+								placeholder="Enter your display name"
+								disabled={isSaving}
+								class="mb-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+							/>
+						</div>
+
+						<!-- Nickname -->
+						<div>
+							<label for="nickname" class="mb-1 block text-sm font-medium text-gray-700">
 								Nickname
 							</label>
 							<div class="flex flex-col gap-2 sm:flex-row">
 								<input
-									id="displayName"
+									id="nickname"
 									type="text"
-									bind:value={displayName}
-									placeholder="Enter your nickname"
+									bind:value={nickname}
+									placeholder="Enter your nickname (optional)"
 									disabled={isSaving}
 									class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
 								/>

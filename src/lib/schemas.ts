@@ -81,10 +81,18 @@ export const userSchema = z.object({
 	uid: z.string().min(1, 'User ID is required'),
 	displayName: z.string().nullable(),
 	email: z.string().email('Valid email is required'),
+	nickname: z.string().optional(), // Profile nickname field
 	avatarUrl: z.string().url().nullable().or(z.literal('')).optional(),
 	photoURL: z.string().url().nullable().or(z.literal('')).optional(),
 	createdAt: z.date().optional(),
-	lastLoginAt: z.date().optional()
+	lastLoginAt: z.date().optional(),
+	lastUpdatedAt: z.date().optional()
+});
+
+// Dedicated UserProfile type (separate from Firebase Auth User)
+export const userProfileSchema = z.object({
+	email: z.string().email('Valid email is required'),
+	nickname: z.string().optional()
 });
 
 // Poll option schema

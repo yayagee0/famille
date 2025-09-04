@@ -33,7 +33,7 @@
 					try {
 						const allowedEmails = getAllowedEmails();
 
-						// Load all family member profiles from Firestore
+						// OnAuthStateChanged → await getAllUserProfiles() BEFORE initializeWidgetContext()
 						const profiles = await getAllUserProfiles(allowedEmails);
 
 						initializeWidgetContext({
