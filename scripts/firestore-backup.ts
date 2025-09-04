@@ -94,7 +94,7 @@ async function performBackup(): Promise<void> {
 		};
 
 		// Main collections to backup
-		const collectionsToBackup = ['posts', 'users', 'questions', 'daily-moods'];
+		const collectionsToBackup = ['posts', 'users', 'questions'];
 
 		// Backup main collections
 		for (const collectionName of collectionsToBackup) {

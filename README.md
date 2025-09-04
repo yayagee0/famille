@@ -10,7 +10,6 @@ A private, secure family social platform built with SvelteKit 2, TypeScript, and
 - **Image Compression**: Automatic image optimization using browser-image-compression
 - **Photo Gallery**: Dedicated gallery page with lightbox modal for all family photos
 - **Daily Ayah Widget**: Rotates Quranic verses daily on the dashboard
-- **Daily Mood Check-in**: Family members share their daily mood with emojis
 - **Birthday Celebrations**: Smart birthday widget with age countdown and confetti animations
 - **Age Playground**: Interactive age simulator with clickable family member avatars
 - **Dream Builder**: Explore careers with role-based storytelling and progress tracking
