@@ -1,9 +1,17 @@
 <script lang="ts">
 	import { auth, db } from '$lib/firebase';
-	import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-	import Button from '$lib/components/Button.svelte';
+	import {
+		addDoc,
+		collection,
+		doc,
+		getDoc,
+		setDoc,
+		increment,
+		serverTimestamp
+	} from 'firebase/firestore';
 	import { RotateCcw, Trophy, Bot, User } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
+	import { playSound } from '$lib/sound';
 
 	type Player = 'X' | 'O' | null;
 	type Board = Player[];
@@ -11,17 +19,13 @@
 	type Difficulty = 'easy' | 'hard';
 
 	let board = $state<Board>(Array(9).fill(null));
-	let currentPlayer = $state<Player>('X');
 	let gameResult = $state<GameResult>(null);
 	let isPlayerTurn = $state(true);
 	let difficulty = $state<Difficulty>('hard');
 	let isThinking = $state(false);
 
-	const user = $state(auth.currentUser);
-
 	function resetGame() {
 		board = Array(9).fill(null);
-		currentPlayer = 'X';
 		gameResult = null;
 		isPlayerTurn = true;
 		isThinking = false;
@@ -112,18 +116,23 @@
 	async function makePlayerMove(index: number) {
 		if (board[index] || !isPlayerTurn || gameResult) return;
 
-		// Player move
+		// Player move with click sound
 		board[index] = 'X';
+		playSound('/sounds/click.mp3');
 
 		const winner = checkWinner(board);
 		if (winner) {
 			gameResult = winner === 'X' ? 'win' : 'lose';
+			if (gameResult === 'win') {
+				playSound('/sounds/victory.mp3');
+			}
 			await saveGame();
 			return;
 		}
 
 		if (isBoardFull(board)) {
 			gameResult = 'draw';
+			playSound('/sounds/draw.mp3');
 			await saveGame();
 			return;
 		}
@@ -143,6 +152,7 @@
 				await saveGame();
 			} else if (isBoardFull(board)) {
 				gameResult = 'draw';
+				playSound('/sounds/draw.mp3');
 				await saveGame();
 			} else {
 				isPlayerTurn = true;
@@ -153,20 +163,53 @@
 	}
 
 	async function saveGame() {
-		if (!user?.uid || !gameResult) return;
+		if (!auth.currentUser?.uid || !gameResult) return;
 
 		try {
+			// Save game record
 			await addDoc(collection(db, 'games', 'tic-tac', 'matches'), {
-				playerUid: user.uid,
-				playerName: getDisplayName(user?.email, { nickname: undefined }),
+				playerUid: auth.currentUser.uid,
+				playerName: getDisplayName(auth.currentUser?.email, { nickname: undefined }),
 				result: gameResult,
 				difficulty,
 				board: board.slice(), // Save final board state
 				timestamp: serverTimestamp(),
-				moves: board.reduce((moves, cell, index) => (cell ? moves + 1 : moves), 0)
+				moves: board.reduce((moves, cell) => (cell ? moves + 1 : moves), 0)
 			});
+
+			// Update leaderboard
+			await updateLeaderboard(gameResult);
 		} catch (error) {
 			console.error('Error saving game:', error);
+		}
+	}
+
+	async function updateLeaderboard(result: GameResult) {
+		if (!auth.currentUser?.uid || !result || result === 'draw') return;
+
+		try {
+			const leaderboardRef = doc(db, 'leaderboard', auth.currentUser.uid);
+
+			// Get current user data to ensure displayName is from profile
+			const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+			const userData = userDoc.data();
+			const displayName = getDisplayName(userData?.email, { nickname: userData?.nickname });
+
+			// Convert game result to leaderboard result
+			const leaderboardResult = result === 'win' ? 'win' : 'loss';
+
+			await setDoc(
+				leaderboardRef,
+				{
+					displayName,
+					[leaderboardResult === 'win' ? 'wins' : 'losses']: increment(1),
+					[`games.tictactoe.${leaderboardResult === 'win' ? 'wins' : 'losses'}`]: increment(1),
+					lastUpdated: serverTimestamp()
+				},
+				{ merge: true }
+			);
+		} catch (error) {
+			console.error('Error updating leaderboard:', error);
 		}
 	}
 
@@ -206,9 +249,13 @@
 				return '';
 		}
 	}
+
+	function getWinnerClass() {
+		return gameResult === 'win' ? 'animate-confetti' : '';
+	}
 </script>
 
-<div class="rounded-2xl bg-white p-6 shadow-sm">
+<div class="rounded-2xl bg-white p-6 shadow-sm {getWinnerClass()}">
 	<!-- Header -->
 	<div class="mb-6 flex items-center justify-between">
 		<div class="flex items-center space-x-3">
@@ -273,7 +320,7 @@
 
 	<!-- Game Board -->
 	<div class="mx-auto mb-6 grid max-w-xs grid-cols-3 gap-2">
-		{#each board as cell, index}
+		{#each board as cell, index (index)}
 			<button
 				class={getCellClass(index)}
 				onclick={() => makePlayerMove(index)}
@@ -286,9 +333,12 @@
 
 	<!-- Controls -->
 	<div class="flex justify-center">
-		<Button variant="outline" size="medium" onclick={resetGame}>
-			<RotateCcw class="mr-2 h-4 w-4" />
-			New Game
-		</Button>
+		<button
+			class="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2 text-white transition-colors duration-200 hover:bg-primary-dark"
+			onclick={resetGame}
+		>
+			<RotateCcw class="h-4 w-4" />
+			<span>New Game</span>
+		</button>
 	</div>
 </div>
