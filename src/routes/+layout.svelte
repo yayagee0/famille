@@ -28,7 +28,7 @@
 				// Check if user is in allowlist
 				if (validateFamilyMember(firebaseUser.email)) {
 					user = firebaseUser;
-					
+
 					// Initialize widget context for authenticated user
 					try {
 						initializeWidgetContext({
@@ -39,7 +39,7 @@
 					} catch (error) {
 						console.error('Failed to initialize widget context:', error);
 					}
-					
+
 					// Redirect to dashboard if on login page
 					if ($page.url.pathname === '/login' || $page.url.pathname === '/') {
 						goto('/dashboard');

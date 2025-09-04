@@ -559,7 +559,7 @@
 							<label for="displayName" class="mb-1 block text-sm font-medium text-gray-700">
 								Nickname
 							</label>
-							<div class="flex flex-col sm:flex-row gap-2">
+							<div class="flex flex-col gap-2 sm:flex-row">
 								<input
 									id="displayName"
 									type="text"
@@ -631,12 +631,15 @@
 									class="rounded-lg border border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 p-4"
 								>
 									<div class="flex items-start justify-between">
-										<p class="text-sm text-gray-800 flex-1 pr-3">{traitText}</p>
-										<div class="flex flex-col space-y-1 items-end">
+										<p class="flex-1 pr-3 text-sm text-gray-800">{traitText}</p>
+										<div class="flex flex-col items-end space-y-1">
 											<span
-												class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium {getCategoryBadgeClass(answer.category)}"
+												class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium {getCategoryBadgeClass(
+													answer.category
+												)}"
 											>
-												{getCategoryIcon(answer.category)} {answer.category}
+												{getCategoryIcon(answer.category)}
+												{answer.category}
 											</span>
 											{#if answer.custom}
 												<span

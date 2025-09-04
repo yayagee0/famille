@@ -21,8 +21,9 @@
 		[key: string]: any;
 	} = $props();
 
-	const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 transform active:scale-95';
-	
+	const baseClasses =
+		'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 transform active:scale-95';
+
 	const variantClasses = {
 		primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
 		secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',

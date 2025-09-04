@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { get } from 'svelte/store';
-import { 
-	initializeWidgetContext, 
-	clearWidgetContext, 
+import {
+	initializeWidgetContext,
+	clearWidgetContext,
 	useWidgetContext,
 	authEmail,
 	members,
@@ -11,10 +11,7 @@ import {
 } from '../lib/widget-context';
 
 describe('Widget Context Store', () => {
-	const mockAllowedEmails = [
-		'test1@example.com',
-		'test2@example.com'
-	];
+	const mockAllowedEmails = ['test1@example.com', 'test2@example.com'];
 
 	const mockAuthUser = { email: 'test1@example.com' };
 
@@ -43,7 +40,7 @@ describe('Widget Context Store', () => {
 		});
 
 		const context = useWidgetContext();
-		
+
 		expect(context.authEmail).toBe('test1@example.com');
 		expect(Object.keys(context.members)).toHaveLength(2);
 		expect(context.current().email).toBe('test1@example.com');
@@ -67,7 +64,7 @@ describe('Widget Context Store', () => {
 
 		const context = useWidgetContext();
 		const currentUserData = context.current();
-		
+
 		expect(currentUserData.displayName).toBe('Test User 1');
 		expect(currentUserData.nickname).toBe('T1');
 		expect(currentUserData.avatarUrl).toBe('https://example.com/avatar1.jpg');
@@ -102,7 +99,7 @@ describe('Widget Context Store', () => {
 
 		const memberStore = getMemberByEmail('test2@example.com');
 		const member = get(memberStore);
-		
+
 		expect(member).toBeDefined();
 		expect(member?.email).toBe('test2@example.com');
 	});

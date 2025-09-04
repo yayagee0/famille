@@ -29,7 +29,7 @@
 	let posts = $state<any[]>([]);
 	let loading = $state(true);
 	let unsubscribePosts: (() => void) | null = null;
-	
+
 	// Dynamic import for VideoPlayer component
 	let VideoPlayerComponent = $state<any>(null);
 
@@ -49,22 +49,24 @@
 	// Simple text sanitization function
 	function sanitizeText(text: string): string {
 		if (!text) return '';
-		
-		return text
-			// Remove HTML tags
-			.replace(/<[^>]*>/g, '')
-			// Remove script content
-			.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-			// Convert HTML entities
-			.replace(/&lt;/g, '<')
-			.replace(/&gt;/g, '>')
-			.replace(/&amp;/g, '&')
-			.replace(/&quot;/g, '"')
-			.replace(/&#x27;/g, "'")
-			// Trim whitespace
-			.trim()
-			// Limit length to prevent spam
-			.substring(0, 500);
+
+		return (
+			text
+				// Remove HTML tags
+				.replace(/<[^>]*>/g, '')
+				// Remove script content
+				.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+				// Convert HTML entities
+				.replace(/&lt;/g, '<')
+				.replace(/&gt;/g, '>')
+				.replace(/&amp;/g, '&')
+				.replace(/&quot;/g, '"')
+				.replace(/&#x27;/g, "'")
+				// Trim whitespace
+				.trim()
+				// Limit length to prevent spam
+				.substring(0, 500)
+		);
 	}
 
 	onMount(() => {
@@ -103,7 +105,7 @@
 			const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
 
 			if (!cachedPosts) loading = true;
-			
+
 			unsubscribePosts = onSnapshot(
 				postsQuery,
 				async (snapshot) => {
@@ -136,7 +138,7 @@
 
 					posts = enriched;
 					loading = false;
-					
+
 					// Cache the enriched posts for offline access
 					cachePosts(enriched);
 					console.log('[Feed] Fresh data loaded and cached');
@@ -144,7 +146,7 @@
 				(err) => {
 					console.error('Feed subscription error:', err);
 					loading = false;
-					
+
 					// If we have cached data, use it as fallback
 					const cachedPosts = getCachedPosts();
 					if (cachedPosts && posts.length === 0) {

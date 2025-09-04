@@ -15,10 +15,12 @@
 	};
 
 	// Get members who have birthdays as an array
-	const membersWithBirthdays = $derived(Object.values($members).filter(member => member.birthday));
+	const membersWithBirthdays = $derived(
+		Object.values($members).filter((member) => member.birthday)
+	);
 
 	// State for the selected family member and target age - initialize with first member when available
-	let selectedMember = $state(null as typeof membersWithBirthdays[0] | null);
+	let selectedMember = $state(null as (typeof membersWithBirthdays)[0] | null);
 	let targetAge = $state(10);
 	let showExactOffsets = $state(false);
 
@@ -32,7 +34,7 @@
 	// Calculate how old everyone would be when the selected member reaches target age
 	const futureAges = $derived.by(() => {
 		if (!selectedMember?.birthday) return [];
-		
+
 		const selectedCurrentAge = ageOn(selectedMember.birthday);
 		const yearsToAdd = targetAge - selectedCurrentAge;
 

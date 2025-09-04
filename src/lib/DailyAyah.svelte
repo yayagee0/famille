@@ -49,7 +49,7 @@
 
 	// Font size state
 	let fontSize = $state<'small' | 'medium' | 'large'>('medium');
-	
+
 	// Theme state
 	let isDarkTheme = $state(false);
 
@@ -90,51 +90,77 @@
 		}
 	});
 
-	const themeClasses = $derived(isDarkTheme 
-		? 'rounded-2xl bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6 text-center shadow-sm'
-		: 'rounded-2xl bg-white p-6 text-center shadow-sm');
+	const themeClasses = $derived(
+		isDarkTheme
+			? 'rounded-2xl bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6 text-center shadow-sm'
+			: 'rounded-2xl bg-white p-6 text-center shadow-sm'
+	);
 </script>
 
 <div class={themeClasses}>
-	<div class="flex items-center justify-between mb-2">
-		<h3 class="flex items-center justify-center text-lg font-semibold {isDarkTheme ? 'text-green-400' : 'text-green-600'}">
+	<div class="mb-2 flex items-center justify-between">
+		<h3
+			class="flex items-center justify-center text-lg font-semibold {isDarkTheme
+				? 'text-green-400'
+				: 'text-green-600'}"
+		>
 			📖 Daily Ayah
 		</h3>
-		
+
 		<!-- Controls Row -->
 		<div class="flex items-center space-x-4">
 			<!-- Theme Toggle -->
 			<button
 				onclick={toggleTheme}
-				class="p-2 rounded-lg transition-all duration-200 {isDarkTheme ? 'bg-white bg-opacity-10 text-yellow-400 hover:bg-opacity-20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
+				class="rounded-lg p-2 transition-all duration-200 {isDarkTheme
+					? 'bg-opacity-10 hover:bg-opacity-20 bg-white text-yellow-400'
+					: 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
 				aria-label={isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme'}
 			>
 				{#if isDarkTheme}
-					<Sun class="w-4 h-4" />
+					<Sun class="h-4 w-4" />
 				{:else}
-					<Moon class="w-4 h-4" />
+					<Moon class="h-4 w-4" />
 				{/if}
 			</button>
-			
+
 			<!-- Font size controls -->
 			<div class="flex items-center space-x-1">
 				<button
 					onclick={() => adjustFontSize('small')}
-					class="px-2 py-1 text-xs rounded transition-colors {fontSize === 'small' ? (isDarkTheme ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700') : (isDarkTheme ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-700')}"
+					class="rounded px-2 py-1 text-xs transition-colors {fontSize === 'small'
+						? isDarkTheme
+							? 'bg-green-600 text-white'
+							: 'bg-green-100 text-green-700'
+						: isDarkTheme
+							? 'text-gray-300 hover:text-white'
+							: 'text-gray-500 hover:text-gray-700'}"
 					aria-label="Small font size"
 				>
 					A-
 				</button>
 				<button
 					onclick={() => adjustFontSize('medium')}
-					class="px-2 py-1 text-sm rounded transition-colors {fontSize === 'medium' ? (isDarkTheme ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700') : (isDarkTheme ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-700')}"
+					class="rounded px-2 py-1 text-sm transition-colors {fontSize === 'medium'
+						? isDarkTheme
+							? 'bg-green-600 text-white'
+							: 'bg-green-100 text-green-700'
+						: isDarkTheme
+							? 'text-gray-300 hover:text-white'
+							: 'text-gray-500 hover:text-gray-700'}"
 					aria-label="Medium font size"
 				>
 					A
 				</button>
 				<button
 					onclick={() => adjustFontSize('large')}
-					class="px-2 py-1 text-base rounded transition-colors {fontSize === 'large' ? (isDarkTheme ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700') : (isDarkTheme ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-700')}"
+					class="rounded px-2 py-1 text-base transition-colors {fontSize === 'large'
+						? isDarkTheme
+							? 'bg-green-600 text-white'
+							: 'bg-green-100 text-green-700'
+						: isDarkTheme
+							? 'text-gray-300 hover:text-white'
+							: 'text-gray-500 hover:text-gray-700'}"
 					aria-label="Large font size"
 				>
 					A+
@@ -142,12 +168,18 @@
 			</div>
 		</div>
 	</div>
-	
-	<p class="font-arabic mb-3 {fontSizeClasses[fontSize]} leading-relaxed {isDarkTheme ? 'text-white' : 'text-gray-900'}">
+
+	<p
+		class="font-arabic mb-3 {fontSizeClasses[fontSize]} leading-relaxed {isDarkTheme
+			? 'text-white'
+			: 'text-gray-900'}"
+	>
 		{todayAyah.arabic}
 	</p>
 	<p class="{isDarkTheme ? 'text-gray-200' : 'text-gray-700'} italic">"{todayAyah.translation}"</p>
-	<p class="mt-1 text-sm {isDarkTheme ? 'text-gray-400' : 'text-gray-500'}">— {todayAyah.reference}</p>
+	<p class="mt-1 text-sm {isDarkTheme ? 'text-gray-400' : 'text-gray-500'}">
+		— {todayAyah.reference}
+	</p>
 </div>
 
 <style>

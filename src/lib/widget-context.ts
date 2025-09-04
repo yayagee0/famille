@@ -60,7 +60,7 @@ export function initializeWidgetContext({
 	for (const email of allowedEmails) {
 		const normalizedEmail = normalizeEmail(email);
 		const skeleton = buildMemberSkeleton(normalizedEmail);
-		
+
 		// Create a new member object with all required fields
 		const member: FamilyMember = {
 			email: skeleton.email,
@@ -68,14 +68,11 @@ export function initializeWidgetContext({
 			birthday: skeleton.birthday,
 			avatarUrl: skeleton.avatarUrl
 		};
-		
+
 		// Overlay profile data if available
 		const profile = profiles?.[normalizedEmail];
 		if (profile) {
-			member.displayName = 
-				profile.displayName || 
-				profile.nickname || 
-				member.displayName;
+			member.displayName = profile.displayName || profile.nickname || member.displayName;
 			member.nickname = profile.nickname;
 			member.avatarUrl = profile.avatarUrl || profile.photoURL;
 		}

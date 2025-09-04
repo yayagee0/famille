@@ -12,7 +12,7 @@
 	let loading = $state(true);
 	let selectedPhoto = $state<any | null>(null);
 	let selectedIndex = $state(0);
-	
+
 	// Dynamic import for Lightbox component
 	let LightboxComponent = $state<any>(null);
 
@@ -121,23 +121,23 @@
 	// Touch/swipe gesture support
 	let touchStartX = $state(0);
 	let touchStartY = $state(0);
-	
+
 	function handleTouchStart(event: TouchEvent) {
 		if (!selectedPhoto || event.touches.length !== 1) return;
-		
+
 		touchStartX = event.touches[0].clientX;
 		touchStartY = event.touches[0].clientY;
 	}
-	
+
 	function handleTouchEnd(event: TouchEvent) {
 		if (!selectedPhoto || event.changedTouches.length !== 1) return;
-		
+
 		const touchEndX = event.changedTouches[0].clientX;
 		const touchEndY = event.changedTouches[0].clientY;
-		
+
 		const deltaX = touchEndX - touchStartX;
 		const deltaY = touchEndY - touchStartY;
-		
+
 		// Only trigger swipe if horizontal movement is greater than vertical
 		if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
 			if (deltaX > 0) {
@@ -222,7 +222,7 @@
 <!-- Dynamic Lightbox Component -->
 {#if LightboxComponent && selectedPhoto}
 	{@const DynamicLightbox = LightboxComponent}
-	<DynamicLightbox 
+	<DynamicLightbox
 		{photos}
 		{selectedPhoto}
 		{selectedIndex}
