@@ -1,9 +1,6 @@
 <script lang="ts">
-	import { useWidgetContext } from './widget-context';
+	import { members } from './widget-context';
 	import dayjs from 'dayjs';
-
-	// Get widget context for family members
-	const { members } = useWidgetContext();
 
 	// Calculate the next upcoming birthday from widget context members
 	const nextBirthday = $derived.by(() => {
@@ -11,7 +8,7 @@
 		const currentYear = today.getFullYear();
 
 		// Calculate next birthday for each member who has a birthday
-		const upcomingBirthdays = Object.values(members)
+		const upcomingBirthdays = Object.values($members)
 			.filter(member => member.birthday)
 			.map((member) => {
 				const birthDate = new Date(member.birthday!);
