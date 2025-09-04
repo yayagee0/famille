@@ -7,7 +7,15 @@
  * 3. local-part of email (before @)
  */
 
-export function getDisplayName(email: string, profile?: { nickname?: string }): string {
+export function getDisplayName(
+	email: string | null | undefined,
+	profile?: { nickname?: string }
+): string {
+	// Handle null/undefined email
+	if (!email) {
+		return 'Unknown';
+	}
+
 	// Priority 1: Profile nickname
 	if (profile?.nickname?.trim()) {
 		return profile.nickname.trim();

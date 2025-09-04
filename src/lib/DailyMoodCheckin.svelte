@@ -48,7 +48,6 @@
 						label: validEntry.mood.label,
 						timestamp: validEntry.createdAt?.toDate?.() || new Date()
 					};
-
 				} catch (error) {
 					console.warn('Invalid mood entry data:', error);
 				}
@@ -107,7 +106,7 @@
 		const currentMember = Object.values($members).find(
 			(member) => member.email === auth.currentUser?.email
 		);
-		return getDisplayName(auth.currentUser.email, { nickname: currentMember?.nickname });
+		return getDisplayName(auth.currentUser?.email, { nickname: currentMember?.nickname });
 	});
 </script>
 
