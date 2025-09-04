@@ -3,6 +3,7 @@
 	import { collection, query, where, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
 	import { db, getFamilyId } from '$lib/firebase';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
+	import { getDisplayName } from '$lib/getDisplayName';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -51,7 +52,7 @@
 							return {
 								...photo,
 								author: {
-									displayName: userData.displayName || 'Unknown User',
+									displayName: getDisplayName(userData.email, { nickname: userData.nickname }),
 									avatarUrl: userData.avatarUrl || null
 								}
 							};

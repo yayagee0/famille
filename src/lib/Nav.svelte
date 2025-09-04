@@ -111,7 +111,7 @@
 								<img
 									class="h-8 w-8 rounded-full bg-gray-50"
 									src={user.photoURL}
-									alt={user.displayName || 'User'}
+									alt={getDisplayName(user?.email, { nickname: user?.nickname })}
 								/>
 							{:else}
 								<div class="h-8 w-8 rounded-full bg-gray-300"></div>
@@ -154,7 +154,7 @@
 		<img
 			class="h-8 w-8 rounded-full bg-gray-50"
 			src={user.photoURL}
-			alt={user.displayName || 'User'}
+			alt={getDisplayName(user?.email, { nickname: user?.nickname })}
 		/>
 	{:else}
 		<div class="h-8 w-8 rounded-full bg-gray-300"></div>
@@ -215,7 +215,7 @@
 											<img
 												class="h-8 w-8 rounded-full bg-gray-50"
 												src={user.photoURL}
-												alt={user.displayName || 'User'}
+												alt={getDisplayName(user?.email, { nickname: user?.nickname })}
 											/>
 										{:else}
 											<div class="h-8 w-8 rounded-full bg-gray-300"></div>

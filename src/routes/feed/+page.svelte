@@ -127,13 +127,13 @@
 									return {
 										...post,
 										author: {
-											displayName: u.displayName || 'Unknown User',
+											displayName: getDisplayName(u.email, { nickname: u.nickname }),
 											avatarUrl: u.avatarUrl || null
 										}
 									};
 								}
 							}
-							return { ...post, author: { displayName: 'Unknown User', avatarUrl: null } };
+							return { ...post, author: { displayName: getDisplayName(null), avatarUrl: null } };
 						})
 					);
 

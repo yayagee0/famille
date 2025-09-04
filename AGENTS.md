@@ -191,6 +191,36 @@ src/
 - **Event dispatching**: Use `createEventDispatcher()` for component communication
 - **Error boundaries**: Handle Firebase errors gracefully with user feedback
 - **Loading states**: Always provide loading indicators for async operations
+- **Unified Display Names**: All components MUST use `getDisplayName()` helper for consistent user name display
+
+#### Display Name Rule (Mandatory)
+
+**Rule**: Never show raw emails or use inline display name fallbacks. Always call `getDisplayName()`.
+
+**Priority Order**:
+1. Profile nickname (from Firestore `users/{uid}.nickname`)
+2. Environment nickname (from `VITE_NICKNAMES`)
+3. Email local-part (before @ symbol)
+4. "Unknown" (for null emails)
+
+**Usage Pattern**:
+```svelte
+<!-- ✅ CORRECT: Use unified helper -->
+{getDisplayName(member.email, { nickname: member.nickname })}
+
+<!-- ❌ WRONG: Raw email or inline fallbacks -->
+{member.email?.split('@')[0]}
+{user.displayName || 'Unknown'}
+{member.displayName || member.email?.split('@')[0]}
+```
+
+**Examples**:
+- **Widgets**: `{getDisplayName(member.email, { nickname: member.nickname })}`
+- **Author enrichment**: `displayName: getDisplayName(userData.email, { nickname: userData.nickname })`
+- **Current user**: `{getDisplayName($user?.email, { nickname: $user?.nickname })}`
+- **Alt text**: `alt={getDisplayName(user?.email, { nickname: user?.nickname })}`
+
+This ensures profile nicknames are always respected and display names remain consistent across the entire application.
 
 ### Data Flow
 
