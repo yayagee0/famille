@@ -104,14 +104,6 @@
 - **Styling**: Uses Amiri font for Arabic text
 - **Location**: Dashboard top section
 
-#### Daily Mood Check-in Widget
-
-- **Component**: `DailyMoodCheckin.svelte`
-- **Features**: Family members share daily emotions with emoji selection
-- **Data Storage**: Firestore collection `daily-moods/{date}` with automatic midnight reset
-- **UI**: Avatar + emoji display for all family members, kid-friendly design
-- **Location**: Dashboard below Daily Ayah
-
 #### Interactive Playground Widgets
 
 - **Age Playground**: `AgePlaygroundCard.svelte` - Interactive age simulator with avatar chips
@@ -124,7 +116,7 @@
 - **Component**: `BirthdayPreview.svelte`
 - **Format**: "{Name} turns {Age} on {Date}" with countdown days
 - **Special Effects**: Confetti animation when birthday is today
-- **Location**: Dashboard below mood check-in
+- **Location**: Dashboard below Daily Ayah
 
 ## Security Rules & Constraints
 
@@ -169,7 +161,6 @@ src/
 │   ├── Nav.svelte          # Navigation component
 │   ├── FeedUpload.svelte   # Post creation component
 │   ├── DailyAyah.svelte    # Daily Quranic verse widget
-│   ├── DailyMoodCheckin.svelte # Family mood check-in widget
 │   ├── BirthdayPreview.svelte  # Birthday countdown with confetti
 │   ├── AgePlaygroundCard.svelte # Interactive age simulator
 │   └── DreamBuilderPlaygroundCard.svelte # Career exploration game

@@ -504,7 +504,6 @@ src/
 **Firebase Collections**
 - \`posts/{docId}\`: Posts with author enrichment
 - \`users/{uid}\`: User profiles
-- \`daily-moods/{date}\`: Daily check-ins
 
 ---
 
@@ -520,7 +519,6 @@ src/
 **Current Features**
 - 5 post types: text, photo, video, YouTube, polls
 - Daily Ayah widget with Arabic text
-- Daily mood check-in with emojis
 - Interactive playground (age simulator, dream builder)
 - Birthday countdown with confetti
 - Real-time feed updates
@@ -564,9 +562,8 @@ src/
 - Birthday confetti animation adds delight
 
 **Suggestions**
-1. Shrink mood widget (make it card-sized, not dominant)
-2. Add smoother transitions in Gallery (swipe + arrows)
-3. Increase Ayah font and allow toggle for readability
+1. Add smoother transitions in Gallery (swipe + arrows)
+2. Increase Ayah font and allow toggle for readability
 
 ---
 
@@ -688,7 +685,7 @@ ${this.evidence.join('\n')}
 ## (Y) PAGE + WIDGET MATRIX
 
 **Narrative View**
-- Dashboard: Shows Daily Ayah (Anchor), Daily Mood (Anchor), Birthday Preview (Quiet)
+- Dashboard: Shows Daily Ayah (Anchor), Birthday Preview (Quiet)
 - Feed: Displays posts with LoadingSpinner (Quiet), real-time updates
 - Gallery: Photo grid with lightbox modal, lazy loading
 - Playground: Age simulator and dream builder widgets (Anchor)
@@ -699,7 +696,6 @@ ${this.evidence.join('\n')}
 | Route | Widget | Placement | Visibility | Reset Rules |
 |-------|--------|-----------|------------|-------------|
 | /dashboard | DailyAyah | Anchor | Always | Daily rotation |
-| /dashboard | DailyMoodCheckin | Anchor | Always | Midnight reset |
 | /dashboard | BirthdayPreview | Quiet | Conditional | Yearly cycle |
 | /feed | LoadingSpinner | Quiet | While loading | Auto-hide |
 | /gallery | Lightbox | Anchor | On image click | Manual close |
