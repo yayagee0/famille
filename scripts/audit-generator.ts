@@ -177,56 +177,59 @@ class FamilyHubAuditor {
 
 	private checkUserObjectConsistency(): string[] {
 		const issues: string[] = [];
-		
+
 		try {
 			// Check for consistent user object usage across components
 			const userUsagePatterns = execSync(
 				'find src -name "*.svelte" -o -name "*.ts" | xargs grep -n "\\$user\\|user\\." | head -20',
 				{ encoding: 'utf8' }
 			);
-			
+
 			// Check for inconsistent display name usage
 			const displayNameIssues = execSync(
 				'find src -name "*.svelte" | xargs grep -n "displayName\\|email\\.split" | grep -v "getDisplayName" | head -10',
 				{ encoding: 'utf8' }
 			);
-			
+
 			if (displayNameIssues.trim()) {
 				issues.push('Inconsistent display name usage found (not using getDisplayName helper)');
 			}
-			
+
 			// Check widget context usage
 			const widgetContextUsage = execSync(
 				'find src -name "*.svelte" | xargs grep -l "widget-context\\|authEmail\\|members" | wc -l',
 				{ encoding: 'utf8' }
 			);
-			
+
 			if (parseInt(widgetContextUsage.trim()) > 0) {
 				issues.push('Widget context system is being used for user standardization');
 			}
-			
 		} catch (error) {
 			issues.push('Unable to analyze user object consistency');
 		}
-		
+
 		return issues;
 	}
 
 	private checkBackupStatus(): { exists: boolean; lastBackup?: string } {
 		try {
 			const backupDir = 'backups';
-			if (!execSync(`test -d ${backupDir} && echo "exists" || echo "missing"`, { encoding: 'utf8' }).includes('exists')) {
+			if (
+				!execSync(`test -d ${backupDir} && echo "exists" || echo "missing"`, {
+					encoding: 'utf8'
+				}).includes('exists')
+			) {
 				return { exists: false };
 			}
-			
+
 			const latestBackup = execSync(
 				'ls -t backups/firestore-backup-*.json 2>/dev/null | head -1 || echo "none"',
 				{ encoding: 'utf8' }
 			).trim();
-			
-			return { 
-				exists: true, 
-				lastBackup: latestBackup !== 'none' ? latestBackup : undefined 
+
+			return {
+				exists: true,
+				lastBackup: latestBackup !== 'none' ? latestBackup : undefined
 			};
 		} catch {
 			return { exists: false };
@@ -241,16 +244,16 @@ class FamilyHubAuditor {
 			'Add service worker caching for static assets',
 			'Batch Firestore operations to reduce read/write operations'
 		];
-		
+
 		const current = {
 			estimatedReads: '~360/day',
-			estimatedWrites: '~55/day', 
+			estimatedWrites: '~55/day',
 			storageUsage: '~125MB',
 			avgDownload: '~1.2MB/session',
 			avgUpload: '~0.3MB/session',
 			cacheRatio: '~60%'
 		};
-		
+
 		return { current, recommendations };
 	}
 
@@ -259,10 +262,10 @@ class FamilyHubAuditor {
 
 		// Check user object consistency
 		const userConsistencyIssues = this.checkUserObjectConsistency();
-		
+
 		// Check backup status
 		const backupStatus = this.checkBackupStatus();
-		
+
 		// Analyze bandwidth optimization
 		const bandwidthAnalysis = this.analyzeBandwidthOptimization();
 
@@ -289,14 +292,18 @@ class FamilyHubAuditor {
 		this.addEvidence(`Firebase rules: firestore.rules, storage.rules validation`);
 		this.addEvidence(`Environment config: .env validation for required variables`);
 		this.addEvidence(`Security scan: package-lock.json npm audit`);
-		this.addEvidence(`Backup status: ${backupStatus.exists ? 'Directory exists' : 'Missing backup directory'}`);
+		this.addEvidence(
+			`Backup status: ${backupStatus.exists ? 'Directory exists' : 'Missing backup directory'}`
+		);
 		this.addEvidence(`Disk usage: du -sh . (${this.metrics.projectSize})`);
 		this.addEvidence(`TailwindCSS compilation: vite.config.ts @tailwindcss/vite plugin`);
 		this.addEvidence(`Firebase SDK: package.json firebase@12.2.1 dependency check`);
 		this.addEvidence(`User object consistency: ${userConsistencyIssues.length} issues found`);
 		this.addEvidence(`Widget context system: Unified family member data access`);
 		this.addEvidence(`Display name standardization: getDisplayName() helper usage`);
-		this.addEvidence(`Bandwidth analysis: ${bandwidthAnalysis.current.avgDownload} avg download per session`);
+		this.addEvidence(
+			`Bandwidth analysis: ${bandwidthAnalysis.current.avgDownload} avg download per session`
+		);
 		this.addEvidence(`Cost estimation: Firebase usage tracking and optimization`);
 
 		return this.generateMarkdown();
@@ -327,14 +334,16 @@ class FamilyHubAuditor {
 
 		// Generate critical issues summary
 		const issues: string[] = [];
-		
+
 		if (!buildSuccess) issues.push('❌ Build failed');
 		if (!lintSuccess) issues.push('❌ Lint errors found (132 issues identified)');
 		if (!typeCheckSuccess) issues.push('❌ TypeScript errors found');
 		if (!testSuccess) issues.push('❌ Tests failed');
 		if (!backupStatus.exists) issues.push('❌ Missing automated Firestore backup process');
-		if (userConsistencyIssues.length > 0) issues.push('⚠️ User object standardization issues detected');
-		if (bundleSize.includes('554')) issues.push('⚠️ Bundle size high (~554KB) - needs code splitting');
+		if (userConsistencyIssues.length > 0)
+			issues.push('⚠️ User object standardization issues detected');
+		if (bundleSize.includes('554'))
+			issues.push('⚠️ Bundle size high (~554KB) - needs code splitting');
 
 		const criticalIssues =
 			issues.length > 0
@@ -606,11 +615,13 @@ src/
 - ✅ Spacing: TailwindCSS spacing scale used uniformly
 
 **User Object Standardization**
-${userConsistencyIssues.length > 0 ? 
-`- ⚠️ Issues found: ${userConsistencyIssues.join(', ')}
-- ⚠️ Action needed: Standardize user object access patterns` : 
-`- ✅ User objects handled consistently via getDisplayName() helper
-- ✅ Widget context provides unified family member access`}
+${
+	userConsistencyIssues.length > 0
+		? `- ⚠️ Issues found: ${userConsistencyIssues.join(', ')}
+- ⚠️ Action needed: Standardize user object access patterns`
+		: `- ✅ User objects handled consistently via getDisplayName() helper
+- ✅ Widget context provides unified family member access`
+}
 
 **Navigation Consistency**
 - ✅ Desktop: Fixed sidebar navigation

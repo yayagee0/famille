@@ -74,7 +74,7 @@
 				);
 				return {
 					memberUid: member.uid,
-					memberName: getDisplayName(member.email, { nickname: member.nickname }),
+					memberName: getDisplayName(member.email, { nickname: undefined }),
 					answers: memberAnswersSnapshot.docs.map((doc) => ({
 						questionId: doc.data().questionId,
 						answer: doc.data().answer,

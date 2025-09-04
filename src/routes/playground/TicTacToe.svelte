@@ -159,7 +159,7 @@
 		try {
 			await addDoc(collection(db, 'games', 'tic-tac', 'matches'), {
 				playerUid: user.uid,
-				playerName: getDisplayName(user?.email, { nickname: user?.nickname }),
+				playerName: getDisplayName(user?.email, { nickname: undefined }),
 				result: gameResult,
 				difficulty,
 				board: board.slice(), // Save final board state

@@ -1,1 +1,5 @@
-{"timestamp":"2025-09-04","note":"Initial backup setup","collections":{"posts":[],"users":[]}}
+{
+	"timestamp": "2025-09-04",
+	"note": "Initial backup setup",
+	"collections": { "posts": [], "users": [] }
+}

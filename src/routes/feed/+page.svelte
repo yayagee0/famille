@@ -286,7 +286,7 @@
 
 		try {
 			const newComment = {
-				author: getDisplayName(user?.email, { nickname: user?.nickname }),
+				author: getDisplayName(user?.email, { nickname: undefined }),
 				text: sanitizedText, // Use sanitized text
 				createdAt: new Date()
 			};

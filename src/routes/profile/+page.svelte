@@ -522,7 +522,7 @@
 							<img
 								class="h-20 w-20 rounded-full object-cover"
 								src={user.photoURL}
-								alt={getDisplayName(user?.email, { nickname: user?.nickname })}
+								alt={getDisplayName(user?.email, { nickname: undefined })}
 							/>
 						{:else}
 							<div class="flex h-20 w-20 items-center justify-center rounded-full bg-gray-300">
