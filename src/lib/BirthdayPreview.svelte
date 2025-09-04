@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { members } from './widget-context';
+	import { getDisplayName } from './getDisplayName';
 	import dayjs from 'dayjs';
 
 	// Calculate the next upcoming birthday from widget context members
@@ -23,7 +24,7 @@
 
 				return {
 					email: member.email,
-					displayName: member.displayName,
+					displayName: getDisplayName(member.email, { nickname: member.nickname }),
 					birthday: member.birthday!,
 					nextDate: nextBirthday,
 					daysUntil: Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
