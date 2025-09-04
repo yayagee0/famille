@@ -4,42 +4,97 @@
 	import { Moon, Sun } from 'lucide-svelte';
 	import { cacheAyat, getCachedAyat } from '$lib/offline';
 
-	// A simple array of ayat to rotate daily
+	// Extended array of ayat with simplified kids meanings
 	const ayat = [
 		{
 			arabic: 'وَاللَّهُ يُحِبُّ الْمُحْسِنِينَ',
 			translation: 'And Allah loves the doers of good.',
+			kids: 'Allah is happy when we are kind and do good things.',
 			reference: 'Quran 3:134'
 		},
 		{
 			arabic: 'إِنَّ مَعَ الْعُسْرِ يُسْرًا',
 			translation: 'Indeed, with hardship comes ease.',
+			kids: 'When life is hard, Allah will make it easier soon.',
 			reference: 'Quran 94:6'
 		},
 		{
 			arabic: 'لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ',
 			translation: 'Do not despair of the mercy of Allah.',
+			kids: 'Never give up — Allah’s love and help are always there.',
 			reference: 'Quran 39:53'
 		},
 		{
 			arabic: 'وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا',
 			translation: 'And whoever fears Allah - He will make for him a way out.',
+			kids: 'If we obey Allah, He will help us out of problems.',
 			reference: 'Quran 65:2'
 		},
 		{
 			arabic: 'وَاللَّهُ خَيْرٌ حَافِظًا',
 			translation: 'And Allah is the best guardian.',
+			kids: 'Allah protects us better than anyone else.',
 			reference: 'Quran 12:64'
 		},
 		{
 			arabic: 'وَهُوَ الْعَزِيزُ الرَّحِيمُ',
 			translation: 'And He is the Exalted in Might, the Merciful.',
+			kids: 'Allah is strong and also very kind.',
 			reference: 'Quran 59:1'
 		},
 		{
 			arabic: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً',
 			translation: 'Our Lord, give us in this world [that which is] good.',
+			kids: 'We ask Allah to give us good things in this life.',
 			reference: 'Quran 2:201'
+		},
+		{
+			arabic: 'وَقُولُوا لِلنَّاسِ حُسْنًا',
+			translation: 'And speak to people good words.',
+			kids: 'Always talk nicely to everyone.',
+			reference: 'Quran 2:83'
+		},
+		{
+			arabic: 'وَاعْبُدُوا اللَّهَ وَلَا تُشْرِكُوا بِهِ شَيْئًا',
+			translation: 'Worship Allah and do not associate anything with Him.',
+			kids: 'Pray only to Allah, not anyone else.',
+			reference: 'Quran 4:36'
+		},
+		{
+			arabic: 'إِنَّ اللَّهَ مَعَ الصَّابِرِينَ',
+			translation: 'Indeed, Allah is with the patient.',
+			kids: 'Allah is close to us when we wait calmly.',
+			reference: 'Quran 2:153'
+		},
+		{
+			arabic: 'وَأَقِيمُوا الصَّلَاةَ',
+			translation: 'And establish prayer.',
+			kids: 'Never forget to pray to Allah every day.',
+			reference: 'Quran 2:43'
+		},
+		{
+			arabic: 'وَبِالْوَالِدَيْنِ إِحْسَانًا',
+			translation: 'And be good to parents.',
+			kids: 'Always respect and listen to mom and dad.',
+			reference: 'Quran 4:36'
+		},
+		{
+			arabic: 'إِنَّ اللَّهَ غَفُورٌ رَّحِيمٌ',
+			translation: 'Indeed, Allah is Forgiving and Merciful.',
+			kids: 'If we say sorry, Allah forgives us.',
+			reference: 'Quran 2:173'
+		},
+		{
+			arabic: 'إِنَّ اللَّهَ يُحِبُّ الْمُتَوَكِّلِينَ',
+			translation: 'Indeed, Allah loves those who rely upon Him.',
+			kids: 'Trust Allah and He will take care of you.',
+			reference: 'Quran 3:159'
+		},
+		{
+			arabic: 'وَإِذَا حُيِّيْتُم بِتَحِيَّةٍ فَحَيُّوا بِأَحْسَنَ مِنْهَا',
+			translation: 'When you are greeted with a greeting, respond with one better.',
+			kids: 'When someone says salaam, answer kindly back.',
+			reference: 'Quran 4:86'
 		}
 	];
 
@@ -65,26 +120,19 @@
 
 	function toggleTheme() {
 		isDarkTheme = !isDarkTheme;
-		// Save theme preference
 		if (browser) {
 			localStorage.setItem('daily-ayah-theme', isDarkTheme ? 'dark' : 'light');
 		}
 	}
 
 	onMount(() => {
-		// Load theme preference
 		if (browser) {
 			const savedTheme = localStorage.getItem('daily-ayah-theme');
 			isDarkTheme = savedTheme === 'dark';
 		}
-
-		// Cache ayat for offline access
 		cacheAyat(ayat);
-
-		// Try to load from cache if needed (for future offline enhancement)
 		const cachedAyat = getCachedAyat();
 		if (cachedAyat && cachedAyat.length > ayat.length) {
-			// Use cached version if it has more ayat
 			const cachedIndex = new Date().getDate() % cachedAyat.length;
 			todayAyah = cachedAyat[cachedIndex];
 		}
@@ -176,7 +224,12 @@
 	>
 		{todayAyah.arabic}
 	</p>
-	<p class="{isDarkTheme ? 'text-gray-200' : 'text-gray-700'} italic">"{todayAyah.translation}"</p>
+	<p class="{isDarkTheme ? 'text-gray-200' : 'text-gray-700'} italic">
+		"{todayAyah.translation}"
+	</p>
+	<p class="mt-1 text-sm {isDarkTheme ? 'text-green-300' : 'text-green-600'}">
+		👶 {todayAyah.kids}
+	</p>
 	<p class="mt-1 text-sm {isDarkTheme ? 'text-gray-400' : 'text-gray-500'}">
 		— {todayAyah.reference}
 	</p>
@@ -184,6 +237,6 @@
 
 <style>
 	.font-arabic {
-		font-family: 'Amiri', serif; /* add Google font link in app.html if not included */
+		font-family: 'Amiri', serif;
 	}
 </style>
