@@ -40,11 +40,7 @@
 }
 
 .from-primary {
-	background-image: linear-gradient(to right, var(--color-primary), var(--color-accent));
-}
-
-.to-accent {
-	/* This is handled by the gradient above */
+	background: linear-gradient(to right, #8b5cf6, #fbbf24);
 }
 
 .hover\:bg-primary-dark:hover {

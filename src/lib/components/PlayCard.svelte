@@ -9,14 +9,14 @@
 </script>
 
 <!-- PlayCard - Reusable base layout for playground widgets -->
-<div class="bg-white rounded-card shadow-soft transition-transform hover:scale-105 duration-200 w-full md:w-1/2 lg:w-1/3">
+<div class="bg-white rounded-card shadow-soft transition-transform hover:scale-105 duration-200 w-full">
 	<!-- Header slot with gradient strip -->
-	<div class="from-primary to-accent bg-gradient-to-r text-white font-bold rounded-t-card p-2 text-lg flex items-center gap-2">
+	<div class="from-primary to-accent bg-gradient-to-r text-white font-bold rounded-t-card p-4 text-lg flex items-center gap-2">
 		{header}
 	</div>
 	
 	<!-- Body slot with white background -->
-	<div class="bg-white p-4">
+	<div class="bg-white p-6">
 		{@render children?.()}
 	</div>
 	
