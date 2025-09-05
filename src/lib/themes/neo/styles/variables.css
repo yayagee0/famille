@@ -1,0 +1,38 @@
+/* Neo Theme Color Variables */
+:root {
+  /* Background colors */
+  --neo-bg: #020617;
+  --neo-gradient-start: #0f172a;
+  --neo-gradient-end: #020617;
+  
+  /* Glass effects */
+  --neo-glass: rgba(255, 255, 255, 0.08);
+  --neo-border: rgba(255, 255, 255, 0.12);
+  --neo-border-hover: rgba(255, 255, 255, 0.2);
+  
+  /* Accent colors */
+  --neo-cyan: #00f6ff;
+  --neo-magenta: #ff00d4;
+  --neo-lime: #b6ff00;
+  
+  /* Text colors */
+  --neo-text-primary: #f8fafc;
+  --neo-text-secondary: #cbd5e1;
+  --neo-text-muted: #64748b;
+  
+  /* Additional glass variants */
+  --neo-glass-light: rgba(255, 255, 255, 0.05);
+  --neo-glass-medium: rgba(255, 255, 255, 0.1);
+  --neo-glass-strong: rgba(255, 255, 255, 0.15);
+  
+  /* Shadow colors */
+  --neo-shadow-cyan: rgba(0, 246, 255, 0.3);
+  --neo-shadow-magenta: rgba(255, 0, 212, 0.3);
+  --neo-shadow-lime: rgba(182, 255, 0, 0.3);
+}
+
+/* Gradient definitions */
+html.neo {
+  --neo-gradient-header: linear-gradient(270deg, var(--neo-cyan), var(--neo-magenta), var(--neo-lime));
+  --neo-gradient-bg: radial-gradient(ellipse at top, var(--neo-gradient-start) 0%, var(--neo-gradient-end) 100%);
+}

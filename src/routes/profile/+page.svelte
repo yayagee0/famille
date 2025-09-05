@@ -20,6 +20,7 @@
 	import ErrorMessage from '$lib/ErrorMessage.svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { validateImageFile } from '$lib/schemas';
+	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 
 	let user = $state(auth.currentUser);
 	let displayName = $state('');
@@ -609,6 +610,11 @@
 									{/if}
 								</button>
 							</div>
+						</div>
+
+						<!-- Theme Preference -->
+						<div>
+							<ThemeToggle variant="full" showLabel={true} />
 						</div>
 					</div>
 				</div>

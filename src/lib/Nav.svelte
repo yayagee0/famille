@@ -5,6 +5,7 @@
 	import { signOut } from 'firebase/auth';
 	import { Home, User, Rss, LogOut, Menu, X, Gamepad2, Moon } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
+	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 
 	let { user } = $props<{ user: any }>();
 	let mobileMenuOpen = $state(false);
@@ -95,7 +96,12 @@
 						{/each}
 					</ul>
 				</li>
-				<li class="mt-auto">
+				<li class="mt-auto space-y-4">
+					<!-- Theme Toggle -->
+					<div class="px-2">
+						<ThemeToggle variant="minimal" />
+					</div>
+					
 					{#if user}
 						<div
 							class="flex items-center gap-x-4 px-2 py-3 text-sm leading-6 font-semibold text-gray-900"
@@ -143,6 +149,10 @@
 		<Menu class="h-6 w-6 transition-transform duration-200 hover:rotate-90" />
 	</button>
 	<div class="flex-1 text-sm leading-6 font-semibold text-gray-900">Family Hub</div>
+	
+	<!-- Theme toggle in mobile header -->
+	<ThemeToggle variant="minimal" />
+	
 	{#if user && user.photoURL}
 		<img
 			class="h-8 w-8 rounded-full bg-gray-50"
@@ -202,7 +212,12 @@
 									{/each}
 								</ul>
 							</li>
-							<li class="mt-auto">
+							<li class="mt-auto space-y-4">
+								<!-- Theme Toggle -->
+								<div class="px-2">
+									<ThemeToggle variant="minimal" />
+								</div>
+								
 								{#if user}
 									<div
 										class="flex items-center gap-x-4 px-2 py-3 text-sm leading-6 font-semibold text-gray-900"

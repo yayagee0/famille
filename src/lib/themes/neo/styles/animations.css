@@ -1,0 +1,239 @@
+/* Neo Theme Animations and Effects */
+
+/* Grid overlay background */
+@keyframes gridPulse {
+  0%, 100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+@keyframes neonGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--neo-cyan), 0 0 10px var(--neo-cyan), 0 0 15px var(--neo-cyan);
+  }
+  33% {
+    box-shadow: 0 0 5px var(--neo-magenta), 0 0 10px var(--neo-magenta), 0 0 15px var(--neo-magenta);
+  }
+  66% {
+    box-shadow: 0 0 5px var(--neo-lime), 0 0 10px var(--neo-lime), 0 0 15px var(--neo-lime);
+  }
+}
+
+@keyframes headerShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes particleFall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes glassShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Neo theme global styles */
+html.neo {
+  background: var(--neo-gradient-bg);
+  min-height: 100vh;
+}
+
+html.neo body {
+  background: transparent;
+  color: var(--neo-text-primary);
+}
+
+/* Grid overlay */
+html.neo::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(0, 246, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 246, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  z-index: -1;
+  animation: gridPulse 4s ease-in-out infinite;
+}
+
+/* Glass morphism effects */
+.neo-glass {
+  background: var(--neo-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--neo-border);
+  transition: all 350ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neo-glass:hover {
+  background: var(--neo-glass-medium);
+  border-color: var(--neo-border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px -5px var(--neo-shadow-cyan);
+}
+
+/* Text gradients */
+.neo-gradient-text {
+  background: var(--neo-gradient-header);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: headerShift 8s ease-in-out infinite;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Button effects */
+.neo-button {
+  position: relative;
+  overflow: hidden;
+  background: var(--neo-glass);
+  border: 1px solid var(--neo-border);
+  color: var(--neo-text-primary);
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neo-button:hover {
+  border-color: var(--neo-cyan);
+  box-shadow: 0 0 20px var(--neo-shadow-cyan);
+  transform: scale(1.02);
+}
+
+.neo-button:active {
+  transform: scale(0.98);
+}
+
+.neo-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, var(--neo-cyan) 0%, transparent 70%);
+  transition: all 600ms ease-out;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.neo-button:active::before {
+  width: 300px;
+  height: 300px;
+  animation: ripple 600ms ease-out;
+}
+
+/* Particle container */
+.neo-particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.neo-particle {
+  position: absolute;
+  font-size: 20px;
+  animation: particleFall linear infinite;
+  opacity: 0.8;
+}
+
+/* Neo-specific text styles */
+html.neo h1,
+html.neo h2,
+html.neo h3 {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+html.neo p,
+html.neo span {
+  color: var(--neo-text-secondary);
+  line-height: 1.6;
+}
+
+/* Arabic text in Neo theme */
+html.neo .arabic-text {
+  font-family: 'Amiri', serif;
+  line-height: 1.8;
+  color: var(--neo-text-primary);
+}
+
+/* Card hover effects */
+.neo-card-hover {
+  transition: all 350ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neo-card-hover:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 
+    0 20px 40px -10px var(--neo-shadow-cyan),
+    0 0 0 1px var(--neo-border-hover);
+}
+
+/* Subtle shimmer effect for glass elements */
+.neo-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.neo-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.04),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: glassShimmer 3s ease-in-out infinite;
+}

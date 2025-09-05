@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+/* Neo Theme Imports - Conditionally loaded only when Neo theme is active */
+@import './lib/themes/neo/styles/variables.css';
+@import './lib/themes/neo/styles/animations.css';
+
 @theme {
 	--font-family-sans:
 		'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
