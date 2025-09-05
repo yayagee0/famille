@@ -41,20 +41,7 @@
 		mobileMenuOpen = false;
 	}
 
-	function getIcon(iconName: string) {
-		switch (iconName) {
-			case 'home':
-				return Home;
-			case 'rss':
-				return Rss;
-			case 'gamepad':
-				return Gamepad2;
-			case 'user':
-				return User;
-			default:
-				return Home;
-		}
-	}
+	// TODO: Consider using a getIcon() helper function to reduce code duplication in icon rendering
 </script>
 
 <!-- Desktop sidebar -->

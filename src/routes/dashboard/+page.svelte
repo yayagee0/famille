@@ -11,7 +11,7 @@
 		getDoc
 	} from 'firebase/firestore';
 	import { db, getFamilyId } from '$lib/firebase';
-	import { MessageSquare, Volume2, VolumeX } from 'lucide-svelte';
+	import { Volume2, VolumeX } from 'lucide-svelte';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import DailyAyah from '$lib/DailyAyah.svelte';

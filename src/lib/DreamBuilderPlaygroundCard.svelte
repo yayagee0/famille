@@ -266,7 +266,7 @@
 
 			<!-- Progress indicators -->
 			<div class="mb-4 flex justify-center space-x-2">
-				{#each selected.facts as _, i (i)}
+				{#each selected.facts as _fact, i (i)}
 					<div
 						class="h-3 w-3 rounded-full transition-all duration-300 {i <= step
 							? 'scale-110 bg-gradient-to-r from-purple-500 to-pink-500'
