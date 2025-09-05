@@ -21,6 +21,8 @@
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { validateImageFile } from '$lib/schemas';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import GlassChip from '$lib/themes/neo/components/GlassChip.svelte';
+	import { themeStore } from '$lib/themes/neo';
 
 	let user = $state(auth.currentUser);
 	let displayName = $state('');
@@ -42,6 +44,15 @@
 	let selectedAnswers = $state<Record<string, string>>({});
 	let customAnswers = $state<Record<string, string>>({});
 	let showOtherInput = $state<Record<string, boolean>>({});
+	let currentTheme = $state('default');
+
+	// Subscribe to theme changes
+	$effect(() => {
+		const unsubscribe = themeStore.subscribe((theme) => {
+			currentTheme = theme;
+		});
+		return unsubscribe;
+	});
 
 	// Categories for balanced rotation
 	const categoryOrder = [
@@ -520,23 +531,23 @@
 		{/if}
 
 		<!-- 1. Identity Section (Avatar + Nickname) -->
-		<div class="rounded-2xl bg-white shadow-sm">
+		<div class="{currentTheme === 'neo' ? 'neo-glass neo-row-hover border border-white/10' : 'bg-white shadow-sm'} rounded-2xl">
 			<div class="px-6 py-5">
-				<h3 class="mb-4 text-lg font-semibold text-gray-900">Identity</h3>
+				<h3 class="mb-4 text-lg font-semibold {currentTheme === 'neo' ? 'neo-gradient-text' : 'text-gray-900'}">Identity</h3>
 
 				<div class="flex items-center space-x-6">
 					<div class="flex-shrink-0">
 						{#if previewUrl}
-							<img class="h-20 w-20 rounded-full object-cover" src={previewUrl} alt="Preview" />
+							<img class="h-20 w-20 rounded-full object-cover {currentTheme === 'neo' ? 'border-2 border-cyan-400/50' : ''}" src={previewUrl} alt="Preview" />
 						{:else if user.photoURL}
 							<img
-								class="h-20 w-20 rounded-full object-cover"
+								class="h-20 w-20 rounded-full object-cover {currentTheme === 'neo' ? 'border-2 border-cyan-400/50' : ''}"
 								src={user.photoURL}
 								alt={getDisplayName(user?.email, { nickname: undefined })}
 							/>
 						{:else}
-							<div class="flex h-20 w-20 items-center justify-center rounded-full bg-gray-300">
-								<User class="h-8 w-8 text-gray-500" />
+							<div class="flex h-20 w-20 items-center justify-center rounded-full {currentTheme === 'neo' ? 'neo-glass border border-white/30' : 'bg-gray-300'}">
+								<User class="h-8 w-8 {currentTheme === 'neo' ? 'text-slate-400' : 'text-gray-500'}" />
 							</div>
 						{/if}
 					</div>
@@ -662,23 +673,36 @@
 									class="rounded-lg border border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 p-4"
 								>
 									<div class="flex items-start justify-between">
-										<p class="flex-1 pr-3 text-sm text-gray-800">{traitText}</p>
+										<p class="flex-1 pr-3 text-sm {currentTheme === 'neo' ? 'text-slate-200' : 'text-gray-800'}">{traitText}</p>
 										<div class="flex flex-col items-end space-y-1">
-											<span
-												class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium {getCategoryBadgeClass(
-													answer.category
-												)}"
-											>
-												{getCategoryIcon(answer.category)}
-												{answer.category}
-											</span>
-											{#if answer.custom}
+											{#if currentTheme === 'neo'}
+												<GlassChip size="small" variant="accent">
+													{getCategoryIcon(answer.category)}
+													{answer.category}
+												</GlassChip>
+												{#if answer.custom}
+													<GlassChip size="small" variant="default">
+														<Star class="h-3 w-3" />
+														unique
+													</GlassChip>
+												{/if}
+											{:else}
 												<span
-													class="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700"
+													class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium {getCategoryBadgeClass(
+														answer.category
+													)}"
 												>
-													<Star class="mr-1 h-3 w-3" />
-													unique
+													{getCategoryIcon(answer.category)}
+													{answer.category}
 												</span>
+												{#if answer.custom}
+													<span
+														class="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700"
+													>
+														<Star class="mr-1 h-3 w-3" />
+														unique
+													</span>
+												{/if}
 											{/if}
 										</div>
 									</div>

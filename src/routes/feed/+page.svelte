@@ -15,6 +15,8 @@
 	import { auth, db } from '$lib/firebase';
 	import FeedUpload from '$lib/FeedUpload.svelte';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
+	import GlassCard from '$lib/themes/neo/components/GlassCard.svelte';
+	import { themeStore } from '$lib/themes/neo';
 	import { ensureUserProfile } from '$lib/auth';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { Heart, MessageCircle, Trash2, WifiOff } from 'lucide-svelte';
@@ -28,6 +30,15 @@
 	let posts = $state<any[]>([]);
 	let loading = $state(true);
 	let unsubscribePosts: (() => void) | null = null;
+	let currentTheme = $state('default');
+
+	// Subscribe to theme changes
+	$effect(() => {
+		const unsubscribe = themeStore.subscribe((theme) => {
+			currentTheme = theme;
+		});
+		return unsubscribe;
+	});
 
 	// Dynamic import for VideoPlayer component
 	let VideoPlayerComponent = $state<any>(null);
@@ -313,18 +324,18 @@
 
 <div class="mx-auto max-w-2xl space-y-6">
 	<div>
-		<h1 class="text-2xl font-bold text-gray-900">Family Feed</h1>
-		<p class="mt-1 text-sm text-gray-500">Share moments and stay connected</p>
+		<h1 class="{currentTheme === 'neo' ? 'neo-gradient-text' : ''} text-2xl font-bold {currentTheme === 'neo' ? '' : 'text-gray-900'}">Family Feed</h1>
+		<p class="mt-1 text-sm {currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-500'}">Share moments and stay connected</p>
 	</div>
 
 	<!-- Offline Indicator -->
 	{#if !$isOnline}
-		<div class="rounded-lg border border-orange-200 bg-orange-50 p-4">
+		<div class="{currentTheme === 'neo' ? 'neo-glass border border-orange-400/30' : 'border border-orange-200 bg-orange-50'} rounded-lg p-4">
 			<div class="flex items-center">
-				<WifiOff class="h-5 w-5 text-orange-600" />
+				<WifiOff class="h-5 w-5 {currentTheme === 'neo' ? 'text-orange-400' : 'text-orange-600'}" />
 				<div class="ml-3">
-					<h3 class="text-sm font-medium text-orange-800">You're offline</h3>
-					<p class="mt-1 text-sm text-orange-700">
+					<h3 class="text-sm font-medium {currentTheme === 'neo' ? 'text-orange-300' : 'text-orange-800'}">You're offline</h3>
+					<p class="mt-1 text-sm {currentTheme === 'neo' ? 'text-orange-400' : 'text-orange-700'}">
 						Showing cached content. New posts will sync when you're back online.
 					</p>
 				</div>
@@ -338,23 +349,25 @@
 		{#if loading}
 			<LoadingSpinner size="large" message="Loading family feed..." />
 		{:else if posts.length === 0}
-			<div class="rounded bg-white py-8 text-center shadow">
-				<p class="text-gray-600">No posts yet — be the first!</p>
+			<div class="{currentTheme === 'neo' ? 'neo-glass border border-white/10' : 'bg-white shadow'} rounded py-8 text-center">
+				<p class="{currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-600'}">No posts yet — be the first!</p>
 			</div>
 		{:else}
 			<div class="space-y-6">
 				{#each posts as post (post.id)}
-					<article class="rounded-lg bg-white shadow">
+					<article class="rounded-lg overflow-hidden {currentTheme === 'neo' 
+						? 'neo-glass neo-row-hover border border-white/10' 
+						: 'bg-white shadow'}">
 						<div class="p-6 pb-4">
 							<div class="mb-4 flex items-center space-x-3">
 								{#if post.author?.avatarUrl}
-									<img src={post.author.avatarUrl} alt="" class="h-10 w-10 rounded-full" />
+									<img src={post.author.avatarUrl} alt="" class="h-10 w-10 rounded-full {currentTheme === 'neo' ? 'border border-white/20' : ''}" />
 								{:else}
-									<div class="h-10 w-10 rounded-full bg-gray-300"></div>
+									<div class="h-10 w-10 rounded-full {currentTheme === 'neo' ? 'neo-glass border border-white/20' : 'bg-gray-300'}"></div>
 								{/if}
 								<div>
-									<p class="text-sm font-medium text-gray-900">{post.author?.displayName}</p>
-									<p class="text-xs text-gray-500">
+									<p class="text-sm font-medium {currentTheme === 'neo' ? 'text-slate-200' : 'text-gray-900'}">{post.author?.displayName}</p>
+									<p class="text-xs {currentTheme === 'neo' ? 'text-slate-400' : 'text-gray-500'}">
 										{#if post.createdAt}
 											{dayjs(
 												post.createdAt?.toDate ? post.createdAt.toDate() : post.createdAt
@@ -365,7 +378,7 @@
 							</div>
 
 							{#if post.text}
-								<p class="mb-4 text-gray-900">{post.text}</p>
+								<p class="mb-4 {currentTheme === 'neo' ? 'text-slate-200' : 'text-gray-900'}">{post.text}</p>
 							{/if}
 
 							{#if post.imagePath}
@@ -380,10 +393,9 @@
 												<img
 													src={imagePath}
 													alt=""
-													class="max-h-[600px] w-full rounded-xl bg-gray-100 object-contain {index ===
-														5 && post.imagePaths.length > 6
-														? 'opacity-75'
-														: ''}"
+													class="max-h-[600px] w-full rounded-xl object-contain transition-all duration-300 hover:scale-105 {currentTheme === 'neo' 
+														? 'bg-slate-800 border border-white/20 hover:border-cyan-400/50 hover:shadow-cyan-400/20 hover:shadow-lg' 
+														: 'bg-gray-100'} {index === 5 && post.imagePaths.length > 6 ? 'opacity-75' : ''}"
 												/>
 												{#if index === 5 && post.imagePaths.length > 6}
 													<div
@@ -401,7 +413,9 @@
 									<img
 										src={post.imagePath}
 										alt=""
-										class="mb-4 max-h-[600px] w-full rounded-xl bg-gray-100 object-contain"
+										class="mb-4 max-h-[600px] w-full rounded-xl object-contain transition-all duration-300 hover:scale-105 {currentTheme === 'neo' 
+											? 'bg-slate-800 border border-white/20 hover:border-cyan-400/50 hover:shadow-cyan-400/20 hover:shadow-lg' 
+											: 'bg-gray-100'}"
 									/>
 								{/if}
 							{/if}
@@ -482,9 +496,11 @@
 								<div class="flex items-center space-x-6">
 									<button
 										onclick={() => toggleLike(post.id, isUserLiked(post))}
-										class="flex items-center space-x-2 text-sm text-gray-500 hover:text-red-600"
+										class="flex items-center space-x-2 text-sm transition-all duration-200 hover:scale-105 {currentTheme === 'neo' 
+											? 'text-slate-400 hover:text-magenta-400' 
+											: 'text-gray-500 hover:text-red-600'}"
 									>
-										<Heart class="h-5 w-5 {isUserLiked(post) ? 'fill-red-500 text-red-500' : ''}" />
+										<Heart class="h-5 w-5 {isUserLiked(post) ? (currentTheme === 'neo' ? 'fill-magenta-500 text-magenta-500' : 'fill-red-500 text-red-500') : ''}" />
 										<span
 											>{post.likes?.length || 0}
 											{(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span
@@ -492,7 +508,9 @@
 									</button>
 									<button
 										onclick={() => toggleComments(post.id)}
-										class="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600"
+										class="flex items-center space-x-2 text-sm transition-all duration-200 hover:scale-105 {currentTheme === 'neo' 
+											? 'text-slate-400 hover:text-cyan-400' 
+											: 'text-gray-500 hover:text-blue-600'}"
 									>
 										<MessageCircle class="h-5 w-5" />
 										<span
@@ -504,7 +522,9 @@
 								{#if user}
 									<button
 										onclick={() => deletePost(post.id)}
-										class="flex items-center space-x-1 text-sm text-gray-400 hover:text-red-600"
+										class="flex items-center space-x-1 text-sm transition-all duration-200 hover:scale-105 {currentTheme === 'neo' 
+											? 'text-slate-500 hover:text-red-400' 
+											: 'text-gray-400 hover:text-red-600'}"
 										title="Delete post"
 									>
 										<Trash2 class="h-4 w-4" />
