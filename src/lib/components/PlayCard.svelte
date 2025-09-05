@@ -4,7 +4,7 @@
 		children
 	}: {
 		header: string;
-		children?: any;
+		children?: import('svelte').Snippet;
 	} = $props();
 </script>
 

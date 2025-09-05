@@ -6,7 +6,7 @@
 	import { Home, User, Rss, LogOut, Menu, X, Gamepad2 } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 
-	let { user } = $props<{ user: any }>();
+	let { user } = $props<{ user: import('firebase/auth').User | null }>();
 	let mobileMenuOpen = $state(false);
 
 	const navigation = [

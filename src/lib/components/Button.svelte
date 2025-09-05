@@ -16,9 +16,9 @@
 		size?: 'small' | 'medium' | 'large';
 		disabled?: boolean;
 		loading?: boolean;
-		children?: any;
+		children?: import('svelte').Snippet;
 		onclick?: () => void;
-		[key: string]: any;
+		[key: string]: unknown;
 	} = $props();
 
 	const baseClasses =

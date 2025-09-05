@@ -3,18 +3,21 @@
 	import { collection, query, where, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
 	import { db, getFamilyId } from '$lib/firebase';
 	import { getDisplayName } from '$lib/getDisplayName';
+	import type { Photo, RawPost } from '$lib/types';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 
 	dayjs.extend(relativeTime);
 
-	let photos = $state<any[]>([]);
+	let photos = $state<Photo[]>([]);
 	let loading = $state(true);
-	let selectedPhoto = $state<any | null>(null);
+	let selectedPhoto = $state<Photo | null>(null);
 	let selectedIndex = $state(0);
 
 	// Dynamic import for Lightbox component
-	let LightboxComponent = $state<any>(null);
+	let LightboxComponent = $state<typeof import('$lib/components/Lightbox.svelte').default | null>(
+		null
+	);
 
 	async function loadLightbox() {
 		if (!LightboxComponent) {
@@ -39,11 +42,11 @@
 			const rawPhotos = photosSnapshot.docs.map((doc) => ({
 				id: doc.id,
 				...doc.data()
-			}));
+			})) as RawPost[];
 
 			// Enrich with author data from users/{uid}
 			const enrichedPhotos = await Promise.all(
-				rawPhotos.map(async (photo: any) => {
+				rawPhotos.map(async (photo) => {
 					if (photo.authorUid) {
 						const userDoc = await getDoc(doc(db, 'users', photo.authorUid));
 						if (userDoc.exists()) {
@@ -62,7 +65,7 @@
 			);
 
 			// Flatten to individual images
-			const allImages: any[] = [];
+			const allImages: Photo[] = [];
 			enrichedPhotos.forEach((photo) => {
 				// Check both imagePath (single) and imagePaths (multiple)
 				const imagePaths = photo.imagePaths || (photo.imagePath ? [photo.imagePath] : []);
@@ -83,7 +86,7 @@
 		}
 	});
 
-	async function openLightbox(photo: any, index: number) {
+	async function openLightbox(photo: Photo, index: number) {
 		await loadLightbox(); // Load Lightbox component dynamically
 		selectedPhoto = photo;
 		selectedIndex = index;
