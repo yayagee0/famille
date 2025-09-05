@@ -21,16 +21,18 @@
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import { isOnline, cachePosts, getCachedPosts } from '$lib/offline';
+	import type { Post, RawPost } from '$lib/types';
 	dayjs.extend(relativeTime);
 
 	let user = $state(auth.currentUser);
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let posts = $state<any[]>([]);
+	let posts = $state<Post[]>([]);
 	let loading = $state(true);
 	let unsubscribePosts: (() => void) | null = null;
 
 	// Dynamic import for VideoPlayer component
-	let VideoPlayerComponent = $state<any>(null);
+	let VideoPlayerComponent = $state<
+		typeof import('$lib/components/VideoPlayer.svelte').default | null
+	>(null);
 
 	async function loadVideoPlayer() {
 		if (!VideoPlayerComponent) {
@@ -108,10 +110,10 @@
 			unsubscribePosts = onSnapshot(
 				postsQuery,
 				async (snapshot) => {
-					const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<any>;
+					const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as RawPost[];
 
 					// Preload VideoPlayer if there are video posts
-					const hasVideoPosts = rawPosts.some((post: any) => post.videoPath);
+					const hasVideoPosts = rawPosts.some((post) => post.videoPath);
 					if (hasVideoPosts) {
 						loadVideoPlayer();
 					}

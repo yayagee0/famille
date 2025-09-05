@@ -62,6 +62,7 @@ export interface Comment {
 	uid: string;
 	text: string;
 	createdAt: any;
+	author?: string; // Display name of commenter
 	displayName?: string;
 	avatarUrl?: string | null;
 }

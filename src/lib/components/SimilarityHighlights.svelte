@@ -7,6 +7,14 @@
 	import PlayCard from './PlayCard.svelte';
 	import { playSound } from '$lib/sound';
 	import type { User } from 'firebase/auth';
+	import type { User as AppUser } from '$lib/types';
+
+	interface FamilyMember {
+		uid: string;
+		email: string;
+		displayName?: string;
+		nickname?: string;
+	}
 
 	let user = $state<User | null>(auth.currentUser);
 	let similarities = $state<
@@ -83,10 +91,10 @@
 					email: doc.data().email,
 					...doc.data()
 				}))
-				.filter((member: any) => member.uid !== user?.uid);
+				.filter((member: FamilyMember) => member.uid !== user?.uid);
 
 			// Create questions lookup map
-			const questionsMap = new Map();
+			const questionsMap = new Map<string, any>();
 			questionsSnapshot.docs.forEach((doc) => {
 				questionsMap.set(doc.id, doc.data());
 			});
