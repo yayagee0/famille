@@ -142,11 +142,19 @@
 			
 			await Promise.all(deletePromises);
 			
+			// Remove localStorage key islamicProgress (defensive programming)
+			if (typeof localStorage !== 'undefined') {
+				localStorage.removeItem('islamicProgress');
+			}
+			
 			// Reset local state
 			answeredIds.clear();
 			answeredIds = new Set(answeredIds); // Trigger reactivity
-			updateQuestionLists();
 			justAddedId = null; // Reset animation state
+			
+			// Reload fresh data from islamicQuestions
+			allQuestions = [...islamicQuestions as Question[]];
+			updateQuestionLists();
 			
 		} catch (error) {
 			console.error('Failed to reset progress:', error);

@@ -37,6 +37,28 @@ describe('Islamic Q&A Data Structure', () => {
 		expect(categories.has('Allah')).toBe(true);
 	});
 
+	it('should aggregate all required categories', () => {
+		const categories = new Set(islamicQuestions.map(q => q.category));
+		
+		// Check that we have questions from key expected categories
+		expect(categories.has('Allah')).toBe(true);
+		expect(categories.has('Prophet')).toBe(true);
+		expect(categories.has('Prayer')).toBe(true);
+		expect(categories.has('Life & Death')).toBe(true);
+		expect(categories.has('Good Character')).toBe(true);
+		expect(categories.has('Identity')).toBe(true);
+		
+		// Check that we have a Quran category (Unicode-safe check)
+		const hasQuranCategory = Array.from(categories).some(cat => cat.includes('Qur') && cat.includes('an'));
+		expect(hasQuranCategory).toBe(true);
+		
+		// Verify we have exactly 7 categories
+		expect(categories.size).toBe(7);
+		
+		// Verify we have a reasonable number of questions
+		expect(islamicQuestions.length).toBeGreaterThan(10);
+	});
+
 	it('should have MCQ questions with options', () => {
 		const mcqQuestions = islamicQuestions.filter(q => q.format === 'mcq');
 		mcqQuestions.forEach((question) => {
