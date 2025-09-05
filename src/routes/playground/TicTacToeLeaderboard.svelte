@@ -195,7 +195,7 @@
 					<div class="mt-4">
 						<h5 class="mb-2 text-xs font-medium text-gray-700">Recent Games</h5>
 						<div class="flex space-x-2">
-							{#each userStats.recentGames as game}
+							{#each userStats.recentGames as game, i (i)}
 								<div class="flex items-center space-x-1 rounded-lg bg-white px-2 py-1 text-xs">
 									<span>{getResultIcon(game.result)}</span>
 									<span class="text-gray-500">{game.difficulty}</span>
@@ -210,7 +210,7 @@
 		<!-- Leaderboard -->
 		{#if leaderboard.length > 0}
 			<div class="space-y-3">
-				{#each leaderboard as player, index}
+				{#each leaderboard as player, index (player.playerId)}
 					<div class="flex items-center justify-between rounded-xl bg-gray-50 p-3">
 						<div class="flex items-center space-x-3">
 							<div class="flex h-6 w-6 items-center justify-center">

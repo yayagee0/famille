@@ -163,7 +163,7 @@
 	{#if loading}
 		<!-- Loading State -->
 		<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-			{#each Array(8) as _}
+			{#each Array(8) as _, i (i)}
 				<div class="aspect-square animate-pulse rounded-2xl bg-gray-200"></div>
 			{/each}
 		</div>
@@ -183,7 +183,7 @@
 	{:else}
 		<!-- Photo Grid -->
 		<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-			{#each photos as photo, index}
+			{#each photos as photo, index (photo.id + '-' + index)}
 				<button
 					class="group relative aspect-square overflow-hidden rounded-2xl bg-gray-100 shadow-sm transition-shadow hover:shadow-md focus:ring-2 focus:ring-indigo-500 focus:outline-none"
 					onclick={() => openLightbox(photo, index)}

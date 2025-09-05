@@ -168,7 +168,7 @@
 		{#if loading}
 			<!-- Skeleton Loader -->
 			<div class="animate-pulse space-y-3">
-				{#each Array(3) as _, i}
+				{#each Array(3) as _, i (i)}
 					<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
 						<div class="flex items-start justify-between">
 							<div class="flex-1 space-y-2">
@@ -198,7 +198,7 @@
 			</div>
 		{:else}
 			<div class="space-y-4">
-				{#each similarities as similarity, i}
+				{#each similarities as similarity, i (similarity.question + '-' + similarity.answer)}
 					<div
 						class="rounded-lg border border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4 transition-all duration-300 hover:scale-105 hover:shadow-md"
 						style="animation-delay: {i * 150}ms"
