@@ -4,7 +4,12 @@ export const prayerQuestions = [
     category: "Prayer",
     question_en: "Why do we pray?",
     question_ar: "لماذا نصلي؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "To remember Allah and thank Him",
+      "Because everyone else does",
+      "Because it’s exercise"
+    ],
     feedback_en: "We pray to remember Allah and thank Him.",
     feedback_ar: "وَأَقِمِ الصَّلَاةَ لِذِكْرِي",
     reference: "Qur’an 20:14"
@@ -36,7 +41,12 @@ export const prayerQuestions = [
     category: "Prayer",
     question_en: "Why do we wash before prayer?",
     question_ar: "لماذا نتوضأ قبل الصلاة؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "To clean ourselves and prepare to stand before Allah",
+      "Because it’s a tradition only",
+      "Because water is fun"
+    ],
     feedback_en: "To clean ourselves and prepare to stand before Allah.",
     feedback_ar: "إِذَا قُمْتُمْ إِلَى الصَّلَاةِ فَاغْسِلُوا وُجُوهَكُمْ",
     reference: "Qur’an 5:6"
@@ -57,7 +67,12 @@ export const prayerQuestions = [
     category: "Prayer",
     question_en: "Can we pray anywhere?",
     question_ar: "هل يمكن أن نصلي في أي مكان؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "Yes, anywhere clean — the whole earth is a place of prayer",
+      "Only in the mosque",
+      "Only at home"
+    ],
     feedback_en: "Yes, Muslims can pray anywhere clean. The whole earth is a place of prayer.",
     feedback_ar: "جُعِلَتْ لِيَ الأَرْضُ مَسْجِداً وَطَهُوراً",
     reference: "Hadith – Bukhari"
@@ -67,7 +82,12 @@ export const prayerQuestions = [
     category: "Prayer",
     question_en: "Why do we say Bismillah before eating?",
     question_ar: "لماذا نقول بسم الله قبل الأكل؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "So that we remember Allah and He puts blessing in our food",
+      "Because it’s just a habit",
+      "Because food tastes better with it"
+    ],
     feedback_en: "So that we remember Allah and He puts blessing in our food.",
     feedback_ar: "سمِّ الله وكل بيمينك وكل مما يليك",
     reference: "Hadith – Muslim"
