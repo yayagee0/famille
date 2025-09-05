@@ -278,9 +278,9 @@
 								{#each getAllGameIds() as gameId (gameId)}
 									{@const gameData = member.gameStats[gameId]}
 									{@const gameIcon = getGameIcon(gameId)}
+									{@const GameIcon = gameIcon.icon}
 									<div class="rounded-lg {gameIcon.bg} p-3">
 										<div class="mb-2 flex items-center space-x-2">
-											{@const GameIcon = gameIcon.icon}
 											<GameIcon class="h-4 w-4 {gameIcon.class}" />
 											<span class="text-sm font-medium {gameIcon.class}">
 												{getGameDisplayName(gameId)}
