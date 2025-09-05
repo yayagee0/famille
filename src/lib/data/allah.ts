@@ -15,7 +15,12 @@ export const allahQuestions = [
     category: "Allah",
     question_en: "Does Allah love us?",
     question_ar: "هل الله يحبنا؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "Yes, Allah loves all His creations and especially those who do good",
+      "No, Allah only loves some people",
+      "Not sure"
+    ],
     feedback_en: "Yes, Allah loves all His creations, and He loves most those who do good.",
     feedback_ar: "إِنَّ اللَّهَ يُحِبُّ الْمُحْسِنِينَ",
     reference: "Qur’an 3:134"
@@ -35,7 +40,12 @@ export const allahQuestions = [
     category: "Allah",
     question_en: "Can we see Allah?",
     question_ar: "هل نستطيع أن نرى الله؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "No, not in this life but in Paradise insha’Allah",
+      "Yes, we can see Him anytime",
+      "Maybe only in dreams"
+    ],
     feedback_en: "No, we cannot see Allah in this life, but we will see Him in Paradise insha’Allah.",
     feedback_ar: "لَا تُدْرِكُهُ الْأَبْصَارُ",
     reference: "Qur’an 6:103"
@@ -67,9 +77,10 @@ export const allahQuestions = [
     category: "Allah",
     question_en: "Does Allah get tired?",
     question_ar: "هل يتعب الله؟",
-    format: "story",
+    format: "mcq",
+    options: ["Yes", "No, Allah never gets tired or needs rest", "Sometimes"],
     feedback_en: "No, Allah never gets tired or needs rest.",
-    feedback_ar: "وَلَقَدْ خَلَقْنَا السَّمَاوَاتِ وَالْأَرْضَ ... وَمَا مَسَّنَا مِن لُّغُوبٍ",
+    feedback_ar: "وَمَا مَسَّنَا مِن لُّغُوبٍ",
     reference: "Qur’an 50:38"
   },
   {
@@ -98,7 +109,12 @@ export const allahQuestions = [
     category: "Allah",
     question_en: "Why should we trust Allah?",
     question_ar: "لماذا يجب أن نثق بالله؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "Because Allah knows what is best for us",
+      "Because people always know better",
+      "Because life is random"
+    ],
     feedback_en: "Because Allah knows what is best for us, even when we don’t understand.",
     feedback_ar: "وَعَلَى اللَّهِ فَتَوَكَّلُوا إِن كُنتُم مُّؤْمِنِينَ",
     reference: "Qur’an 5:23"
