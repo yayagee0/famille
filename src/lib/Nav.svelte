@@ -69,7 +69,7 @@
 			<ul role="list" class="flex flex-1 flex-col gap-y-7">
 				<li>
 					<ul role="list" class="-mx-2 space-y-1">
-						{#each navigation as item}
+						{#each navigation as item (item.href)}
 							<li>
 								<a
 									href={item.href}
@@ -181,7 +181,7 @@
 						<ul role="list" class="flex flex-1 flex-col gap-y-7">
 							<li>
 								<ul role="list" class="-mx-2 space-y-1">
-									{#each navigation as item}
+									{#each navigation as item (item.href)}
 										<li>
 											<a
 												href={item.href}

@@ -67,7 +67,7 @@
 		{#if nextBirthday && isToday}
 			<!-- Enhanced confetti animation for today's birthday -->
 			<div class="pointer-events-none absolute inset-0 overflow-hidden">
-				{#each Array(30) as _, i}
+				{#each Array(30) as _, i (i)}
 					<div
 						class="absolute animate-bounce text-xl"
 						style="left: {Math.random() * 100}%; top: {Math.random() *
@@ -78,7 +78,7 @@
 					</div>
 				{/each}
 				<!-- Floating confetti pieces -->
-				{#each Array(15) as _, i}
+				{#each Array(15) as _, i (i)}
 					<div
 						class="absolute animate-pulse"
 						style="left: {Math.random() * 100}%; top: {Math.random() *
