@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/firebase';
 	import { signOut } from 'firebase/auth';
-	import { Home, User, Rss, LogOut, Menu, X, Gamepad2 } from 'lucide-svelte';
+	import { Home, User, Rss, LogOut, Menu, X, Gamepad2, Church } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 
 	let { user } = $props<{ user: any }>();
@@ -12,6 +12,7 @@
 	const navigation = [
 		{ name: 'Dashboard', href: '/dashboard', icon: 'home' },
 		{ name: 'Feed', href: '/feed', icon: 'rss' },
+		{ name: 'Islam – Our Identity', href: '/playground/islamic', icon: 'church' },
 		{ name: 'Play Area', href: '/playground', icon: 'gamepad' },
 		{ name: 'Profile', href: '/profile', icon: 'user' }
 	];
@@ -65,6 +66,7 @@
 										? 'bg-gray-50 text-indigo-600'
 										: 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600'}"
 									onclick={closeMobileMenu}
+									aria-label={item.name}
 								>
 									{#if item.icon === 'home'}
 										<Home
@@ -72,6 +74,10 @@
 										/>
 									{:else if item.icon === 'rss'}
 										<Rss
+											class="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
+										/>
+									{:else if item.icon === 'church'}
+										<Church
 											class="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
 										/>
 									{:else if item.icon === 'gamepad'}
@@ -177,11 +183,14 @@
 													? 'bg-gray-50 text-indigo-600'
 													: 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600'}"
 												onclick={closeMobileMenu}
+												aria-label={item.name}
 											>
 												{#if item.icon === 'home'}
 													<Home class="h-6 w-6 shrink-0" />
 												{:else if item.icon === 'rss'}
 													<Rss class="h-6 w-6 shrink-0" />
+												{:else if item.icon === 'church'}
+													<Church class="h-6 w-6 shrink-0" />
 												{:else if item.icon === 'gamepad'}
 													<Gamepad2 class="h-6 w-6 shrink-0" />
 												{:else if item.icon === 'user'}
