@@ -3,15 +3,12 @@
 	import {
 		addDoc,
 		collection,
-		doc,
-		getDoc,
-		setDoc,
-		increment,
 		serverTimestamp
 	} from 'firebase/firestore';
 	import { RotateCcw, Trophy, Bot, User } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { playSound } from '$lib/sound';
+	import { recordWin, recordLoss } from '$lib/gameUtils';
 
 	type Player = 'X' | 'O' | null;
 	type Board = Player[];
@@ -166,8 +163,8 @@
 		if (!auth.currentUser?.uid || !gameResult) return;
 
 		try {
-			// Save game record
-			await addDoc(collection(db, 'games', 'tic-tac', 'matches'), {
+			// Save game record to matches collection
+			await addDoc(collection(db, 'games', 'tictactoe', 'matches'), {
 				playerUid: auth.currentUser.uid,
 				playerName: getDisplayName(auth.currentUser?.email, { nickname: undefined }),
 				result: gameResult,
@@ -177,41 +174,20 @@
 				moves: board.reduce((moves, cell) => (cell ? moves + 1 : moves), 0)
 			});
 
-			// Update leaderboard
-			await updateLeaderboard(gameResult);
+			// Update results using new utility
+			if (gameResult !== 'draw') {
+				if (gameResult === 'win') {
+					await recordWin(auth.currentUser.uid, 'tictactoe');
+				} else {
+					await recordLoss(auth.currentUser.uid, 'tictactoe');
+				}
+			}
 		} catch (error) {
 			console.error('Error saving game:', error);
 		}
 	}
 
-	async function updateLeaderboard(result: GameResult) {
-		if (!auth.currentUser?.uid || !result || result === 'draw') return;
 
-		try {
-			const leaderboardRef = doc(db, 'leaderboard', auth.currentUser.uid);
-
-			// Get current user data to ensure displayName is from profile
-			const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
-			const userData = userDoc.data();
-			const displayName = getDisplayName(userData?.email, { nickname: userData?.nickname });
-
-			// Convert game result to leaderboard result
-			const leaderboardResult = result === 'win' ? 'win' : 'loss';
-
-			await setDoc(
-				leaderboardRef,
-				{
-					displayName,
-					[leaderboardResult === 'win' ? 'wins' : 'losses']: increment(1),
-					[`games.tictactoe.${leaderboardResult === 'win' ? 'wins' : 'losses'}`]: increment(1),
-					lastUpdated: serverTimestamp()
-				},
-				{ merge: true }
-			);
-		} catch (error) {
-			console.error('Error updating leaderboard:', error);
-		}
-	}
 
 	function getCellClass(index: number) {
 		const baseClass =

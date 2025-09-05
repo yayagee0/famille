@@ -5,6 +5,7 @@
 	import AgePlayground from './AgePlayground.svelte';
 	import BuildADream from './BuildADream.svelte';
 	import TicTacToe from './TicTacToe.svelte';
+	import MathGame from './MathGame.svelte';
 	import Leaderboard from './Leaderboard.svelte';
 
 	function handleSoundToggle() {
@@ -66,6 +67,10 @@
 			<div class="grid gap-6 lg:grid-cols-2">
 				<PlayCard header="🎮 Tic-Tac-Toe">
 					<TicTacToe />
+				</PlayCard>
+
+				<PlayCard header="🧮 Math Game">
+					<MathGame />
 				</PlayCard>
 
 				<PlayCard header="🏆 Family Leaderboard">
