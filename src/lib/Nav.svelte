@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/firebase';
 	import { signOut } from 'firebase/auth';
-	import { Home, User, Rss, LogOut, Menu, X, Gamepad2, Church } from 'lucide-svelte';
+	import { Home, User, Rss, LogOut, Menu, X, Gamepad2, Moon } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 
 	let { user } = $props<{ user: any }>();
@@ -12,7 +12,7 @@
 	const navigation = [
 		{ name: 'Dashboard', href: '/dashboard', icon: 'home' },
 		{ name: 'Feed', href: '/feed', icon: 'rss' },
-		{ name: 'Islam – Our Identity', href: '/playground/islamic', icon: 'church' },
+		{ name: 'Islam – Our Identity', href: '/playground/islamic', icon: 'moon' },
 		{ name: 'Play Area', href: '/playground', icon: 'gamepad' },
 		{ name: 'Profile', href: '/profile', icon: 'user' }
 	];
@@ -76,8 +76,8 @@
 										<Rss
 											class="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
 										/>
-									{:else if item.icon === 'church'}
-										<Church
+									{:else if item.icon === 'moon'}
+										<Moon
 											class="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
 										/>
 									{:else if item.icon === 'gamepad'}
@@ -189,8 +189,8 @@
 													<Home class="h-6 w-6 shrink-0" />
 												{:else if item.icon === 'rss'}
 													<Rss class="h-6 w-6 shrink-0" />
-												{:else if item.icon === 'church'}
-													<Church class="h-6 w-6 shrink-0" />
+												{:else if item.icon === 'moon'}
+													<Moon class="h-6 w-6 shrink-0" />
 												{:else if item.icon === 'gamepad'}
 													<Gamepad2 class="h-6 w-6 shrink-0" />
 												{:else if item.icon === 'user'}

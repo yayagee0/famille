@@ -17,25 +17,12 @@
 	}
 
 	// State management using Svelte 5 runes
-	let activeQuestions = $state<Question[]>([]);
-	let answeredQuestions = $state<Question[]>([]);
 	let allQuestions = $state<Question[]>(islamicQuestions as Question[]);
+	let activeQuestions = $state<Question[]>(islamicQuestions.slice(0, 3) as Question[]);
+	let answeredQuestions = $state<Question[]>([]);
 	let questionsToShow = $state(3);
 
-	// Initialize with first 3 questions
-	$effect(() => {
-		loadMoreQuestions();
-	});
-
-	function loadMoreQuestions() {
-		const unanswered = allQuestions.filter(
-			(q) => !answeredQuestions.find((aq) => aq.id === q.id) && 
-				   !activeQuestions.find((aq) => aq.id === q.id)
-		);
-		
-		const newQuestions = unanswered.slice(0, 3);
-		activeQuestions = [...activeQuestions, ...newQuestions];
-	}
+	// Initialize with first 3 questions - removed $effect to prevent infinite loop
 
 	function handleQuestionAnswered(question: Question) {
 		// Remove from active questions
@@ -46,7 +33,13 @@
 	}
 
 	function showMoreQuestions() {
-		loadMoreQuestions();
+		const unanswered = allQuestions.filter(
+			(q) => !answeredQuestions.find((aq) => aq.id === q.id) && 
+				   !activeQuestions.find((aq) => aq.id === q.id)
+		);
+		
+		const newQuestions = unanswered.slice(0, 3);
+		activeQuestions = [...activeQuestions, ...newQuestions];
 	}
 
 	// Check if there are more questions to load
