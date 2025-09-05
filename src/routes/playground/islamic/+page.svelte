@@ -46,6 +46,7 @@
 	let answeredIds = $state<Set<string>>(new Set());
 	let activeQuestions = $state<Question[]>([]);
 	let allUnansweredQuestions = $state<Question[]>([]);
+	let justAddedId = $state<string | null>(null); // Track newly added answers for animation
 	
 	// Derive answered questions from answeredIds and original questions
 	const answeredQuestions = $derived(() => {
@@ -118,6 +119,9 @@
 			answeredIds.add(question.id);
 			answeredIds = new Set(answeredIds); // Trigger reactivity
 			updateQuestionLists();
+			
+			// Set justAddedId for animation
+			justAddedId = question.id;
 
 		} catch (error) {
 			console.error('Failed to save progress:', error);
@@ -142,6 +146,7 @@
 			answeredIds.clear();
 			answeredIds = new Set(answeredIds); // Trigger reactivity
 			updateQuestionLists();
+			justAddedId = null; // Reset animation state
 			
 		} catch (error) {
 			console.error('Failed to reset progress:', error);
@@ -267,7 +272,12 @@
 						Reset Progress
 					</button>
 				</div>
-				<KnowledgeTree groupedAnsweredQuestions={groupedAnsweredQuestions()} {categoryIcons} />
+				<KnowledgeTree 
+					groupedAnsweredQuestions={groupedAnsweredQuestions()} 
+					{categoryIcons} 
+					{justAddedId}
+					onAnimationComplete={() => { justAddedId = null; }}
+				/>
 			</div>
 		{/if}
 

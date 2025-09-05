@@ -1,5 +1,20 @@
 <script lang="ts">
 	import { ChevronDown, ChevronRight } from 'lucide-svelte';
+	import { fade, scale } from 'svelte/transition';
+	
+	// Custom transition that combines fade and scale
+	function growIn(node: Element, { duration = 500 } = {}) {
+		return {
+			duration,
+			css: (t: number) => {
+				const scaleFactor = 0.95 + (0.05 * t);
+				return `
+					transform: scale(${scaleFactor});
+					opacity: ${t};
+				`;
+			}
+		};
+	}
 
 	interface Question {
 		id: string;
@@ -15,10 +30,14 @@
 
 	let { 
 		groupedAnsweredQuestions, 
-		categoryIcons 
+		categoryIcons,
+		justAddedId = null,
+		onAnimationComplete
 	}: { 
 		groupedAnsweredQuestions: Record<string, Question[]>; 
-		categoryIcons: Record<string, string>; 
+		categoryIcons: Record<string, string>;
+		justAddedId?: string | null;
+		onAnimationComplete?: () => void;
 	} = $props();
 
 	// State for collapsible sections
@@ -38,6 +57,16 @@
 	const sortedCategories = $derived(() => {
 		return Object.keys(groupedAnsweredQuestions).sort();
 	});
+
+	// Handle animation completion
+	function handleAnimationComplete() {
+		if (onAnimationComplete) {
+			// Small delay to ensure the animation is fully visible
+			setTimeout(() => {
+				onAnimationComplete();
+			}, 500);
+		}
+	}
 </script>
 
 <div class="space-y-3">
@@ -80,8 +109,67 @@
 					class="border-t border-gray-100 p-4 space-y-4"
 				>
 					{#each questions as question}
-						<div class="rounded-xl bg-gradient-to-r from-green-50 to-teal-50 p-4">
-							<!-- Original Question -->
+						{@const isJustAdded = justAddedId === question.id}
+						<div 
+							class="rounded-xl bg-gradient-to-r from-green-50 to-teal-50 p-4 relative"
+							class:animate-grow={isJustAdded}
+						>
+							{#if isJustAdded}
+								<!-- Apply animation only to newly added items -->
+								<div 
+									in:growIn={{ duration: 500 }}
+									onintroend={handleAnimationComplete}
+									class="w-full"
+								>
+									<!-- Leaf emoji for newly added items -->
+									<div 
+										class="absolute -top-2 -right-2 text-lg"
+										in:scale={{ duration: 300, delay: 200 }}
+									>
+										🌱
+									</div>
+									
+									<!-- Question content for animated items -->
+									<div class="mb-3 space-y-2">
+										<h4 class="font-medium text-gray-900 text-left">
+											{question.question_en}
+										</h4>
+										<h4 class="font-amiri text-arabic-lg text-gray-700" dir="rtl" lang="ar">
+											{question.question_ar}
+										</h4>
+									</div>
+
+									<!-- Feedback -->
+									<div class="space-y-2 border-t border-green-200 pt-3">
+										<!-- Arabic Feedback -->
+										<p class="font-amiri text-arabic-lg text-gray-800 leading-relaxed" dir="rtl" lang="ar">
+											{question.feedback_ar}
+										</p>
+										
+										<!-- English Feedback -->
+										<p class="text-sm text-gray-700 text-left leading-relaxed">
+											{question.feedback_en}
+										</p>
+
+										<!-- Reference -->
+										<p class="text-xs text-gray-600 text-center font-medium">
+											— {question.reference}
+										</p>
+									</div>
+
+									<!-- Question Type Badge -->
+									<div class="mt-3 flex justify-between items-center">
+										<span class="inline-flex items-center rounded-full bg-white bg-opacity-70 px-2 py-1 text-xs font-medium text-gray-600">
+											{question.format.toUpperCase()}
+										</span>
+										<span class="text-xs text-gray-500">
+											{question.id}
+										</span>
+									</div>
+								</div>
+							{:else}
+								<!-- Regular display for existing items (no animation) -->
+								<!-- Original Question -->
 							<div class="mb-3 space-y-2">
 								<h4 class="font-medium text-gray-900 text-left">
 									{question.question_en}
@@ -118,6 +206,7 @@
 									{question.id}
 								</span>
 							</div>
+							{/if}
 						</div>
 					{/each}
 				</div>
