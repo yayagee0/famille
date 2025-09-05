@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { X, ArrowLeft, ArrowRight } from 'lucide-svelte';
+	import type { EnrichedPost } from '$lib/schemas';
 
 	let {
 		photos = [],
@@ -9,8 +10,8 @@
 		onPrevious = () => {},
 		onNext = () => {}
 	}: {
-		photos: any[];
-		selectedPhoto: any;
+		photos: EnrichedPost[];
+		selectedPhoto: EnrichedPost | null;
 		selectedIndex: number;
 		onClose: () => void;
 		onPrevious: () => void;

@@ -41,20 +41,7 @@
 		mobileMenuOpen = false;
 	}
 
-	function getIcon(iconName: string) {
-		switch (iconName) {
-			case 'home':
-				return Home;
-			case 'rss':
-				return Rss;
-			case 'gamepad':
-				return Gamepad2;
-			case 'user':
-				return User;
-			default:
-				return Home;
-		}
-	}
+	// getIcon function removed - unused
 </script>
 
 <!-- Desktop sidebar -->
@@ -69,7 +56,7 @@
 			<ul role="list" class="flex flex-1 flex-col gap-y-7">
 				<li>
 					<ul role="list" class="-mx-2 space-y-1">
-						{#each navigation as item}
+						{#each navigation as item (item.href)}
 							<li>
 								<a
 									href={item.href}
@@ -181,7 +168,7 @@
 						<ul role="list" class="flex flex-1 flex-col gap-y-7">
 							<li>
 								<ul role="list" class="-mx-2 space-y-1">
-									{#each navigation as item}
+									{#each navigation as item (item.href)}
 										<li>
 											<a
 												href={item.href}

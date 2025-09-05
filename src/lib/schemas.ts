@@ -236,3 +236,20 @@ export function validateUserAnswer(answer: unknown) {
 		return { success: false as const, error };
 	}
 }
+
+// Export inferred types
+export type Post = z.infer<typeof postSchema>;
+export type User = z.infer<typeof userSchema>;
+export type Question = z.infer<typeof questionSchema>;
+export type UserAnswer = z.infer<typeof userAnswerSchema>;
+
+// Additional UI types for enriched data
+export interface EnrichedPost extends Omit<Post, 'createdAt'> {
+	author?: {
+		displayName: string;
+		avatarUrl: string | null;
+	};
+	displayUrl?: string;
+	imageUrl?: string;
+	createdAt: Date | { toDate(): Date } | any; // Handle both Date and Firestore Timestamp
+}

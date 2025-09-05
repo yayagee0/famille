@@ -122,33 +122,8 @@
 	let touchStartX = $state(0);
 	let touchStartY = $state(0);
 
-	function handleTouchStart(event: TouchEvent) {
-		if (!selectedPhoto || event.touches.length !== 1) return;
-
-		touchStartX = event.touches[0].clientX;
-		touchStartY = event.touches[0].clientY;
-	}
-
-	function handleTouchEnd(event: TouchEvent) {
-		if (!selectedPhoto || event.changedTouches.length !== 1) return;
-
-		const touchEndX = event.changedTouches[0].clientX;
-		const touchEndY = event.changedTouches[0].clientY;
-
-		const deltaX = touchEndX - touchStartX;
-		const deltaY = touchEndY - touchStartY;
-
-		// Only trigger swipe if horizontal movement is greater than vertical
-		if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-			if (deltaX > 0) {
-				// Swipe right -> previous photo
-				previousPhoto();
-			} else {
-				// Swipe left -> next photo
-				nextPhoto();
-			}
-		}
-	}
+	// Touch handlers removed - unused in template
+	// TODO: Add touch/swipe support for mobile gallery navigation if needed
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -163,7 +138,7 @@
 	{#if loading}
 		<!-- Loading State -->
 		<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-			{#each Array(8) as _}
+			{#each Array(8) as _, loadingIndex (loadingIndex)}
 				<div class="aspect-square animate-pulse rounded-2xl bg-gray-200"></div>
 			{/each}
 		</div>
@@ -183,7 +158,7 @@
 	{:else}
 		<!-- Photo Grid -->
 		<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-			{#each photos as photo, index}
+			{#each photos as photo, index (photo.id || photo.imagePath)}
 				<button
 					class="group relative aspect-square overflow-hidden rounded-2xl bg-gray-100 shadow-sm transition-shadow hover:shadow-md focus:ring-2 focus:ring-indigo-500 focus:outline-none"
 					onclick={() => openLightbox(photo, index)}

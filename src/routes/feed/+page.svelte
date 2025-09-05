@@ -302,12 +302,8 @@
 		}
 	}
 
-	function getYouTubeVideoId(url: string): string | null {
-		const regex =
-			/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/;
-		const m = url.match(regex);
-		return m ? m[1] : null;
-	}
+	// getYouTubeVideoId function removed - unused
+	// TODO: Add YouTube URL parsing if needed
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	function isUserLiked(post: any) {

@@ -92,7 +92,7 @@ class FamilyHubAuditor {
 		let lintErrorCount = 0;
 		try {
 			execSync('npm run lint', { stdio: 'pipe' });
-		} catch (error: any) {
+		} catch {
 			lintSuccess = false;
 			// Count lint errors from output
 			try {
@@ -247,7 +247,7 @@ class FamilyHubAuditor {
 		}
 	}
 
-	private analyzeBandwidthOptimization(): { current: any; recommendations: string[] } {
+	private analyzeBandwidthOptimization(): { current: unknown; recommendations: string[] } {
 		const recommendations = [
 			'Implement WebP image conversion for 40-60% size reduction',
 			'Add lazy loading for non-critical images and components',

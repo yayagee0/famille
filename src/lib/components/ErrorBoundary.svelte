@@ -2,7 +2,9 @@
 	import { onMount } from 'svelte';
 	import { AlertCircle, RefreshCw } from 'lucide-svelte';
 
-	let { children } = $props<{ children: any }>();
+	import type { Snippet } from 'svelte';
+
+	let { children } = $props<{ children: Snippet }>();
 
 	let error = $state<Error | null>(null);
 	let hasError = $state(false);

@@ -58,7 +58,7 @@
 		}
 
 		const selectedCurrentAge = ageOn(selectedMember.birthday);
-		const memberBirthday = new Date(selectedMember.birthday);
+		// memberBirthday variable removed - unused
 		const targetDate = new Date();
 		targetDate.setFullYear(targetDate.getFullYear() + (targetAge - selectedCurrentAge));
 
@@ -151,7 +151,7 @@
 		<!-- Results display -->
 		{#if ageCalculations.length > 0}
 			<div class="grid gap-3 sm:grid-cols-2">
-				{#each ageCalculations as member}
+				{#each ageCalculations as member (member.email)}
 					<div
 						class="rounded-xl border-2 border-gray-200 bg-white p-4 text-center shadow-sm transition-transform duration-200 hover:scale-102"
 					>

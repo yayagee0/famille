@@ -350,17 +350,18 @@
 				class="w-full rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
 			/>
 
-			{#each pollOptions as _, index (index)}
+			{#each pollOptions as _, optionIndex (optionIndex)}
+				<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 				<div class="flex items-center space-x-2">
 					<input
 						type="text"
-						bind:value={pollOptions[index]}
-						placeholder={`Option ${index + 1}`}
+						bind:value={pollOptions[optionIndex]}
+						placeholder={`Option ${optionIndex + 1}`}
 						class="flex-1 rounded-lg border border-gray-300 p-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
 					/>
 					{#if pollOptions.length > 2}
 						<button
-							onclick={() => removePollOption(index)}
+							onclick={() => removePollOption(optionIndex)}
 							class="p-2 text-red-500 hover:text-red-700"
 						>
 							<X class="h-4 w-4" />

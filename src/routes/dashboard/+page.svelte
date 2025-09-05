@@ -11,7 +11,8 @@
 		getDoc
 	} from 'firebase/firestore';
 	import { db, getFamilyId } from '$lib/firebase';
-	import { MessageSquare, Volume2, VolumeX } from 'lucide-svelte';
+	import { Volume2, VolumeX } from 'lucide-svelte';
+	// MessageSquare removed - unused import
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import DailyAyah from '$lib/DailyAyah.svelte';
@@ -160,7 +161,7 @@
 					</div>
 				{:else}
 					<div class="space-y-3">
-						{#each familyHighlights as highlight, i}
+						{#each familyHighlights as highlight, i (highlight.id)}
 							<div
 								class="flex items-center space-x-3 rounded-xl bg-gray-50 p-3 transition-all duration-300 hover:scale-105 hover:bg-gray-100 hover:shadow-sm"
 								style="animation: slideIn 0.5s ease-out {i * 150}ms both"

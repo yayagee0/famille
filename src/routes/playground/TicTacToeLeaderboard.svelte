@@ -121,18 +121,8 @@
 		}
 	}
 
-	function getRankIcon(index: number) {
-		switch (index) {
-			case 0:
-				return { icon: Trophy, class: 'text-yellow-500' };
-			case 1:
-				return { icon: Medal, class: 'text-gray-400' };
-			case 2:
-				return { icon: Award, class: 'text-orange-500' };
-			default:
-				return { icon: User, class: 'text-gray-400' };
-		}
-	}
+	// getRankIcon function removed - unused
+	// TODO: Add rank icons for leaderboard display
 
 	function getResultIcon(result: string) {
 		switch (result) {
@@ -195,7 +185,7 @@
 					<div class="mt-4">
 						<h5 class="mb-2 text-xs font-medium text-gray-700">Recent Games</h5>
 						<div class="flex space-x-2">
-							{#each userStats.recentGames as game}
+							{#each userStats.recentGames as game (game.id || `${game.result}-${game.difficulty}`)}
 								<div class="flex items-center space-x-1 rounded-lg bg-white px-2 py-1 text-xs">
 									<span>{getResultIcon(game.result)}</span>
 									<span class="text-gray-500">{game.difficulty}</span>
@@ -210,7 +200,7 @@
 		<!-- Leaderboard -->
 		{#if leaderboard.length > 0}
 			<div class="space-y-3">
-				{#each leaderboard as player, index}
+				{#each leaderboard as player, index (player.uid)}
 					<div class="flex items-center justify-between rounded-xl bg-gray-50 p-3">
 						<div class="flex items-center space-x-3">
 							<div class="flex h-6 w-6 items-center justify-center">
