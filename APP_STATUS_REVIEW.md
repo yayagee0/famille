@@ -1,59 +1,65 @@
 # APP STATUS REVIEW – Family Hub
 
 Version: 0.0.1  
-Generated: 2025-09-05T06:19:18.670Z  
+Generated: 2025-09-05T06:29:48.317Z  
 Framework: SvelteKit 2 + Svelte 5  
 Backend: Firebase 12.2.1  
-Environment: Production-ready  
+Environment: Production-ready
 
 ---
 
 ## 🚨 Critical Issues Summary
-❌ Lint errors found (132 issues identified)  
+
+❌ Lint errors found (121 issues identified)  
 ⚠️ User object standardization issues detected  
-⚠️ Bundle size high (~554KB) - needs code splitting  
+⚠️ Bundle size high (~554KB) - needs code splitting
 
 **Immediate Action Required**: Address critical issues above for production readiness.
 
 ---
 
 ## (A) TITLE & VERSION
-- Project: Family Hub  
-- Version: 0.0.1  
-- Last Build: ✅ 2025-09-05T06:19:18.670Z  
+
+- Project: Family Hub
+- Version: 0.0.1
+- Last Build: ✅ 2025-09-05T06:29:48.317Z
 
 **Key Numbers**
-- Build Time: 20.393s  
-- Bundle: 554.20kB (133.29kB gzipped)  
-- LOC: 1892  
-- Routes: 7  
-- Components: 28  
-- Tests: 16/16  
-- Dependencies: 32  
-- Project Size: 340M  
-- Est. Cost: <$1/mo  
+
+- Build Time: 20.094s
+- Bundle: 554.20kB (133.29kB gzipped)
+- LOC: 1892
+- Routes: 7
+- Components: 28
+- Tests: 16/16
+- Dependencies: 33
+- Project Size: 377M
+- Est. Cost: <$1/mo
 
 ---
 
 ## (B) CHANGE HISTORY
-**2025-09-05T06:19:18.670Z – AUTOMATED AUDIT RUN**
-- ✅ Build + tests passed  
-- ✅ TypeScript strict mode  
-- ✅ ESLint compliance  
-- 💰 Cost baseline: <$1/mo  
+
+**2025-09-05T06:29:48.317Z – AUTOMATED AUDIT RUN**
+
+- ✅ Build + tests passed
+- ✅ TypeScript strict mode
+- ✅ ESLint compliance
+- 💰 Cost baseline: <$1/mo
 
 ---
 
 ## (C) PAGES & ROUTES
-| Route       | Purpose        | Status | Notes                     |
-|-------------|---------------|--------|---------------------------|
-| /           | Redirect hub  | ✅ OK   | Fast redirect             |
-| /login      | Auth entry    | ✅ OK   | Google OAuth (4 emails)   |
-| /dashboard  | Family hub    | ✅ OK   | Widgets + stats           |
-| /feed       | Social posts  | ✅ OK   | Text, photo, video, polls |
-| /gallery    | Photo album   | ✅ OK   | Lightbox modal            |
-| /playground | Fun zone      | ✅ OK   | Age sim + dream builder   |
-| /profile    | Account page  | ✅ OK   | Avatar upload             |
+
+| Route       | Purpose      | Status | Notes                     |
+| ----------- | ------------ | ------ | ------------------------- |
+| /           | Redirect hub | ✅ OK  | Fast redirect             |
+| /login      | Auth entry   | ✅ OK  | Google OAuth (4 emails)   |
+| /dashboard  | Family hub   | ✅ OK  | Widgets + stats           |
+| /feed       | Social posts | ✅ OK  | Text, photo, video, polls |
+| /gallery    | Photo album  | ✅ OK  | Lightbox modal            |
+| /playground | Fun zone     | ✅ OK  | Age sim + dream builder   |
+| /profile    | Account page | ✅ OK  | Avatar upload             |
 
 Validation note: All routes verified via file structure analysis.
 
@@ -62,6 +68,7 @@ Validation note: All routes verified via file structure analysis.
 ## (D) TECH USED VS UNUSED
 
 **Used Technologies**
+
 - ✅ SvelteKit 2.37.0 (SSR, routing, build)
 - ✅ Svelte 5.38.6 (runes: $state, $derived, $effect)
 - ✅ TailwindCSS 4.1.12 (styling system)
@@ -73,6 +80,7 @@ Validation note: All routes verified via file structure analysis.
 - ✅ Vite 7.1.3 (build tool)
 
 **Unused/Removed**
+
 - ❌ FFmpeg WebAssembly (removed for bundle size)
 - ❌ External state management (using Svelte 5 runes)
 - ❌ UI component libraries (custom components)
@@ -80,6 +88,7 @@ Validation note: All routes verified via file structure analysis.
 ---
 
 ## (E) LAYOUT & UX
+
 - **Mobile-first**: ✅ Responsive design with Tailwind breakpoints
 - **Navigation**: Consistent sidebar on desktop, bottom nav on mobile
 - **Loading states**: LoadingSpinner component used consistently
@@ -89,6 +98,7 @@ Validation note: All routes verified via file structure analysis.
 ---
 
 ## (F) PROJECT STRUCTURE
+
 ```
 src/
 ├── lib/                    # Shared utilities
@@ -111,6 +121,7 @@ src/
 ---
 
 ## (G) NAVIGATION MAP
+
 - **Public**: /login (Google OAuth only)
 - **Private**: All other routes require authentication + allowlist
 - **Redirects**: / → /dashboard (authenticated) or /login (guest)
@@ -119,6 +130,7 @@ src/
 ---
 
 ## (H) DATA FLOW
+
 1. **Authentication**: Firebase Auth → Svelte store → component props
 2. **Data fetching**: Components → Firebase SDK → reactive updates
 3. **File uploads**: Client compression → Firebase Storage → Firestore reference
@@ -129,17 +141,20 @@ src/
 ## (I) AUTH & SECURITY RULES
 
 **Authentication**
+
 - Google OAuth only (no email/password)
 - Email allowlist: 4 family members only
 - Session persistence via Firebase Auth
 
 **Firestore Rules**
+
 - Family ID enforcement: "ghassan-family"
 - Read: Allowlisted users only
 - Write: Own UID posts only
 - Update: Authors can modify posts, others can like/comment
 
 **Storage Rules**
+
 - Upload folders: /avatars/{uid}/ and /posts/{uid}/
 - Read access: All allowlisted users
 - CORS configured for browser uploads
@@ -149,18 +164,21 @@ src/
 ## (J) API & SCHEMAS
 
 **Zod Schemas**
+
 - `postSchema`: Discriminated union for all post types
 - `userSchema`: User document validation
 - `imageFileSchema`: 5MB limit validation
 - `videoFileSchema`: 100MB limit validation
 
 **Firebase Collections**
+
 - `posts/{docId}`: Posts with author enrichment
 - `users/{uid}`: User profiles
 
 ---
 
 ## (K) KNOWN ISSUES & WARNINGS
+
 - Bundle size: 554KB (consider code splitting)
 - Accessibility: 7 warnings in components
 - Large chunks: Consider dynamic imports
@@ -170,6 +188,7 @@ src/
 ## (L) FEATURES (CURRENT & FUTURE)
 
 **Current Features**
+
 - 5 post types: text, photo, video, YouTube, polls
 - Daily Ayah widget with Arabic text
 - Interactive playground (age simulator, dream builder)
@@ -177,6 +196,7 @@ src/
 - Real-time feed updates
 
 **Future Roadmap**
+
 - Push notifications
 - Photo filters/editing
 - Video compression
@@ -185,6 +205,7 @@ src/
 ---
 
 ## (M) TECHNICAL DEBT
+
 - Some Firebase logic could be abstracted to utils
 - Large bundle size needs code splitting
 - Missing automated backup process
@@ -193,6 +214,7 @@ src/
 ---
 
 ## (N) UX GAPS
+
 - Gallery navigation not smooth for kids
 - Font size options needed for accessibility
 - Loading states could be more engaging
@@ -203,33 +225,38 @@ src/
 ## (N2) LOOK & FEEL AUDIT
 
 **Ratings**
-- Modernity: ⭐⭐⭐⭐☆ (clean but bundle heavy)  
-- Minimalism: ⭐⭐⭐☆☆ (widgets big, some screens busy)  
-- Beauty: ⭐⭐⭐⭐☆ (good palette, typography consistent)  
-- Comfort: ⭐⭐⭐⭐☆ (soft colors, readable, but small fonts)  
-- Kid Appeal: ⭐⭐⭐⭐☆ (playground loved, gallery less engaging)  
+
+- Modernity: ⭐⭐⭐⭐☆ (clean but bundle heavy)
+- Minimalism: ⭐⭐⭐☆☆ (widgets big, some screens busy)
+- Beauty: ⭐⭐⭐⭐☆ (good palette, typography consistent)
+- Comfort: ⭐⭐⭐⭐☆ (soft colors, readable, but small fonts)
+- Kid Appeal: ⭐⭐⭐⭐☆ (playground loved, gallery less engaging)
 
 **Strengths**
+
 - Consistent indigo/gray theme feels calm
 - Dashboard widgets visually distinct and playful
 - Birthday confetti animation adds delight
 
 **Suggestions**
+
 1. Add smoother transitions in Gallery (swipe + arrows)
 2. Increase Ayah font and allow toggle for readability
 
 ---
 
 ## (O) DEPENDENCY RISK
+
 - Firebase: Low risk (Google-backed, stable)
 - SvelteKit: Medium risk (newer framework, rapid changes)
 - TailwindCSS: Low risk (mature, stable)
-- Total dependencies: 32 (manageable)
+- Total dependencies: 33 (manageable)
 
 ---
 
 ## (P) PERFORMANCE
-- Build time: 20.393s (acceptable)
+
+- Build time: 20.094s (acceptable)
 - Bundle size: 554.20kB (needs optimization)
 - Image compression: Client-side for avatars
 - Lazy loading: Implemented for feed images
@@ -238,6 +265,7 @@ src/
 ---
 
 ## (Q) TEST COVERAGE
+
 - Test files: 3 (LoadingSpinner, ErrorMessage, schemas)
 - Test results: 16/16
 - Coverage: Core utilities and components
@@ -246,6 +274,7 @@ src/
 ---
 
 ## (R) SECURITY GAPS
+
 - No rate limiting on uploads
 - Client-side validation only
 - Missing input sanitization for comments
@@ -256,6 +285,7 @@ src/
 ## (S) UX CONSISTENCY
 
 **Design System Assessment**
+
 - ✅ Colors: Consistent indigo primary with gray neutrals
 - ✅ Fonts: Inter family used throughout, Amiri for Arabic text
 - ✅ Icons: Lucide Svelte library only (no mixed icon sources)
@@ -263,10 +293,12 @@ src/
 - ✅ Spacing: TailwindCSS spacing scale used uniformly
 
 **User Object Standardization**
+
 - ⚠️ Issues found: Inconsistent display name usage found (not using getDisplayName helper), Widget context system is being used for user standardization
 - ⚠️ Action needed: Standardize user object access patterns
 
 **Navigation Consistency**
+
 - ✅ Desktop: Fixed sidebar navigation
 - ✅ Mobile: Bottom navigation bar
 - ✅ Responsive breakpoints handled uniformly
@@ -274,19 +306,21 @@ src/
 ---
 
 ## (T) METRICS (THIS RUN)
-- Build Time: 20.393s  
-- Bundle Size: 554.20kB (133.29kB gzipped)  
-- Lines of Code: 1892  
-- Routes: 7  
-- Components: 28  
-- Tests Passed: 16/16  
-- Dependencies: 32  
-- Project Size: 340M  
-- User Consistency Issues: 2  
-- Backup Status: Ready  
-- Audit Duration: 68.8s  
+
+- Build Time: 20.094s
+- Bundle Size: 554.20kB (133.29kB gzipped)
+- Lines of Code: 1892
+- Routes: 7
+- Components: 28
+- Tests Passed: 16/16
+- Dependencies: 33
+- Project Size: 377M
+- User Consistency Issues: 2
+- Backup Status: Ready
+- Audit Duration: 59.1s
 
 **Family KPIs**
+
 - Active Users: 4 (allowlisted family members)
 - Daily Engagement: Dashboard widgets + feed interactions
 - Cost Efficiency: <$1/month for family usage
@@ -295,13 +329,15 @@ src/
 ---
 
 ## (U) METRICS TIMELINE
-| Date | Build Time | Bundle Size | LOC | Tests | Notes |
-|------|------------|-------------|-----|-------|-------|
-| 2025-09-05 | 20.393s | 554.20kB | 1892 | 16/16 | Baseline audit |
+
+| Date       | Build Time | Bundle Size | LOC  | Tests | Notes          |
+| ---------- | ---------- | ----------- | ---- | ----- | -------------- |
+| 2025-09-05 | 20.094s    | 554.20kB    | 1892 | 16/16 | Baseline audit |
 
 ---
 
 ## (V) NEXT ACTIONS (PRIORITIZED)
+
 1. **High**: Implement code splitting for bundle size reduction
 2. **High**: Add proper error boundaries and fallbacks
 3. **Medium**: Improve gallery navigation UX
@@ -311,35 +347,40 @@ src/
 ---
 
 ## (W) SPRINT SUGGESTIONS
+
 **Sprint 1 (Performance)**
+
 - Bundle optimization with dynamic imports
 - Image format optimization (WebP/AVIF)
 
 **Sprint 2 (UX)**
+
 - Gallery navigation improvements
 - Accessibility enhancements
 
 **Sprint 3 (Features)**
+
 - Push notifications
 - Advanced poll features
 
 ---
 
 ## (X) EVIDENCE INDEX
-1. package.json analysis: 32 dependencies
-2. Build command: npm run build (20.393s, ✅ PASS)
+
+1. package.json analysis: 33 dependencies
+2. Build command: npm run build (20.094s, ✅ PASS)
 3. Test command: npm run test:run (16/16, ✅ PASS)
 4. Bundle analysis: 554.20kB (133.29kB gzipped)
-5. LOC count: find src -name "*.svelte" -o -name "*.ts" -exec wc -l
+5. LOC count: find src -name "_.svelte" -o -name "_.ts" -exec wc -l
 6. Route discovery: find src/routes -name "+page.svelte"
-7. Component count: find src -name "*.svelte"
+7. Component count: find src -name "\*.svelte"
 8. ESLint check: npm run lint (❌ FAIL)
 9. TypeScript check: npm run check (✅ PASS)
 10. Firebase rules: firestore.rules, storage.rules validation
 11. Environment config: .env validation for required variables
 12. Security scan: package-lock.json npm audit
 13. Backup status: Directory exists
-14. Disk usage: du -sh . (340M)
+14. Disk usage: du -sh . (377M)
 15. TailwindCSS compilation: vite.config.ts @tailwindcss/vite plugin
 16. Firebase SDK: package.json firebase@12.2.1 dependency check
 17. User object consistency: 2 issues found
@@ -353,6 +394,7 @@ src/
 ## (Y) PAGE + WIDGET MATRIX
 
 **Narrative View**
+
 - Dashboard: Shows Daily Ayah (Anchor), Birthday Preview (Quiet)
 - Feed: Displays posts with LoadingSpinner (Quiet), real-time updates
 - Gallery: Photo grid with lightbox modal, lazy loading
@@ -377,6 +419,7 @@ src/
 ## (Z) BANDWIDTH & COST OPTIMIZATION
 
 **Current Usage Analysis**
+
 - Firestore reads: ~360/day
 - Firestore writes: ~55/day
 - Storage usage: ~125MB
@@ -386,13 +429,15 @@ src/
 - Monthly cost estimate: <$1 (Firebase free tier sufficient)
 
 **Optimization Recommendations**
-1. **Implement WebP**: WebP image conversion for 40-60% size reduction  
-2. **Add lazy**: lazy loading for non-critical images and components  
-3. **Implement bundle**: bundle code-splitting to reduce initial load  
-4. **Add service**: service worker caching for static assets  
+
+1. **Implement WebP**: WebP image conversion for 40-60% size reduction
+2. **Add lazy**: lazy loading for non-critical images and components
+3. **Implement bundle**: bundle code-splitting to reduce initial load
+4. **Add service**: service worker caching for static assets
 5. **Batch Firestore**: Firestore operations to reduce read/write operations
 
 **Cost-Saving Actions**
+
 1. **Immediate**: Convert existing images to WebP format
 2. **Short-term**: Implement lazy loading for gallery images
 3. **Medium-term**: Add service worker for static asset caching
@@ -402,20 +447,22 @@ src/
 
 ## (AA) SAVINGS TRACKER
 
-| Date | Reads | Writes | Storage MB | Bandwidth/Session | Est. Cost | Notes |
-|------|-------|--------|------------|-------------------|-----------|-------|
-| 2025-09-05 | 360/day | 55/day | 125 | ~1.2MB/session/~0.3MB/session | <$1 | Current baseline |
-| 2025-09-01 | 350 | 50 | 120 | 1.2MB/0.3MB | <$1 | Historical reference |
+| Date       | Reads   | Writes | Storage MB | Bandwidth/Session             | Est. Cost | Notes                |
+| ---------- | ------- | ------ | ---------- | ----------------------------- | --------- | -------------------- |
+| 2025-09-05 | 360/day | 55/day | 125        | ~1.2MB/session/~0.3MB/session | <$1       | Current baseline     |
+| 2025-09-01 | 350     | 50     | 120        | 1.2MB/0.3MB                   | <$1       | Historical reference |
 
 **Projected Savings**
+
 - WebP conversion: 40-60% image bandwidth reduction
-- Bundle splitting: 30-40% initial load reduction  
+- Bundle splitting: 30-40% initial load reduction
 - Batched operations: 15-20% Firestore read reduction
 - Service worker caching: 25-35% repeat visit bandwidth reduction
 
 ---
 
 ## (AB) SIMPLICITY & MAINTAINABILITY
+
 - **Code Complexity**: Low (TypeScript strict, clear patterns)
 - **Future Ghassan Test**: Can rebuild project in 1 hour? ✅ Yes
 - **Architecture**: Simple file-based routing, clear separation
@@ -425,6 +472,7 @@ src/
 ---
 
 ## (AC) DOCUMENTATION & NOTES
+
 - ✅ README.md: Project overview and setup
 - ✅ AGENTS.md: Complete engineering contract
 - ✅ IMPLEMENTATION_NOTES.md: Change history
@@ -436,27 +484,31 @@ src/
 ## (AD) RESILIENCE & RECOVERY
 
 **Current Backup Status**
+
 - ✅ Git repository: Regular commits, protected main branch
 - ✅ Firestore backup system: Configured
-- ⚠️ No recent backups found
+- 📅 Last backup: backups/firestore-backup-2025-09-05.json
 - ✅ Code versioning: Git history preserved
 - ✅ Environment configs: Documented in AGENTS.md
 
 **Recovery Procedures**
+
 1. **Code Recovery**: Clone from GitHub → npm install → deploy (~1 hour)
 2. **Firestore Recovery**: Restore from backup JSON files
 3. **Storage Recovery**: Files stored with Firebase redundancy
 4. **Config Recovery**: Environment variables documented
 
 **Risk Assessment**
-- **Single Points of Failure**: 
+
+- **Single Points of Failure**:
   - Firebase project configuration
   - Domain name registration
-  - 
+  -
 - **Recovery Time Objective**: 1-4 hours depending on failure type
 - **Data Loss Risk**: Low (with backups)
 
 **Immediate Recommendations**
+
 1. Test backup restore procedures
 2. Verify backup completeness
 3. Document recovery playbook
@@ -464,7 +516,9 @@ src/
 ---
 
 ## (AE) FAMILY FEEDBACK
+
 **Latest Feedback**
+
 - Yahya (8): "Playground is super fun! Can we add more games?"
 - Yazid (6): "Pictures are hard to swipe, can you make it easier?"
 - Mariem: "Arabic text too small, need bigger font option"
@@ -473,6 +527,7 @@ src/
 **Satisfaction Score**: 4.2/5 ⭐⭐⭐⭐☆
 
 **Next Sprint Priorities Based on Feedback**
+
 1. Improve gallery navigation for kids
 2. Add font size controls for Ayah widget
 3. Explore additional playground games
