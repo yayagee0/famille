@@ -5,6 +5,8 @@
 	import { Users, Sparkles } from 'lucide-svelte';
 	import { getDisplayName } from '../getDisplayName';
 	import PlayCard from './PlayCard.svelte';
+	import GlassCard from '$lib/themes/neo/components/GlassCard.svelte';
+	import { themeStore } from '$lib/themes/neo';
 	import { playSound } from '$lib/sound';
 	import type { User } from 'firebase/auth';
 
@@ -18,6 +20,15 @@
 		}>
 	>([]);
 	let loading = $state(true);
+	let currentTheme = $state('default');
+
+	// Subscribe to theme changes
+	$effect(() => {
+		const unsubscribe = themeStore.subscribe((theme) => {
+			currentTheme = theme;
+		});
+		return unsubscribe;
+	});
 
 	// Map categories to emojis
 	const categoryEmojis: Record<string, string> = {
@@ -164,87 +175,173 @@
 </script>
 
 {#if user}
-	<PlayCard header="👨‍👩‍👧 Family Similarities">
-		{#if loading}
-			<!-- Skeleton Loader -->
-			<div class="animate-pulse space-y-3">
-				{#each Array(3) as _, loadingIndex (loadingIndex)}
-					<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-					<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-						<div class="flex items-start justify-between">
-							<div class="flex-1 space-y-2">
-								<div class="h-4 w-3/4 rounded bg-gray-300"></div>
-								<div class="h-3 w-1/2 rounded bg-gray-200"></div>
-								<div class="flex items-center space-x-2">
-									<div class="h-3 w-16 rounded bg-gray-300"></div>
-									<div class="h-5 w-20 rounded-full bg-gray-200"></div>
-								</div>
-							</div>
-							<div class="ml-3">
-								<div class="h-6 w-16 rounded-full bg-gray-200"></div>
-							</div>
-						</div>
-					</div>
-				{/each}
-				<div class="pt-2 text-center">
-					<div class="mx-auto h-3 w-32 rounded bg-gray-200"></div>
-				</div>
-			</div>
-		{:else if similarities.length === 0}
-			<div class="py-8 text-center">
-				<Sparkles class="mx-auto mb-3 h-12 w-12 text-gray-400" />
-				<p class="text-sm text-gray-500">
-					Answer more questions to unlock<br />similarities with your family!
-				</p>
-			</div>
-		{:else}
-			<div class="space-y-4">
-				{#each similarities as similarity, i (`${similarity.category}-${i}`)}
-					<div
-						class="rounded-lg border border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4 transition-all duration-300 hover:scale-105 hover:shadow-md"
-						style="animation-delay: {i * 150}ms"
-					>
-						<div class="flex items-start justify-between">
-							<div class="flex-1">
-								<div class="mb-2 flex items-center gap-2">
-									<span class="text-lg">{getCategoryEmoji(similarity.category)}</span>
-									<p class="text-sm font-medium text-gray-900">
-										{similarity.question}
-									</p>
-								</div>
-								<p class="mb-3 text-sm text-gray-700">
-									<span class="font-medium">"{similarity.answer}"</span>
-								</p>
-								<div class="flex items-center justify-between">
+	{#if currentTheme === 'neo'}
+		<GlassCard header="👨‍👩‍👧 Family Similarities" glow={true} shimmer={true}>
+			{#if loading}
+				<!-- Neo Skeleton Loader -->
+				<div class="animate-pulse space-y-3">
+					{#each Array(3) as _, loadingIndex (loadingIndex)}
+						<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+						<div class="rounded-lg border border-white/10 neo-glass p-4">
+							<div class="flex items-start justify-between">
+								<div class="flex-1 space-y-2">
+									<div class="h-4 w-3/4 rounded bg-white/20"></div>
+									<div class="h-3 w-1/2 rounded bg-white/10"></div>
 									<div class="flex items-center space-x-2">
-										<Users class="h-4 w-4 text-purple-600" />
-										<span class="text-xs text-purple-700">
-											Also chosen by: {similarity.sharedWith.join(', ')}
-										</span>
-									</div>
-									<div class="flex items-center gap-2">
-										<span class="animate-pulse text-xl">✨</span>
-										<button
-											onclick={playMatchSound}
-											class="text-purple-600 transition-colors hover:text-purple-800"
-											title="Celebrate match!"
-										>
-											🏅
-										</button>
+										<div class="h-3 w-16 rounded bg-white/20"></div>
+										<div class="h-5 w-20 rounded-full bg-white/10"></div>
 									</div>
 								</div>
-							</div>
-							<div class="ml-3">
-								<span
-									class="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800"
-								>
-									{similarity.category}
-								</span>
+								<div class="ml-3">
+									<div class="h-6 w-16 rounded-full bg-white/10"></div>
+								</div>
 							</div>
 						</div>
+					{/each}
+					<div class="pt-2 text-center">
+						<div class="mx-auto h-3 w-32 rounded bg-white/10"></div>
 					</div>
-				{/each}
-			</div>
-		{/if}
-	</PlayCard>
+				</div>
+			{:else if similarities.length === 0}
+				<div class="py-8 text-center">
+					<Sparkles class="mx-auto mb-3 h-12 w-12 text-slate-400" />
+					<p class="text-sm text-slate-300">
+						Answer more questions to unlock<br />similarities with your family!
+					</p>
+				</div>
+			{:else}
+				<div class="space-y-4">
+					{#each similarities as similarity, i (`${similarity.category}-${i}`)}
+						<div
+							class="rounded-lg border border-white/10 neo-glass neo-row-hover p-4"
+							style="animation-delay: {i * 150}ms"
+						>
+							<div class="flex items-start justify-between">
+								<div class="flex-1">
+									<div class="mb-2 flex items-center gap-2">
+										<span class="text-lg">{getCategoryEmoji(similarity.category)}</span>
+										<p class="text-sm font-medium text-slate-200">
+											{similarity.question}
+										</p>
+									</div>
+									<p class="mb-3 text-sm text-slate-300">
+										<span class="font-medium">"{similarity.answer}"</span>
+									</p>
+									<div class="flex items-center justify-between">
+										<div class="flex items-center space-x-2">
+											<Users class="h-4 w-4 text-magenta-400" />
+											<span class="text-xs text-magenta-300">
+												Also chosen by: {similarity.sharedWith.join(', ')}
+											</span>
+										</div>
+										<div class="flex items-center gap-2">
+											<span class="animate-pulse text-xl">✨</span>
+											<button
+												onclick={playMatchSound}
+												class="text-cyan-400 transition-colors hover:text-cyan-300"
+												title="Celebrate match!"
+											>
+												🏅
+											</button>
+										</div>
+									</div>
+								</div>
+								<div class="ml-3">
+									<span
+										class="inline-flex items-center rounded-full bg-magenta-600/20 border border-magenta-400/30 px-2 py-1 text-xs font-medium text-magenta-300"
+									>
+										{similarity.category}
+									</span>
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</GlassCard>
+	{:else}
+		<PlayCard header="👨‍👩‍👧 Family Similarities">
+			{#if loading}
+				<!-- Skeleton Loader -->
+				<div class="animate-pulse space-y-3">
+					{#each Array(3) as _, loadingIndex (loadingIndex)}
+						<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+						<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+							<div class="flex items-start justify-between">
+								<div class="flex-1 space-y-2">
+									<div class="h-4 w-3/4 rounded bg-gray-300"></div>
+									<div class="h-3 w-1/2 rounded bg-gray-200"></div>
+									<div class="flex items-center space-x-2">
+										<div class="h-3 w-16 rounded bg-gray-300"></div>
+										<div class="h-5 w-20 rounded-full bg-gray-200"></div>
+									</div>
+								</div>
+								<div class="ml-3">
+									<div class="h-6 w-16 rounded-full bg-gray-200"></div>
+								</div>
+							</div>
+						</div>
+					{/each}
+					<div class="pt-2 text-center">
+						<div class="mx-auto h-3 w-32 rounded bg-gray-200"></div>
+					</div>
+				</div>
+			{:else if similarities.length === 0}
+				<div class="py-8 text-center">
+					<Sparkles class="mx-auto mb-3 h-12 w-12 text-gray-400" />
+					<p class="text-sm text-gray-500">
+						Answer more questions to unlock<br />similarities with your family!
+					</p>
+				</div>
+			{:else}
+				<div class="space-y-4">
+					{#each similarities as similarity, i (`${similarity.category}-${i}`)}
+						<div
+							class="rounded-lg border border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4 transition-all duration-300 hover:scale-105 hover:shadow-md"
+							style="animation-delay: {i * 150}ms"
+						>
+							<div class="flex items-start justify-between">
+								<div class="flex-1">
+									<div class="mb-2 flex items-center gap-2">
+										<span class="text-lg">{getCategoryEmoji(similarity.category)}</span>
+										<p class="text-sm font-medium text-gray-900">
+											{similarity.question}
+										</p>
+									</div>
+									<p class="mb-3 text-sm text-gray-700">
+										<span class="font-medium">"{similarity.answer}"</span>
+									</p>
+									<div class="flex items-center justify-between">
+										<div class="flex items-center space-x-2">
+											<Users class="h-4 w-4 text-purple-600" />
+											<span class="text-xs text-purple-700">
+												Also chosen by: {similarity.sharedWith.join(', ')}
+											</span>
+										</div>
+										<div class="flex items-center gap-2">
+											<span class="animate-pulse text-xl">✨</span>
+											<button
+												onclick={playMatchSound}
+												class="text-purple-600 transition-colors hover:text-purple-800"
+												title="Celebrate match!"
+											>
+												🏅
+											</button>
+										</div>
+									</div>
+								</div>
+								<div class="ml-3">
+									<span
+										class="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800"
+									>
+										{similarity.category}
+									</span>
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</PlayCard>
+	{/if}
 {/if}

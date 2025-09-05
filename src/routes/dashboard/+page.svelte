@@ -44,7 +44,8 @@
 		}>
 	>([]);
 
-	onMount(async () => {
+	// Use $effect for theme-related side effects
+	$effect(() => {
 		// Subscribe to theme changes
 		unsubscribe = themeStore.subscribe((theme) => {
 			currentTheme = theme;
@@ -55,6 +56,13 @@
 			}
 		});
 
+		return () => {
+			unsubscribe?.();
+			stopParticles();
+		};
+	});
+
+	onMount(async () => {
 		try {
 			const familyId = getFamilyId();
 
@@ -116,11 +124,6 @@
 		} finally {
 			loading = false;
 		}
-
-		return () => {
-			unsubscribe?.();
-			stopParticles();
-		};
 	});
 </script>
 

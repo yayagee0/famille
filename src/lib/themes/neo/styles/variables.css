@@ -29,11 +29,23 @@
 	--neo-shadow-cyan: rgba(0, 246, 255, 0.3);
 	--neo-shadow-magenta: rgba(255, 0, 212, 0.3);
 	--neo-shadow-lime: rgba(182, 255, 0, 0.3);
+
+	/* Glow effects */
+	--neo-glow-cyan: 0 0 15px rgba(0, 246, 255, 0.6);
+	--neo-glow-magenta: 0 0 15px rgba(255, 0, 212, 0.6);
+	--neo-glow-lime: 0 0 15px rgba(182, 255, 0, 0.6);
+	--neo-shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 /* Gradient definitions */
 html.neo {
 	--neo-gradient-header: linear-gradient(
+		270deg,
+		var(--neo-cyan),
+		var(--neo-magenta),
+		var(--neo-lime)
+	);
+	--neo-gradient-anim: linear-gradient(
 		270deg,
 		var(--neo-cyan),
 		var(--neo-magenta),
