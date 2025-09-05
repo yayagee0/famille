@@ -11,19 +11,32 @@
 		getDoc
 	} from 'firebase/firestore';
 	import { db, getFamilyId } from '$lib/firebase';
-	import { MessageSquare } from 'lucide-svelte';
+	import { MessageSquare, Volume2, VolumeX } from 'lucide-svelte';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import DailyAyah from '$lib/DailyAyah.svelte';
 	import SimilarityHighlights from '$lib/components/SimilarityHighlights.svelte';
 	import BirthdayPreview from '$lib/BirthdayPreview.svelte';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
+	import PlayCard from '$lib/components/PlayCard.svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
+	import { soundEnabled, toggleSound } from '$lib/sound';
 
 	dayjs.extend(relativeTime);
 
 	let loading = $state(true);
-	let familyHighlights = $state<string[]>([]);
+	let familyHighlights = $state<
+		Array<{
+			id: string;
+			text: string;
+			emoji: string;
+			author: {
+				displayName: string;
+				avatarUrl: string | null;
+			};
+			timeAgo: string;
+		}>
+	>([]);
 
 	onMount(async () => {
 		try {
@@ -63,16 +76,24 @@
 				})
 			);
 
-			// Generate family highlights from recent activity
+			// Generate family highlights from recent activity with enhanced data
 			familyHighlights = enrichedPosts.slice(0, 3).map((post: any) => {
 				const authorName = post.author?.displayName || 'Someone';
 				const timeAgo = dayjs(post.createdAt?.toDate()).fromNow();
 
-				if (post.kind === 'photo') return `${authorName} shared a photo ${timeAgo} 📷`;
-				if (post.kind === 'video') return `${authorName} shared a video ${timeAgo} 🎥`;
-				if (post.kind === 'youtube') return `${authorName} shared a YouTube video ${timeAgo} 🎬`;
-				if (post.kind === 'poll') return `${authorName} created a poll ${timeAgo} 📊`;
-				return `${authorName} shared an update ${timeAgo} 💬`;
+				let emoji = '📝';
+				if (post.kind === 'photo') emoji = '📷';
+				else if (post.kind === 'video') emoji = '🎥';
+				else if (post.kind === 'youtube') emoji = '🎬';
+				else if (post.kind === 'poll') emoji = '📊';
+
+				return {
+					id: post.id,
+					text: `${authorName} shared ${post.kind === 'text' ? 'an update' : `a ${post.kind}`} ${timeAgo}`,
+					emoji,
+					author: post.author,
+					timeAgo
+				};
 			});
 		} catch (error) {
 			console.error('Error loading dashboard data:', error);
@@ -82,48 +103,116 @@
 	});
 </script>
 
-<div class="space-y-6">
-	<!-- Header -->
-	<div>
-		<h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-		<p class="mt-1 text-sm text-gray-500">Welcome to your family hub</p>
-	</div>
-
-	<!-- Daily Ayah -->
-	<DailyAyah />
-
-	<!-- Family Similarities -->
-	<SimilarityHighlights />
-
-	<!-- Birthday Preview (moved from playground) -->
-	<BirthdayPreview />
-
-	<!-- Family Highlights -->
-	<div class="rounded-2xl bg-white p-6 shadow-sm">
-		<h3 class="mb-4 text-lg font-semibold text-gray-900">Family Highlights</h3>
-		{#if loading}
-			<LoadingSpinner size="medium" message="Loading highlights..." />
-		{:else if familyHighlights.length === 0}
-			<div class="py-8 text-center">
-				<p class="text-gray-500">✨ No recent activity to highlight</p>
-				<p class="mt-1 text-sm text-gray-400">Start sharing to see family highlights!</p>
-			</div>
-		{:else}
-			<div class="space-y-3">
-				{#each familyHighlights as highlight}
-					<div class="flex items-center space-x-3 rounded-xl bg-gray-50 p-3">
-						<div class="flex-1">
-							<p class="text-sm text-gray-700">{highlight}</p>
-						</div>
-					</div>
-				{/each}
-			</div>
-		{/if}
-
-		<div class="mt-4 text-center">
-			<a href="/feed" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-				View all activity →
-			</a>
+<div class="space-y-8">
+	<!-- Header with Global Sound Toggle -->
+	<div class="flex items-center justify-between">
+		<div>
+			<h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+			<p class="mt-1 text-sm text-gray-500">Welcome to your family hub</p>
 		</div>
+		<button
+			onclick={toggleSound}
+			class="rounded-lg p-2 transition-all duration-200 {$soundEnabled
+				? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+				: 'bg-gray-100 text-gray-400 hover:bg-gray-200'}"
+			aria-label={$soundEnabled ? 'Disable sounds' : 'Enable sounds'}
+			title={$soundEnabled ? 'Sound ON - Click to mute' : 'Sound OFF - Click to enable'}
+		>
+			{#if $soundEnabled}
+				<Volume2 class="h-5 w-5" />
+			{:else}
+				<VolumeX class="h-5 w-5" />
+			{/if}
+		</button>
 	</div>
+
+	<!-- Spiritual Section -->
+	<section>
+		<div class="mb-4 flex items-center gap-2">
+			<span class="text-2xl">🌙</span>
+			<h2 class="text-xl font-semibold text-gray-800">Spiritual</h2>
+		</div>
+		<DailyAyah />
+	</section>
+
+	<!-- Family Section -->
+	<section>
+		<div class="mb-6 flex items-center gap-2">
+			<span class="text-2xl">👨‍👩‍👧</span>
+			<h2 class="text-xl font-semibold text-gray-800">Family</h2>
+		</div>
+
+		<div class="space-y-6">
+			<!-- Family Similarities -->
+			<SimilarityHighlights />
+
+			<!-- Birthday Preview -->
+			<BirthdayPreview />
+
+			<!-- Family Highlights -->
+			<PlayCard header="🌟 Family Highlights">
+				{#if loading}
+					<LoadingSpinner size="medium" message="Loading highlights..." />
+				{:else if familyHighlights.length === 0}
+					<div class="py-8 text-center">
+						<p class="text-gray-500">✨ No recent activity to highlight</p>
+						<p class="mt-1 text-sm text-gray-400">Start sharing to see family highlights!</p>
+					</div>
+				{:else}
+					<div class="space-y-3">
+						{#each familyHighlights as highlight, i}
+							<div
+								class="flex items-center space-x-3 rounded-xl bg-gray-50 p-3 transition-all duration-300 hover:scale-105 hover:bg-gray-100 hover:shadow-sm"
+								style="animation: slideIn 0.5s ease-out {i * 150}ms both"
+							>
+								<div class="flex-shrink-0">
+									{#if highlight.author.avatarUrl}
+										<img
+											src={highlight.author.avatarUrl}
+											alt={highlight.author.displayName}
+											class="h-8 w-8 rounded-full"
+										/>
+									{:else}
+										<div
+											class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-medium text-indigo-600"
+										>
+											{highlight.author.displayName.charAt(0).toUpperCase()}
+										</div>
+									{/if}
+								</div>
+								<div class="flex-1">
+									<p class="text-sm text-gray-700">
+										<span class="font-medium">{highlight.author.displayName}</span>
+										shared {highlight.emoji} • {highlight.timeAgo}
+									</p>
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
+
+				<div class="mt-6 text-center">
+					<a
+						href="/feed"
+						class="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-500"
+					>
+						View all activity →
+					</a>
+				</div>
+			</PlayCard>
+		</div>
+	</section>
 </div>
+
+<style>
+	@keyframes slideIn {
+		from {
+			opacity: 0;
+			transform: translateX(-20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
+		}
+	}
+</style>

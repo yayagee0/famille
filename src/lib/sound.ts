@@ -52,7 +52,15 @@ export function playSound(src: string) {
 				'/sounds/victory.mp3': { frequency: 523, duration: 0.5 },
 				'/sounds/draw.mp3': { frequency: 440, duration: 0.3 },
 				'/sounds/select.mp3': { frequency: 660, duration: 0.15 },
-				'/sounds/chime.mp3': { frequency: 880, duration: 0.4 }
+				'/sounds/chime.mp3': { frequency: 880, duration: 0.4 },
+				// Dashboard sound effects
+				'/sounds/ayah.mp3': { frequency: 659, duration: 0.6 }, // E note, peaceful
+				'/sounds/bell.mp3': { frequency: 523, duration: 0.8 }, // C note, celebration
+				'/sounds/birthday.mp3': { frequency: 523, duration: 1.2 }, // Happy birthday melody
+				'/static/sounds/ayah.mp3': { frequency: 659, duration: 0.6 }, // Alternative path
+				'/static/sounds/chime.mp3': { frequency: 880, duration: 0.4 }, // Alternative path
+				'/static/sounds/bell.mp3': { frequency: 523, duration: 0.8 }, // Alternative path
+				'/static/sounds/birthday.mp3': { frequency: 523, duration: 1.2 } // Alternative path
 			};
 
 			const soundConfig = soundMap[src] || { frequency: 440, duration: 0.2 };
