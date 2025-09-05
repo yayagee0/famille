@@ -78,5 +78,28 @@
 				</PlayCard>
 			</div>
 		</div>
+
+		<!-- Educational Section -->
+		<div>
+			<h2 class="mb-4 flex items-center text-xl font-bold text-gray-800">
+				<span class="mr-2">📚</span>
+				Learning
+			</h2>
+			<div class="grid gap-6 lg:grid-cols-2">
+				<PlayCard header="🕌 Islam – Our Identity">
+					<div class="text-center space-y-4">
+						<p class="text-gray-600">
+							Learn about our beautiful faith through interactive questions and reflections.
+						</p>
+						<a
+							href="/playground/islamic"
+							class="inline-block rounded-xl bg-gradient-to-r from-green-600 to-teal-500 px-6 py-3 font-medium text-white shadow-sm transition-all hover:shadow-md hover:from-green-700 hover:to-teal-600"
+						>
+							Start Learning
+						</a>
+					</div>
+				</PlayCard>
+			</div>
+		</div>
 	</div>
 </div>
