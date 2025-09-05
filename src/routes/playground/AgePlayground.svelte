@@ -58,7 +58,7 @@
 		}
 
 		const selectedCurrentAge = ageOn(selectedMember.birthday);
-		const memberBirthday = new Date(selectedMember.birthday);
+		// memberBirthday variable removed - unused
 		const targetDate = new Date();
 		targetDate.setFullYear(targetDate.getFullYear() + (targetAge - selectedCurrentAge));
 

@@ -25,10 +25,11 @@
 <div class="flex flex-col items-center justify-center py-8">
 	{#if type === 'dots'}
 		<div class="flex space-x-1">
-			{#each Array(3) as _, i}
+			{#each Array(3) as _, dotIndex (dotIndex)}
+				<!-- dotIndex is used, _ is intentionally unused -->
 				<div
 					class="{dotSizeClasses[size]} animate-bounce rounded-full bg-indigo-600"
-					style="animation-delay: {i * 0.2}s"
+					style="animation-delay: {dotIndex * 0.2}s"
 				></div>
 			{/each}
 		</div>

@@ -67,18 +67,20 @@
 		{#if nextBirthday && isToday}
 			<!-- Enhanced confetti animation for today's birthday -->
 			<div class="pointer-events-none absolute inset-0 overflow-hidden">
-				{#each Array(30) as _, i}
+				{#each Array(30) as _, confettiIndex (confettiIndex)}
+					<!-- confettiIndex is used, _ is intentionally unused -->
 					<div
 						class="absolute animate-bounce text-xl"
 						style="left: {Math.random() * 100}%; top: {Math.random() *
 							100}%; animation-delay: {Math.random() * 3}s; animation-duration: {1.5 +
 							Math.random() * 2}s;"
 					>
-						{#if i % 5 === 0}🎊{:else if i % 4 === 0}🌟{:else if i % 3 === 0}🎈{:else}🎉{/if}
+						{#if confettiIndex % 5 === 0}🎊{:else if confettiIndex % 4 === 0}🌟{:else if confettiIndex % 3 === 0}🎈{:else}🎉{/if}
 					</div>
 				{/each}
 				<!-- Floating confetti pieces -->
-				{#each Array(15) as _, i}
+				{#each Array(15) as _, floatIndex (floatIndex)}
+					<!-- floatIndex is used, _ is intentionally unused -->
 					<div
 						class="absolute animate-pulse"
 						style="left: {Math.random() * 100}%; top: {Math.random() *
@@ -94,7 +96,7 @@
 								'#96ceb4',
 								'#feca57',
 								'#ff9ff3'
-							][i % 6]};"
+							][floatIndex % 6]};"
 						></div>
 					</div>
 				{/each}

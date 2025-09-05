@@ -92,7 +92,7 @@ class FamilyHubAuditor {
 		let lintErrorCount = 0;
 		try {
 			execSync('npm run lint', { stdio: 'pipe' });
-		} catch (error: any) {
+		} catch {
 			lintSuccess = false;
 			// Count lint errors from output
 			try {

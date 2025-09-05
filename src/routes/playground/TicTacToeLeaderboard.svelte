@@ -121,18 +121,8 @@
 		}
 	}
 
-	function getRankIcon(index: number) {
-		switch (index) {
-			case 0:
-				return { icon: Trophy, class: 'text-yellow-500' };
-			case 1:
-				return { icon: Medal, class: 'text-gray-400' };
-			case 2:
-				return { icon: Award, class: 'text-orange-500' };
-			default:
-				return { icon: User, class: 'text-gray-400' };
-		}
-	}
+	// getRankIcon function removed - unused
+	// TODO: Add rank icons for leaderboard display
 
 	function getResultIcon(result: string) {
 		switch (result) {
