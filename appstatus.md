@@ -1,7 +1,7 @@
 # APP STATUS – Family Hub
 
 Version: (TODO)  
-Generated: (TODO – UTC ISO8601)  
+Generated: 2025-09-05T18:26:35.969Z  
 Framework: (TODO)  
 Backend: (TODO)  
 Environment: (TODO)  
@@ -9,23 +9,27 @@ Environment: (TODO)
 ---
 
 ## 🚨 Critical Issues Summary
-(TODO – real lint/test/build/security issues here)
+  
+  
+❌ TypeScript errors  
+❌ Tests failed  
 
 ---
 
 ## (A) TITLE & VERSION
 - Project: Family Hub  
 - Version: (TODO)  
-- Last Build: (TODO)  
+- Last Build: 2025-09-05T18:26:35.969Z  
 
 **KPIs**
-- Build Time: (TODO)  
-- Bundle Size: (TODO)  
-- LOC: (TODO)  
-- Routes: (TODO)  
-- Components: (TODO)  
-- Tests: (TODO)  
-- Lighthouse: (TODO)  
+- Build Time: 0.146s  
+- Bundle Size: TODO (TODO gzipped)  
+- LOC: 5878  
+- Routes: 8  
+- Components: 33  
+- Tests: TODO  
+- Dependencies: 33  
+- Project Size: 2.7M  
 - Cost: (TODO)  
 - Family KPIs: (TODO)  
 
@@ -54,9 +58,9 @@ Environment: (TODO)
 ---
 
 ## (F) PROJECT STRUCTURE
-
-(TODO – file tree)
-
+```
+(TODO)
+```
 
 ---
 
@@ -135,14 +139,21 @@ Environment: (TODO)
 ---
 
 ## (T) METRICS (THIS RUN)
-(TODO)
+- Build Time: 0.146s  
+- Bundle Size: TODO  
+- LOC: 5878  
+- Routes: 8  
+- Components: 33  
+- Tests: TODO  
+- Dependencies: 33  
+- Project Size: 2.7M  
 
 ---
 
 ## (U) METRICS TIMELINE
-| Date | Build Time | Bundle Size | LOC | Tests | Notes |
-|------|------------|-------------|-----|-------|-------|
-| (TODO) | (TODO) | (TODO) | (TODO) | (TODO) | (TODO) |
+| Date | Build | Bundle | LOC | Tests | Notes |
+|------|-------|--------|-----|-------|-------|
+| 2025-09-05 | 0.146s | TODO | 5878 | TODO | Baseline |
 
 ---
 
@@ -157,30 +168,22 @@ Environment: (TODO)
 ---
 
 ## (X) EVIDENCE INDEX
-(TODO – ≥20 real entries)
+(TODO – fill with ≥20 real entries)
 
 ---
 
 ## (Y) PAGE + WIDGET MATRIX
-**Narrative View**  
 (TODO)
-
-**Table View**  
-| Route | Widget | Placement | Visibility | Reset Rules |
-|-------|--------|-----------|------------|-------------|
-| (TODO) | (TODO) | (TODO) | (TODO) | (TODO) |
 
 ---
 
 ## (Z) BANDWIDTH & COST OPTIMIZATION
-(TODO – ≥3 recommendations)
+(TODO)
 
 ---
 
 ## (AA) SAVINGS TRACKER
-| Date | Reads | Writes | Storage MB | Bandwidth/Session | Est. Cost | Notes |
-|------|-------|--------|------------|-------------------|-----------|-------|
-| (TODO) | (TODO) | (TODO) | (TODO) | (TODO) | (TODO) | (TODO) |
+(TODO)
 
 ---
 
