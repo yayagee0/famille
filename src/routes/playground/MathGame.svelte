@@ -5,6 +5,8 @@
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { playSound } from '$lib/sound';
 	import { recordScore } from '$lib/gameUtils';
+	import { triggerParticleBurst } from '$lib/themes/neo/utils/particles';
+	import { themeStore } from '$lib/themes/neo';
 
 	type Difficulty = 'easy' | 'medium' | 'hard';
 	type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division';
@@ -27,8 +29,17 @@
 	let showResult = $state(false);
 	let userDisplayName = $state('');
 	let userAvatarUrl = $state<string | null>(null);
+	let currentTheme = $state('default');
 
 	let timer: NodeJS.Timeout | null = null;
+
+	// Subscribe to theme changes
+	$effect(() => {
+		const unsubscribe = themeStore.subscribe((theme) => {
+			currentTheme = theme;
+		});
+		return unsubscribe;
+	});
 
 	// Load user display name and avatar when component mounts
 	$effect(() => {
@@ -182,6 +193,10 @@
 		if (isCorrect) {
 			score += 10;
 			playSound('/sounds/victory.mp3');
+			// Trigger Neo particles for correct answer
+			if (currentTheme === 'neo') {
+				triggerParticleBurst(8, 3000); // 8 particles for 3 seconds
+			}
 		} else {
 			playSound('/sounds/draw.mp3');
 		}

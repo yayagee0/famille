@@ -4,6 +4,7 @@
 	import PlayCard from './components/PlayCard.svelte';
 	import GlassCard from './themes/neo/components/GlassCard.svelte';
 	import { themeStore } from './themes/neo';
+	import { triggerParticleBurst } from './themes/neo/utils/particles';
 	import { playSound } from './sound';
 	import dayjs from 'dayjs';
 
@@ -62,12 +63,17 @@
 		return unsubscribe;
 	});
 
-	// Play birthday sound for upcoming birthdays
+	// Play birthday sound for upcoming birthdays and trigger Neo particles
 	$effect(() => {
 		if (isUpcoming && typeof window !== 'undefined') {
 			// Small delay to avoid playing sound immediately on load
 			setTimeout(() => {
 				playSound('/static/sounds/birthday.mp3');
+				
+				// Trigger Neo particles for birthday celebration if Neo theme is active
+				if (currentTheme === 'neo' && isToday) {
+					triggerParticleBurst(20, 5000); // 20 particles for 5 seconds
+				}
 			}, 1000);
 		}
 	});

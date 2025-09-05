@@ -84,18 +84,20 @@ export class ParticleSystem {
 	private animate = () => {
 		if (!this.isRunning) return;
 
-		// Add new particles occasionally
-		if (Math.random() < 0.02 && this.particles.length < 20) {
-			this.addParticle();
-		}
-
-		// Update existing particles
+		// Update existing particles only (no continuous generation)
 		this.particles = this.particles.filter((particle) => this.updateParticle(particle));
 
-		this.animationId = requestAnimationFrame(this.animate);
+		// Continue animation only if there are particles to animate
+		if (this.particles.length > 0) {
+			this.animationId = requestAnimationFrame(this.animate);
+		} else {
+			// Auto-stop when no particles remain
+			this.isRunning = false;
+			this.animationId = null;
+		}
 	};
 
-	private addParticle() {
+	addParticle() {
 		if (!this.container) return;
 
 		const particle = this.createParticle();
@@ -163,9 +165,35 @@ export function clearParticles() {
 	system.clear();
 }
 
+// Event-driven particle burst (replaces continuous animation)
+export function triggerParticleBurst(count = 10, duration = 4000) {
+	const system = getParticleSystem();
+	if (!system.container) return;
+
+	// Add multiple particles at once
+	for (let i = 0; i < count; i++) {
+		system.addParticle();
+	}
+
+	// Start animation if not already running
+	if (!system.isRunning) {
+		system.start();
+	}
+
+	// Auto-stop after duration to prevent memory leaks
+	setTimeout(() => {
+		system.clear();
+	}, duration);
+}
+
 // Achievement particle burst
-export function triggerAchievementParticles(x: number, y: number) {
-	if (!document.querySelector('.neo-particles')) return;
+export function triggerAchievementParticles(x: number, y: number, duration = 3000) {
+	if (!document.querySelector('.neo-particles')) {
+		// Create container if it doesn't exist
+		const container = document.createElement('div');
+		container.className = 'neo-particles';
+		document.body.appendChild(container);
+	}
 
 	const container = document.querySelector('.neo-particles') as HTMLElement;
 	const emojis = ['🌙', '⭐', '🕌', '✨', '💫', '🎉'];
@@ -184,12 +212,15 @@ export function triggerAchievementParticles(x: number, y: number) {
 		element.style.animation = `particleFall ${2 + Math.random() * 2}s ease-out forwards`;
 
 		container.appendChild(element);
+	}
 
-		// Remove after animation
-		setTimeout(() => {
+	// Clean up all particles after duration to prevent memory leaks
+	setTimeout(() => {
+		const elementsToRemove = container.querySelectorAll('.neo-particle');
+		elementsToRemove.forEach(element => {
 			if (element.parentNode) {
 				element.parentNode.removeChild(element);
 			}
-		}, 4000);
-	}
+		});
+	}, duration);
 }

@@ -24,7 +24,7 @@
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { soundEnabled, toggleSound } from '$lib/sound';
 	import { themeStore, isNeoTheme } from '$lib/themes/neo';
-	import { startParticles, stopParticles } from '$lib/themes/neo/utils/particles';
+	import { triggerParticleBurst, triggerAchievementParticles } from '$lib/themes/neo/utils/particles';
 
 	dayjs.extend(relativeTime);
 
@@ -49,16 +49,11 @@
 		// Subscribe to theme changes
 		unsubscribe = themeStore.subscribe((theme) => {
 			currentTheme = theme;
-			if (theme === 'neo') {
-				startParticles();
-			} else {
-				stopParticles();
-			}
+			// Note: Particles are now only triggered by events, not theme changes
 		});
 
 		return () => {
 			unsubscribe?.();
-			stopParticles();
 		};
 	});
 

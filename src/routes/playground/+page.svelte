@@ -5,7 +5,7 @@
 	import { toggleSound, soundEnabled } from '$lib/sound';
 	import { Volume2, VolumeX } from 'lucide-svelte';
 	import { themeStore } from '$lib/themes/neo';
-	import { startParticles, stopParticles } from '$lib/themes/neo/utils/particles';
+	import { triggerParticleBurst, triggerAchievementParticles } from '$lib/themes/neo/utils/particles';
 	import AgePlayground from './AgePlayground.svelte';
 	import BuildADream from './BuildADream.svelte';
 	import TicTacToe from './TicTacToe.svelte';
@@ -23,16 +23,11 @@
 		// Subscribe to theme changes
 		unsubscribe = themeStore.subscribe((theme) => {
 			currentTheme = theme;
-			if (theme === 'neo') {
-				startParticles();
-			} else {
-				stopParticles();
-			}
+			// Note: Particles are now only triggered by events, not theme changes
 		});
 
 		return () => {
 			unsubscribe?.();
-			stopParticles();
 		};
 	});
 </script>
