@@ -16,6 +16,7 @@
 	import FeedUpload from '$lib/FeedUpload.svelte';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import GlassCard from '$lib/themes/neo/components/GlassCard.svelte';
+	import GlassChip from '$lib/themes/neo/components/GlassChip.svelte';
 	import { themeStore } from '$lib/themes/neo';
 	import { ensureUserProfile } from '$lib/auth';
 	import { getDisplayName } from '$lib/getDisplayName';
@@ -355,238 +356,441 @@
 		{:else}
 			<div class="space-y-6">
 				{#each posts as post (post.id)}
-					<article class="rounded-lg overflow-hidden {currentTheme === 'neo' 
-						? 'neo-glass neo-row-hover border border-white/10' 
-						: 'bg-white shadow'}">
-						<div class="p-6 pb-4">
-							<div class="mb-4 flex items-center space-x-3">
-								{#if post.author?.avatarUrl}
-									<img src={post.author.avatarUrl} alt="" class="h-10 w-10 rounded-full {currentTheme === 'neo' ? 'border border-white/20' : ''}" />
-								{:else}
-									<div class="h-10 w-10 rounded-full {currentTheme === 'neo' ? 'neo-glass border border-white/20' : 'bg-gray-300'}"></div>
-								{/if}
-								<div>
-									<p class="text-sm font-medium {currentTheme === 'neo' ? 'text-slate-200' : 'text-gray-900'}">{post.author?.displayName}</p>
-									<p class="text-xs {currentTheme === 'neo' ? 'text-slate-400' : 'text-gray-500'}">
-										{#if post.createdAt}
-											{dayjs(
-												post.createdAt?.toDate ? post.createdAt.toDate() : post.createdAt
-											).fromNow()}
-										{/if}
-									</p>
-								</div>
-							</div>
-
-							{#if post.text}
-								<p class="mb-4 {currentTheme === 'neo' ? 'text-slate-200' : 'text-gray-900'}">{post.text}</p>
-							{/if}
-
-							{#if post.imagePath}
-								{#if post.imagePaths && post.imagePaths.length > 1}
-									<div
-										class="mb-4 grid grid-cols-2 gap-2 {post.imagePaths.length === 3
-											? 'grid-cols-3'
-											: ''} {post.imagePaths.length > 4 ? 'grid-cols-3' : ''}"
-									>
-										{#each post.imagePaths.slice(0, 6) as imagePath, index (imagePath)}
-											<div class="relative">
-												<img
-													src={imagePath}
-													alt=""
-													class="max-h-[600px] w-full rounded-xl object-contain transition-all duration-300 hover:scale-105 {currentTheme === 'neo' 
-														? 'bg-slate-800 border border-white/20 hover:border-cyan-400/50 hover:shadow-cyan-400/20 hover:shadow-lg' 
-														: 'bg-gray-100'} {index === 5 && post.imagePaths.length > 6 ? 'opacity-75' : ''}"
-												/>
-												{#if index === 5 && post.imagePaths.length > 6}
-													<div
-														class="bg-opacity-50 absolute inset-0 flex items-center justify-center rounded-lg bg-black"
-													>
-														<span class="text-lg font-bold text-white"
-															>+{post.imagePaths.length - 6}</span
-														>
-													</div>
-												{/if}
-											</div>
-										{/each}
-									</div>
-								{:else}
-									<img
-										src={post.imagePath}
-										alt=""
-										class="mb-4 max-h-[600px] w-full rounded-xl object-contain transition-all duration-300 hover:scale-105 {currentTheme === 'neo' 
-											? 'bg-slate-800 border border-white/20 hover:border-cyan-400/50 hover:shadow-cyan-400/20 hover:shadow-lg' 
-											: 'bg-gray-100'}"
-									/>
-								{/if}
-							{/if}
-
-							{#if post.videoPath}
-								{#if VideoPlayerComponent}
-									{@const DynamicVideoPlayer = VideoPlayerComponent}
-									<DynamicVideoPlayer src={post.videoPath} className="mb-4" />
-								{:else}
-									<video controls class="mb-4 max-h-96 w-full rounded-lg bg-black">
-										<source src={post.videoPath} type="video/mp4" />
-										<track kind="captions" srclang="en" label="English" />
-										Your browser does not support the video tag.
-									</video>
-								{/if}
-							{/if}
-
-							{#if post.youtubeId}
-								<div class="relative mb-4 aspect-video">
-									<iframe
-										src="https://www.youtube.com/embed/{post.youtubeId}"
-										class="absolute inset-0 h-full w-full rounded-lg"
-										title="YouTube video"
-										allowfullscreen
-									></iframe>
-								</div>
-							{/if}
-
-							<!-- Poll -->
-							{#if post.poll?.options}
-								<div class="mb-4 rounded-lg border border-gray-200 p-4">
-									<h3 class="mb-4 text-lg font-medium text-gray-900">{post.poll.title}</h3>
-									{#each post.poll.options as opt, index (index)}
-										{@const isUserVoted = opt.votes?.includes(user?.uid)}
-										{@const voterNamesPromise = getVoterNames(opt.votes || [])}
-										<button
-											onclick={() => voteInPoll(post, index)}
-											disabled={!user}
-											class="mb-3 w-full rounded-lg border p-3 text-left transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 {isUserVoted
-												? 'border-blue-200 bg-blue-50'
-												: 'border-gray-200'}"
-										>
-											<div class="flex items-center justify-between">
-												<span class="font-medium text-gray-900">{opt.text}</span>
-												<div class="text-sm text-gray-600">
-													{#await voterNamesPromise}
-														<span class="text-gray-400">Loading...</span>
-													{:then voterNames}
-														{#if voterNames}
-															<span>{voterNames}</span>
-														{:else}
-															<span class="text-gray-400">No votes yet</span>
-														{/if}
-													{:catch}
-														<span class="text-gray-400">Error loading</span>
-													{/await}
-												</div>
-											</div>
-										</button>
-									{/each}
-
-									{#if user && getUserVote(post.poll) !== null}
-										{@const userVoteIndex = getUserVote(post.poll)}
-										{#if userVoteIndex !== null}
-											<div class="mt-3 border-t border-gray-200 pt-3">
-												<p class="text-sm font-medium text-blue-600">
-													You voted: {post.poll.options[userVoteIndex].text}
-												</p>
-											</div>
-										{/if}
+					{#if currentTheme === 'neo'}
+						<article class="rounded-lg overflow-hidden neo-glass neo-row-hover border border-white/10">
+							<div class="p-6 pb-4">
+								<div class="mb-4 flex items-center space-x-3">
+									{#if post.author?.avatarUrl}
+										<img src={post.author.avatarUrl} alt="" class="h-10 w-10 rounded-full border border-white/20" />
+									{:else}
+										<div class="h-10 w-10 rounded-full neo-glass border border-white/20"></div>
 									{/if}
+									<div>
+										<p class="text-sm font-medium text-slate-200">{post.author?.displayName}</p>
+										<p class="text-xs text-slate-400">
+											{#if post.createdAt}
+												{dayjs(
+													post.createdAt?.toDate ? post.createdAt.toDate() : post.createdAt
+												).fromNow()}
+											{/if}
+										</p>
+									</div>
 								</div>
-							{/if}
-						</div>
 
-						<div class="border-t border-gray-200 px-6 py-3">
-							<div class="flex items-center justify-between">
-								<div class="flex items-center space-x-6">
-									<button
-										onclick={() => toggleLike(post.id, isUserLiked(post))}
-										class="flex items-center space-x-2 text-sm transition-all duration-200 hover:scale-105 {currentTheme === 'neo' 
-											? 'text-slate-400 hover:text-magenta-400' 
-											: 'text-gray-500 hover:text-red-600'}"
-									>
-										<Heart class="h-5 w-5 {isUserLiked(post) ? (currentTheme === 'neo' ? 'fill-magenta-500 text-magenta-500' : 'fill-red-500 text-red-500') : ''}" />
-										<span
-											>{post.likes?.length || 0}
-											{(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span
-										>
-									</button>
-									<button
-										onclick={() => toggleComments(post.id)}
-										class="flex items-center space-x-2 text-sm transition-all duration-200 hover:scale-105 {currentTheme === 'neo' 
-											? 'text-slate-400 hover:text-cyan-400' 
-											: 'text-gray-500 hover:text-blue-600'}"
-									>
-										<MessageCircle class="h-5 w-5" />
-										<span
-											>{post.comments?.length || 0}
-											{(post.comments?.length || 0) === 1 ? 'comment' : 'comments'}</span
-										>
-									</button>
-								</div>
-								{#if user}
-									<button
-										onclick={() => deletePost(post.id)}
-										class="flex items-center space-x-1 text-sm transition-all duration-200 hover:scale-105 {currentTheme === 'neo' 
-											? 'text-slate-500 hover:text-red-400' 
-											: 'text-gray-400 hover:text-red-600'}"
-										title="Delete post"
-									>
-										<Trash2 class="h-4 w-4" />
-									</button>
+								{#if post.text}
+									<p class="mb-4 text-slate-200">{post.text}</p>
 								{/if}
-							</div>
 
-							<!-- Comments Section -->
-							{#if openComments.has(post.id)}
-								<div class="border-t border-gray-200 px-6 py-4">
-									<!-- Existing Comments -->
-									{#if post.comments && post.comments.length > 0}
-										<div class="mb-4 space-y-3">
-											{#each post.comments as comment (comment)}
-												<div class="text-sm">
-													<span class="font-medium text-gray-900">{comment.author}</span>
-													<span class="ml-2 text-gray-600">{comment.text}</span>
-													<div class="mt-1 text-xs text-gray-400">
-														{dayjs(
-															comment.createdAt?.toDate
-																? comment.createdAt.toDate()
-																: comment.createdAt
-														).fromNow()}
-													</div>
+								{#if post.imagePath}
+									{#if post.imagePaths && post.imagePaths.length > 1}
+										<div
+											class="mb-4 grid grid-cols-2 gap-2 {post.imagePaths.length === 3
+												? 'grid-cols-3'
+												: ''} {post.imagePaths.length > 4 ? 'grid-cols-3' : ''}"
+										>
+											{#each post.imagePaths.slice(0, 6) as imagePath, index (imagePath)}
+												<div class="relative">
+													<img
+														src={imagePath}
+														alt=""
+														class="max-h-[600px] w-full rounded-xl object-contain transition-all duration-300 hover:scale-105 bg-slate-800 border-2 border-cyan-400/30 hover:border-cyan-400/80 hover:shadow-lg shadow-cyan-400/30 hover:shadow-cyan-400/50 {index === 5 && post.imagePaths.length > 6 ? 'opacity-75' : ''}"
+													/>
+													{#if index === 5 && post.imagePaths.length > 6}
+														<div
+															class="bg-opacity-50 absolute inset-0 flex items-center justify-center rounded-lg bg-black"
+														>
+															<span class="text-lg font-bold text-white"
+																>+{post.imagePaths.length - 6}</span
+															>
+														</div>
+													{/if}
 												</div>
 											{/each}
 										</div>
+									{:else}
+										<img
+											src={post.imagePath}
+											alt=""
+											class="mb-4 max-h-[600px] w-full rounded-xl object-contain transition-all duration-300 hover:scale-105 bg-slate-800 border-2 border-cyan-400/30 hover:border-cyan-400/80 hover:shadow-lg shadow-cyan-400/30 hover:shadow-cyan-400/50"
+										/>
 									{/if}
+								{/if}
 
-									<!-- Add Comment Input -->
-									{#if user}
-										<div class="flex space-x-3">
-											<input
-												type="text"
-												placeholder="Write a comment..."
-												value={commentInputs.get(post.id) || ''}
-												oninput={(e) => {
-													const target = e.target as HTMLInputElement;
-													commentInputs.set(post.id, target.value);
-													commentInputs = new Map(commentInputs);
-												}}
-												onkeydown={(e) => {
-													if (e.key === 'Enter' && !e.shiftKey) {
-														e.preventDefault();
-														addComment(post.id);
-													}
-												}}
-												class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
-											/>
+								{#if post.videoPath}
+									{#if VideoPlayerComponent}
+										{@const DynamicVideoPlayer = VideoPlayerComponent}
+										<DynamicVideoPlayer src={post.videoPath} className="mb-4" />
+									{:else}
+										<video controls class="mb-4 max-h-96 w-full rounded-lg bg-black">
+											<source src={post.videoPath} type="video/mp4" />
+											<track kind="captions" srclang="en" label="English" />
+											Your browser does not support the video tag.
+										</video>
+									{/if}
+								{/if}
+
+								{#if post.youtubeId}
+									<div class="relative mb-4 aspect-video">
+										<iframe
+											src="https://www.youtube.com/embed/{post.youtubeId}"
+											class="absolute inset-0 h-full w-full rounded-lg"
+											title="YouTube video"
+											allowfullscreen
+										></iframe>
+									</div>
+								{/if}
+
+								<!-- Poll -->
+								{#if post.poll?.options}
+									<div class="mb-4 rounded-lg neo-glass border border-white/20 p-4">
+										<h3 class="mb-4 text-lg font-medium neo-gradient-text">{post.poll.title}</h3>
+										{#each post.poll.options as opt, index (index)}
+											{@const isUserVoted = opt.votes?.includes(user?.uid)}
+											{@const voterNamesPromise = getVoterNames(opt.votes || [])}
 											<button
-												onclick={() => addComment(post.id)}
-												disabled={!commentInputs.get(post.id)?.trim()}
-												class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+												onclick={() => voteInPoll(post, index)}
+												disabled={!user}
+												class="mb-3 w-full rounded-lg border p-3 text-left transition-colors neo-row-hover {isUserVoted ? 'border-cyan-400/50 bg-cyan-500/20' : 'border-white/20'} disabled:cursor-not-allowed disabled:opacity-50"
 											>
-												Post
+												<div class="flex items-center justify-between">
+													<span class="font-medium text-slate-200">{opt.text}</span>
+													<div class="text-sm text-slate-400">
+														{#await voterNamesPromise}
+															<span class="text-slate-500">Loading...</span>
+														{:then voterNames}
+															{#if voterNames}
+																<span>{voterNames}</span>
+															{:else}
+																<span class="text-slate-500">No votes yet</span>
+															{/if}
+														{:catch}
+															<span class="text-slate-500">Error loading</span>
+														{/await}
+													</div>
+												</div>
 											</button>
-										</div>
+										{/each}
+
+										{#if user && getUserVote(post.poll) !== null}
+											{@const userVoteIndex = getUserVote(post.poll)}
+											{#if userVoteIndex !== null}
+												<div class="mt-3 border-t border-white/20 pt-3">
+													<p class="text-sm font-medium text-cyan-400">
+														You voted: {post.poll.options[userVoteIndex].text}
+													</p>
+												</div>
+											{/if}
+										{/if}
+									</div>
+								{/if}
+							</div>
+
+							<div class="border-t border-white/20 px-6 py-3">
+								<div class="flex items-center justify-between">
+									<div class="flex items-center space-x-6">
+										<GlassChip 
+											onclick={() => toggleLike(post.id, isUserLiked(post))}
+											size="small"
+											variant={isUserLiked(post) ? 'accent' : 'default'}
+										>
+											<Heart class="h-4 w-4 {isUserLiked(post) ? 'fill-magenta-500 text-magenta-500' : 'text-slate-400'}" />
+											<span class="text-xs">{post.likes?.length || 0} {(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span>
+										</GlassChip>
+										<GlassChip 
+											onclick={() => toggleComments(post.id)}
+											size="small"
+										>
+											<MessageCircle class="h-4 w-4 text-slate-400" />
+											<span class="text-xs">{post.comments?.length || 0} {(post.comments?.length || 0) === 1 ? 'comment' : 'comments'}</span>
+										</GlassChip>
+									</div>
+									{#if user}
+										<GlassChip 
+											onclick={() => deletePost(post.id)}
+											size="small"
+										>
+											<Trash2 class="h-4 w-4 text-red-400" />
+										</GlassChip>
 									{/if}
 								</div>
-							{/if}
-						</div>
-					</article>
+
+								<!-- Comments Section -->
+								{#if openComments.has(post.id)}
+									<div class="border-t border-white/20 px-6 py-4">
+										<!-- Existing Comments -->
+										{#if post.comments && post.comments.length > 0}
+											<div class="mb-4 space-y-3">
+												{#each post.comments as comment (comment)}
+													<div class="text-sm">
+														<span class="font-medium text-slate-200">{comment.author}</span>
+														<span class="ml-2 text-slate-300">{comment.text}</span>
+														<div class="mt-1 text-xs text-slate-500">
+															{dayjs(
+																comment.createdAt?.toDate
+																	? comment.createdAt.toDate()
+																	: comment.createdAt
+															).fromNow()}
+														</div>
+													</div>
+												{/each}
+											</div>
+										{/if}
+
+										<!-- Add Comment Input -->
+										{#if user}
+											<div class="flex space-x-3">
+												<input
+													type="text"
+													placeholder="Write a comment..."
+													value={commentInputs.get(post.id) || ''}
+													oninput={(e) => {
+														const target = e.target as HTMLInputElement;
+														commentInputs.set(post.id, target.value);
+														commentInputs = new Map(commentInputs);
+													}}
+													onkeydown={(e) => {
+														if (e.key === 'Enter' && !e.shiftKey) {
+															e.preventDefault();
+															addComment(post.id);
+														}
+													}}
+													class="flex-1 rounded-lg border px-3 py-2 text-sm focus:ring-2 neo-glass border-white/20 text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-cyan-400/50"
+												/>
+												<GlassChip 
+													onclick={() => addComment(post.id)}
+													size="small"
+													variant="accent"
+												>
+													<span class="text-xs font-medium">Post</span>
+												</GlassChip>
+											</div>
+										{/if}
+									</div>
+								{/if}
+							</div>
+						</article>
+					{:else}
+						<article class="rounded-lg overflow-hidden bg-white shadow">
+							<div class="p-6 pb-4">
+								<div class="mb-4 flex items-center space-x-3">
+									{#if post.author?.avatarUrl}
+										<img src={post.author.avatarUrl} alt="" class="h-10 w-10 rounded-full" />
+									{:else}
+										<div class="h-10 w-10 rounded-full bg-gray-300"></div>
+									{/if}
+									<div>
+										<p class="text-sm font-medium text-gray-900">{post.author?.displayName}</p>
+										<p class="text-xs text-gray-500">
+											{#if post.createdAt}
+												{dayjs(
+													post.createdAt?.toDate ? post.createdAt.toDate() : post.createdAt
+												).fromNow()}
+											{/if}
+										</p>
+									</div>
+								</div>
+
+								{#if post.text}
+									<p class="mb-4 text-gray-900">{post.text}</p>
+								{/if}
+
+								{#if post.imagePath}
+									{#if post.imagePaths && post.imagePaths.length > 1}
+										<div
+											class="mb-4 grid grid-cols-2 gap-2 {post.imagePaths.length === 3
+												? 'grid-cols-3'
+												: ''} {post.imagePaths.length > 4 ? 'grid-cols-3' : ''}"
+										>
+											{#each post.imagePaths.slice(0, 6) as imagePath, index (imagePath)}
+												<div class="relative">
+													<img
+														src={imagePath}
+														alt=""
+														class="max-h-[600px] w-full rounded-xl object-contain transition-all duration-300 hover:scale-105 bg-gray-100 {index === 5 && post.imagePaths.length > 6 ? 'opacity-75' : ''}"
+													/>
+													{#if index === 5 && post.imagePaths.length > 6}
+														<div
+															class="bg-opacity-50 absolute inset-0 flex items-center justify-center rounded-lg bg-black"
+														>
+															<span class="text-lg font-bold text-white"
+																>+{post.imagePaths.length - 6}</span
+															>
+														</div>
+													{/if}
+												</div>
+											{/each}
+										</div>
+									{:else}
+										<img
+											src={post.imagePath}
+											alt=""
+											class="mb-4 max-h-[600px] w-full rounded-xl object-contain transition-all duration-300 hover:scale-105 bg-gray-100"
+										/>
+									{/if}
+								{/if}
+
+								{#if post.videoPath}
+									{#if VideoPlayerComponent}
+										{@const DynamicVideoPlayer = VideoPlayerComponent}
+										<DynamicVideoPlayer src={post.videoPath} className="mb-4" />
+									{:else}
+										<video controls class="mb-4 max-h-96 w-full rounded-lg bg-black">
+											<source src={post.videoPath} type="video/mp4" />
+											<track kind="captions" srclang="en" label="English" />
+											Your browser does not support the video tag.
+										</video>
+									{/if}
+								{/if}
+
+								{#if post.youtubeId}
+									<div class="relative mb-4 aspect-video">
+										<iframe
+											src="https://www.youtube.com/embed/{post.youtubeId}"
+											class="absolute inset-0 h-full w-full rounded-lg"
+											title="YouTube video"
+											allowfullscreen
+										></iframe>
+									</div>
+								{/if}
+
+								<!-- Poll -->
+								{#if post.poll?.options}
+									<div class="mb-4 rounded-lg border border-gray-200 p-4">
+										<h3 class="mb-4 text-lg font-medium text-gray-900">{post.poll.title}</h3>
+										{#each post.poll.options as opt, index (index)}
+											{@const isUserVoted = opt.votes?.includes(user?.uid)}
+											{@const voterNamesPromise = getVoterNames(opt.votes || [])}
+											<button
+												onclick={() => voteInPoll(post, index)}
+												disabled={!user}
+												class="mb-3 w-full rounded-lg border p-3 text-left transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 {isUserVoted
+													? 'border-blue-200 bg-blue-50'
+													: 'border-gray-200'}"
+											>
+												<div class="flex items-center justify-between">
+													<span class="font-medium text-gray-900">{opt.text}</span>
+													<div class="text-sm text-gray-600">
+														{#await voterNamesPromise}
+															<span class="text-gray-400">Loading...</span>
+														{:then voterNames}
+															{#if voterNames}
+																<span>{voterNames}</span>
+															{:else}
+																<span class="text-gray-400">No votes yet</span>
+															{/if}
+														{:catch}
+															<span class="text-gray-400">Error loading</span>
+														{/await}
+													</div>
+												</div>
+											</button>
+										{/each}
+
+										{#if user && getUserVote(post.poll) !== null}
+											{@const userVoteIndex = getUserVote(post.poll)}
+											{#if userVoteIndex !== null}
+												<div class="mt-3 border-t border-gray-200 pt-3">
+													<p class="text-sm font-medium text-blue-600">
+														You voted: {post.poll.options[userVoteIndex].text}
+													</p>
+												</div>
+											{/if}
+										{/if}
+									</div>
+								{/if}
+							</div>
+
+							<div class="border-t border-gray-200 px-6 py-3">
+								<div class="flex items-center justify-between">
+									<div class="flex items-center space-x-6">
+										<button
+											onclick={() => toggleLike(post.id, isUserLiked(post))}
+											class="flex items-center space-x-2 text-sm transition-all duration-200 hover:scale-105 text-gray-500 hover:text-red-600"
+										>
+											<Heart class="h-5 w-5 {isUserLiked(post) ? 'fill-red-500 text-red-500' : ''}" />
+											<span
+												>{post.likes?.length || 0}
+												{(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span
+											>
+										</button>
+										<button
+											onclick={() => toggleComments(post.id)}
+											class="flex items-center space-x-2 text-sm transition-all duration-200 hover:scale-105 text-gray-500 hover:text-blue-600"
+										>
+											<MessageCircle class="h-5 w-5" />
+											<span
+												>{post.comments?.length || 0}
+												{(post.comments?.length || 0) === 1 ? 'comment' : 'comments'}</span
+											>
+										</button>
+									</div>
+									{#if user}
+										<button
+											onclick={() => deletePost(post.id)}
+											class="flex items-center space-x-1 text-sm transition-all duration-200 hover:scale-105 text-gray-400 hover:text-red-600"
+											title="Delete post"
+										>
+											<Trash2 class="h-4 w-4" />
+										</button>
+									{/if}
+								</div>
+
+								<!-- Comments Section -->
+								{#if openComments.has(post.id)}
+									<div class="border-t border-gray-200 px-6 py-4">
+										<!-- Existing Comments -->
+										{#if post.comments && post.comments.length > 0}
+											<div class="mb-4 space-y-3">
+												{#each post.comments as comment (comment)}
+													<div class="text-sm">
+														<span class="font-medium text-gray-900">{comment.author}</span>
+														<span class="ml-2 text-gray-600">{comment.text}</span>
+														<div class="mt-1 text-xs text-gray-400">
+															{dayjs(
+																comment.createdAt?.toDate
+																	? comment.createdAt.toDate()
+																	: comment.createdAt
+															).fromNow()}
+														</div>
+													</div>
+												{/each}
+											</div>
+										{/if}
+
+										<!-- Add Comment Input -->
+										{#if user}
+											<div class="flex space-x-3">
+												<input
+													type="text"
+													placeholder="Write a comment..."
+													value={commentInputs.get(post.id) || ''}
+													oninput={(e) => {
+														const target = e.target as HTMLInputElement;
+														commentInputs.set(post.id, target.value);
+														commentInputs = new Map(commentInputs);
+													}}
+													onkeydown={(e) => {
+														if (e.key === 'Enter' && !e.shiftKey) {
+															e.preventDefault();
+															addComment(post.id);
+														}
+													}}
+													class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+												/>
+												<button
+													onclick={() => addComment(post.id)}
+													disabled={!commentInputs.get(post.id)?.trim()}
+													class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+												>
+													Post
+												</button>
+											</div>
+										{/if}
+									</div>
+								{/if}
+							</div>
+						</article>
+					{/if}
 				{/each}
 			</div>
 		{/if}

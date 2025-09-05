@@ -20,6 +20,15 @@ export class ParticleSystem {
 		this.createContainer(containerId);
 	}
 
+	// Public getters for accessing private properties
+	get hasContainer(): boolean {
+		return this.container !== null;
+	}
+
+	get running(): boolean {
+		return this.isRunning;
+	}
+
 	private createContainer(id: string) {
 		this.container = document.getElementById(id);
 		if (!this.container) {
@@ -168,7 +177,7 @@ export function clearParticles() {
 // Event-driven particle burst (replaces continuous animation)
 export function triggerParticleBurst(count = 10, duration = 4000) {
 	const system = getParticleSystem();
-	if (!system.container) return;
+	if (!system.hasContainer) return;
 
 	// Add multiple particles at once
 	for (let i = 0; i < count; i++) {
@@ -176,7 +185,7 @@ export function triggerParticleBurst(count = 10, duration = 4000) {
 	}
 
 	// Start animation if not already running
-	if (!system.isRunning) {
+	if (!system.running) {
 		system.start();
 	}
 

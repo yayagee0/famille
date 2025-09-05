@@ -3,6 +3,8 @@
 	import { islamicQuestions } from '$lib/data/islamicQuestions';
 	import QuestionCard from '$lib/components/QuestionCard.svelte';
 	import KnowledgeTree from '$lib/components/KnowledgeTree.svelte';
+	import GlassCard from '$lib/themes/neo/components/GlassCard.svelte';
+	import { themeStore } from '$lib/themes/neo';
 	import { auth, db, getUserProfile } from '$lib/firebase';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import {
@@ -40,6 +42,15 @@
 	let user = $state(auth.currentUser);
 	let userNickname = $state<string>('');
 	let loading = $state(true);
+	let currentTheme = $state('default');
+
+	// Subscribe to theme changes
+	$effect(() => {
+		const unsubscribe = themeStore.subscribe((theme) => {
+			currentTheme = theme;
+		});
+		return unsubscribe;
+	});
 
 	// State management using Svelte 5 runes
 	let allQuestions = $state<Question[]>(islamicQuestions as Question[]);
@@ -222,14 +233,16 @@
 		<!-- Header -->
 		<div class="text-center">
 			<div
-				class="mb-4 inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-green-600 to-teal-500 px-6 py-4 text-white shadow-sm"
+				class="mb-4 inline-flex items-center gap-3 rounded-2xl px-6 py-4 text-white shadow-sm {currentTheme === 'neo' 
+					? 'neo-glass border border-white/20' 
+					: 'bg-gradient-to-r from-green-600 to-teal-500'}"
 			>
 				<span class="text-3xl">🕌</span>
-				<h1 class="text-2xl font-bold">Islam – Our Identity</h1>
+				<h1 class="text-2xl font-bold {currentTheme === 'neo' ? 'neo-gradient-text' : ''}">Islam – Our Identity</h1>
 			</div>
-			<p class="text-gray-600">Learn about our beautiful faith through questions and reflections</p>
+			<p class="{currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-600'}">Learn about our beautiful faith through questions and reflections</p>
 			{#if userNickname}
-				<p class="mt-2 text-sm font-medium text-green-700">
+				<p class="mt-2 text-sm font-medium {currentTheme === 'neo' ? 'text-lime-400' : 'text-green-700'}">
 					Welcome back, {userNickname}! 🌟
 				</p>
 			{/if}
@@ -238,9 +251,15 @@
 		<!-- Active Questions Section -->
 		{#if activeQuestions.length > 0}
 			<div class="space-y-6">
-				<h2 class="text-xl font-semibold text-gray-800">Active Questions</h2>
+				<h2 class="text-xl font-semibold {currentTheme === 'neo' ? 'neo-gradient-text' : 'text-gray-800'}">Active Questions</h2>
 				{#each activeQuestions as question (question.id)}
-					<QuestionCard {question} onAnswered={() => handleQuestionAnswered(question)} />
+					{#if currentTheme === 'neo'}
+						<GlassCard header={`${categoryIcons[question.category] || '📚'} ${question.category}`} glow={true}>
+							<QuestionCard {question} onAnswered={() => handleQuestionAnswered(question)} />
+						</GlassCard>
+					{:else}
+						<QuestionCard {question} onAnswered={() => handleQuestionAnswered(question)} />
+					{/if}
 				{/each}
 			</div>
 		{/if}
@@ -250,7 +269,9 @@
 			<div class="text-center">
 				<button
 					onclick={showMoreQuestions}
-					class="rounded-2xl bg-gradient-to-r from-green-600 to-teal-500 px-6 py-3 font-medium text-white shadow-sm transition-all hover:from-green-700 hover:to-teal-600 hover:shadow-md"
+					class="rounded-2xl px-6 py-3 font-medium text-white shadow-sm transition-all {currentTheme === 'neo' 
+						? 'neo-button border border-lime-400/50 bg-lime-500/20 text-lime-400 hover:bg-lime-500/30' 
+						: 'bg-gradient-to-r from-green-600 to-teal-500 hover:from-green-700 hover:to-teal-600 hover:shadow-md'}"
 				>
 					Show More Questions
 				</button>
@@ -261,33 +282,50 @@
 		{#if answeredQuestions().length > 0}
 			<div class="space-y-4">
 				<div class="flex items-center justify-between">
-					<h2 class="text-xl font-semibold text-gray-800">What I Know Now</h2>
+					<h2 class="text-xl font-semibold {currentTheme === 'neo' ? 'neo-gradient-text' : 'text-gray-800'}">What I Know Now</h2>
 					<button
 						onclick={resetProgress}
-						class="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-700 transition-colors hover:bg-red-200"
+						class="rounded-lg px-3 py-1 text-sm font-medium transition-colors {currentTheme === 'neo' 
+							? 'neo-glass border border-red-400/30 text-red-400 hover:bg-red-500/20' 
+							: 'bg-red-100 text-red-700 hover:bg-red-200'}"
 					>
 						Reset Progress
 					</button>
 				</div>
-				<KnowledgeTree
-					groupedAnsweredQuestions={groupedAnsweredQuestions()}
-					{categoryIcons}
-					{justAddedId}
-					onAnimationComplete={() => {
-						justAddedId = null;
-					}}
-				/>
+				{#if currentTheme === 'neo'}
+					<GlassCard header="🌟 Knowledge Tree" glow={true}>
+						<KnowledgeTree
+							groupedAnsweredQuestions={groupedAnsweredQuestions()}
+							{categoryIcons}
+							{justAddedId}
+							onAnimationComplete={() => {
+								justAddedId = null;
+							}}
+						/>
+					</GlassCard>
+				{:else}
+					<KnowledgeTree
+						groupedAnsweredQuestions={groupedAnsweredQuestions()}
+						{categoryIcons}
+						{justAddedId}
+						onAnimationComplete={() => {
+							justAddedId = null;
+						}}
+					/>
+				{/if}
 			</div>
 		{/if}
 
 		<!-- Empty state when no questions are active -->
 		{#if activeQuestions.length === 0 && !hasMoreQuestions()}
-			<div class="rounded-2xl bg-gradient-to-r from-green-50 to-teal-50 p-8 text-center">
+			<div class="rounded-2xl p-8 text-center {currentTheme === 'neo' 
+				? 'neo-glass border border-lime-400/30' 
+				: 'bg-gradient-to-r from-green-50 to-teal-50'}">
 				<div class="mb-4 text-4xl">🎉</div>
-				<h3 class="mb-2 text-xl font-semibold text-gray-800">
+				<h3 class="mb-2 text-xl font-semibold {currentTheme === 'neo' ? 'neo-gradient-text' : 'text-gray-800'}">
 					Mashaallah! You've completed all questions!
 				</h3>
-				<p class="text-gray-600">Check your knowledge tree below to review what you've learned.</p>
+				<p class="{currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-600'}">Check your knowledge tree below to review what you've learned.</p>
 			</div>
 		{/if}
 	{/if}
