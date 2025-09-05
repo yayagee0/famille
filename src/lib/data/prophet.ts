@@ -25,7 +25,12 @@ export const prophetQuestions = [
     category: "Prophet",
     question_en: "How did Prophet Muhammad ﷺ treat children?",
     question_ar: "كيف كان النبي محمد ﷺ يعامل الأطفال؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "He smiled, played with them, and showed mercy",
+      "He ignored them",
+      "He was harsh with them"
+    ],
     feedback_en: "He smiled, played with them, and showed mercy.",
     feedback_ar: "وَمَا أَرْسَلْنَاكَ إِلَّا رَحْمَةً لِّلْعَالَمِينَ",
     reference: "Qur’an 21:107"
@@ -57,7 +62,12 @@ export const prophetQuestions = [
     category: "Prophet",
     question_en: "What food did the Prophet ﷺ like?",
     question_ar: "ما هو الطعام الذي كان يحبه النبي ﷺ؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "He liked simple foods such as dates, milk, and honey",
+      "He liked only meat",
+      "He only ate feasts"
+    ],
     feedback_en: "He liked simple foods such as dates, milk, and honey.",
     feedback_ar: "النبي ﷺ أحب التمر واللبن والعسل",
     reference: "Hadith – Bukhari"
@@ -78,7 +88,12 @@ export const prophetQuestions = [
     category: "Prophet",
     question_en: "How did the Prophet ﷺ treat animals?",
     question_ar: "كيف كان النبي ﷺ يعامل الحيوانات؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "He was gentle with animals and told us to care for them",
+      "He ignored animals",
+      "He was cruel to animals"
+    ],
     feedback_en: "He was gentle with animals and told us to care for them.",
     feedback_ar: "في كل كبد رطبة أجر",
     reference: "Hadith – Bukhari & Muslim"
@@ -88,7 +103,12 @@ export const prophetQuestions = [
     category: "Prophet",
     question_en: "What did the Prophet ﷺ teach about neighbors?",
     question_ar: "ماذا علّم النبي ﷺ عن الجيران؟",
-    format: "open",
+    format: "mcq",
+    options: [
+      "To be kind and generous to neighbors",
+      "To ignore neighbors",
+      "To only care for family"
+    ],
     feedback_en: "He taught us to be kind and generous to neighbors.",
     feedback_ar: "ما زال جبريل يوصيني بالجار حتى ظننت أنه سيورثه",
     reference: "Hadith – Bukhari"
