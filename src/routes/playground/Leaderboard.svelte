@@ -42,7 +42,7 @@
 			// Get all family members from users collection
 			const usersQuery = collection(db, 'users');
 			const usersSnapshot = await getDocs(usersQuery);
-			
+
 			const entries: LeaderboardEntry[] = [];
 			const gameIds = getAllGameIds();
 
@@ -67,7 +67,7 @@
 				for (const gameId of gameIds) {
 					try {
 						const gameResultDoc = await getDoc(doc(db, 'games', gameId, 'results', userUid));
-						
+
 						if (gameResultDoc.exists()) {
 							const gameData = gameResultDoc.data();
 							entry.gameStats[gameId] = {
@@ -78,7 +78,10 @@
 							};
 
 							// Track most recent update for tie-breaking
-							if (!mostRecentUpdate || (gameData.updatedAt && gameData.updatedAt.toDate() > mostRecentUpdate.toDate())) {
+							if (
+								!mostRecentUpdate ||
+								(gameData.updatedAt && gameData.updatedAt.toDate() > mostRecentUpdate.toDate())
+							) {
 								mostRecentUpdate = gameData.updatedAt;
 							}
 
@@ -122,7 +125,7 @@
 				if (a.totalScore !== b.totalScore) {
 					return b.totalScore - a.totalScore;
 				}
-				
+
 				// Tie-breaker: most recent update wins
 				if (a.lastUpdated && b.lastUpdated) {
 					return b.lastUpdated.toDate() - a.lastUpdated.toDate();
@@ -131,7 +134,7 @@
 				} else if (b.lastUpdated) {
 					return 1;
 				}
-				
+
 				return 0;
 			});
 
@@ -197,7 +200,7 @@
 
 		<div class="flex items-center space-x-2">
 			<TrendingUp class="h-4 w-4 text-indigo-600" />
-			<span class="text-sm text-indigo-600 font-medium">Live Rankings</span>
+			<span class="text-sm font-medium text-indigo-600">Live Rankings</span>
 		</div>
 	</div>
 
@@ -209,8 +212,8 @@
 	{:else if leaderboard.length === 0}
 		<!-- Empty State -->
 		<div class="py-8 text-center">
-			<Trophy class="mx-auto h-12 w-12 text-gray-400 mb-4" />
-			<h4 class="text-lg font-medium text-gray-900 mb-2">No games played yet</h4>
+			<Trophy class="mx-auto mb-4 h-12 w-12 text-gray-400" />
+			<h4 class="mb-2 text-lg font-medium text-gray-900">No games played yet</h4>
 			<p class="text-gray-500">Start playing games to see rankings!</p>
 		</div>
 	{:else}
@@ -245,7 +248,9 @@
 											alt={member.displayName}
 										/>
 									{:else}
-										<div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+										<div
+											class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300"
+										>
 											<span class="text-sm font-medium text-gray-600">
 												{member.displayName.charAt(0).toUpperCase()}
 											</span>
@@ -253,9 +258,7 @@
 									{/if}
 									<div>
 										<div class="font-semibold text-gray-900">{member.displayName}</div>
-										<div class="text-sm text-gray-500">
-											Tap to see game breakdown
-										</div>
+										<div class="text-sm text-gray-500">Tap to see game breakdown</div>
 									</div>
 								</div>
 							</div>
@@ -293,7 +296,7 @@
 												{gameData.wins || 0}W / {gameData.losses || 0}L
 											{/if}
 											<span class="text-gray-400">
-												(+{((gameData.score || 0) + (gameData.wins || 0) * 10)} total)
+												(+{(gameData.score || 0) + (gameData.wins || 0) * 10} total)
 											</span>
 										</div>
 									</div>
@@ -308,7 +311,7 @@
 		<!-- Scoring Info -->
 		<div class="mt-6 rounded-lg bg-indigo-50 p-4">
 			<div class="flex items-start space-x-2">
-				<TrendingUp class="h-5 w-5 text-indigo-600 mt-0.5" />
+				<TrendingUp class="mt-0.5 h-5 w-5 text-indigo-600" />
 				<div>
 					<h4 class="text-sm font-medium text-indigo-900">How Scoring Works</h4>
 					<p class="mt-1 text-xs text-indigo-700">

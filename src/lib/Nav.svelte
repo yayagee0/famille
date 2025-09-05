@@ -101,7 +101,7 @@
 					<div class="px-2">
 						<ThemeToggle variant="minimal" />
 					</div>
-					
+
 					{#if user}
 						<div
 							class="flex items-center gap-x-4 px-2 py-3 text-sm leading-6 font-semibold text-gray-900"
@@ -149,10 +149,10 @@
 		<Menu class="h-6 w-6 transition-transform duration-200 hover:rotate-90" />
 	</button>
 	<div class="flex-1 text-sm leading-6 font-semibold text-gray-900">Family Hub</div>
-	
+
 	<!-- Theme toggle in mobile header -->
 	<ThemeToggle variant="minimal" />
-	
+
 	{#if user && user.photoURL}
 		<img
 			class="h-8 w-8 rounded-full bg-gray-50"
@@ -217,7 +217,7 @@
 								<div class="px-2">
 									<ThemeToggle variant="minimal" />
 								</div>
-								
+
 								{#if user}
 									<div
 										class="flex items-center gap-x-4 px-2 py-3 text-sm leading-6 font-semibold text-gray-900"

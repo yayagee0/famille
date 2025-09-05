@@ -1,10 +1,6 @@
 <script lang="ts">
 	import { auth, db } from '$lib/firebase';
-	import {
-		addDoc,
-		collection,
-		serverTimestamp
-	} from 'firebase/firestore';
+	import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 	import { RotateCcw, Trophy, Bot, User } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { playSound } from '$lib/sound';
@@ -186,8 +182,6 @@
 			console.error('Error saving game:', error);
 		}
 	}
-
-
 
 	function getCellClass(index: number) {
 		const baseClass =

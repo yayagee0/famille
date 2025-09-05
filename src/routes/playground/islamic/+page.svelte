@@ -40,17 +40,17 @@
 	let user = $state(auth.currentUser);
 	let userNickname = $state<string>('');
 	let loading = $state(true);
-	
+
 	// State management using Svelte 5 runes
 	let allQuestions = $state<Question[]>(islamicQuestions as Question[]);
 	let answeredIds = $state<Set<string>>(new Set());
 	let activeQuestions = $state<Question[]>([]);
 	let allUnansweredQuestions = $state<Question[]>([]);
 	let justAddedId = $state<string | null>(null); // Track newly added answers for animation
-	
+
 	// Derive answered questions from answeredIds and original questions
 	const answeredQuestions = $derived(() => {
-		return allQuestions.filter(q => answeredIds.has(q.id));
+		return allQuestions.filter((q) => answeredIds.has(q.id));
 	});
 
 	// Initialize with first 3 questions - removed $effect to prevent infinite loop
@@ -74,18 +74,17 @@
 				orderBy('answeredAt', 'desc')
 			);
 			const progressSnapshot = await getDocs(progressQuery);
-			
-			const progressDocs = progressSnapshot.docs.map(doc => ({
+
+			const progressDocs = progressSnapshot.docs.map((doc) => ({
 				id: doc.id,
 				...doc.data()
 			})) as ProgressDoc[];
 
 			// Update answered IDs
-			answeredIds = new Set(progressDocs.map(doc => doc.id));
-			
+			answeredIds = new Set(progressDocs.map((doc) => doc.id));
+
 			// Filter questions to get unanswered ones
 			updateQuestionLists();
-			
 		} catch (error) {
 			console.error('Failed to load user progress:', error);
 		} finally {
@@ -95,7 +94,7 @@
 
 	// Update question lists based on answered IDs
 	function updateQuestionLists() {
-		allUnansweredQuestions = allQuestions.filter(q => !answeredIds.has(q.id));
+		allUnansweredQuestions = allQuestions.filter((q) => !answeredIds.has(q.id));
 		activeQuestions = allUnansweredQuestions.slice(0, 3);
 	}
 
@@ -110,19 +109,15 @@
 				answeredAt: serverTimestamp()
 			};
 
-			await addDoc(
-				collection(db, 'users', user.uid, 'islamicProgress'),
-				progressDoc
-			);
+			await addDoc(collection(db, 'users', user.uid, 'islamicProgress'), progressDoc);
 
 			// Update local state
 			answeredIds.add(question.id);
 			answeredIds = new Set(answeredIds); // Trigger reactivity
 			updateQuestionLists();
-			
+
 			// Set justAddedId for animation
 			justAddedId = question.id;
-
 		} catch (error) {
 			console.error('Failed to save progress:', error);
 		}
@@ -131,31 +126,28 @@
 	// Reset all progress
 	async function resetProgress() {
 		if (!user?.uid) return;
-		
+
 		try {
 			const progressQuery = query(collection(db, 'users', user.uid, 'islamicProgress'));
 			const progressSnapshot = await getDocs(progressQuery);
-			
-			const deletePromises = progressSnapshot.docs.map(doc => 
-				deleteDoc(doc.ref)
-			);
-			
+
+			const deletePromises = progressSnapshot.docs.map((doc) => deleteDoc(doc.ref));
+
 			await Promise.all(deletePromises);
-			
+
 			// Remove localStorage key islamicProgress (defensive programming)
 			if (typeof localStorage !== 'undefined') {
 				localStorage.removeItem('islamicProgress');
 			}
-			
+
 			// Reset local state
 			answeredIds.clear();
 			answeredIds = new Set(answeredIds); // Trigger reactivity
 			justAddedId = null; // Reset animation state
-			
+
 			// Reload fresh data from islamicQuestions
-			allQuestions = [...islamicQuestions as Question[]];
+			allQuestions = [...(islamicQuestions as Question[])];
 			updateQuestionLists();
-			
 		} catch (error) {
 			console.error('Failed to reset progress:', error);
 		}
@@ -168,23 +160,23 @@
 
 	function showMoreQuestions() {
 		const newQuestions = allUnansweredQuestions
-			.filter(q => !activeQuestions.find(aq => aq.id === q.id))
+			.filter((q) => !activeQuestions.find((aq) => aq.id === q.id))
 			.slice(0, 3);
-		
+
 		activeQuestions = [...activeQuestions, ...newQuestions];
 	}
 
 	// Check if there are more questions to load
 	const hasMoreQuestions = $derived(() => {
-		const activeIds = new Set(activeQuestions.map(q => q.id));
-		return allUnansweredQuestions.some(q => !activeIds.has(q.id));
+		const activeIds = new Set(activeQuestions.map((q) => q.id));
+		return allUnansweredQuestions.some((q) => !activeIds.has(q.id));
 	});
 
 	// Group answered questions by category for the knowledge tree
 	const groupedAnsweredQuestions = $derived(() => {
 		const groups: Record<string, Question[]> = {};
 		const answered = answeredQuestions();
-		answered.forEach(q => {
+		answered.forEach((q) => {
 			if (!groups[q.category]) {
 				groups[q.category] = [];
 			}
@@ -209,35 +201,35 @@
 
 	// Category icons mapping
 	const categoryIcons: Record<string, string> = {
-		'Allah': '🌙',
-		'Prophet': '❤️',
-		'Qur\'an': '📖',
-		'Prayer': '🙏',
+		Allah: '🌙',
+		Prophet: '❤️',
+		"Qur'an": '📖',
+		Prayer: '🙏',
 		'Life & Death': '🌱',
-		'Akhlaq': '🤲',
-		'Identity': '🕌'
+		Akhlaq: '🤲',
+		Identity: '🕌'
 	};
 </script>
 
 <div class="mx-auto max-w-2xl space-y-8 p-4">
 	<!-- Loading State -->
 	{#if loading}
-		<div class="text-center py-8">
-			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+		<div class="py-8 text-center">
+			<div class="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-green-600"></div>
 			<p class="mt-2 text-gray-600">Loading your progress...</p>
 		</div>
 	{:else}
 		<!-- Header -->
 		<div class="text-center">
-			<div class="mb-4 inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-green-600 to-teal-500 px-6 py-4 text-white shadow-sm">
+			<div
+				class="mb-4 inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-green-600 to-teal-500 px-6 py-4 text-white shadow-sm"
+			>
 				<span class="text-3xl">🕌</span>
 				<h1 class="text-2xl font-bold">Islam – Our Identity</h1>
 			</div>
-			<p class="text-gray-600">
-				Learn about our beautiful faith through questions and reflections
-			</p>
+			<p class="text-gray-600">Learn about our beautiful faith through questions and reflections</p>
 			{#if userNickname}
-				<p class="mt-2 text-sm text-green-700 font-medium">
+				<p class="mt-2 text-sm font-medium text-green-700">
 					Welcome back, {userNickname}! 🌟
 				</p>
 			{/if}
@@ -248,10 +240,7 @@
 			<div class="space-y-6">
 				<h2 class="text-xl font-semibold text-gray-800">Active Questions</h2>
 				{#each activeQuestions as question (question.id)}
-					<QuestionCard 
-						{question} 
-						onAnswered={() => handleQuestionAnswered(question)} 
-					/>
+					<QuestionCard {question} onAnswered={() => handleQuestionAnswered(question)} />
 				{/each}
 			</div>
 		{/if}
@@ -261,7 +250,7 @@
 			<div class="text-center">
 				<button
 					onclick={showMoreQuestions}
-					class="rounded-2xl bg-gradient-to-r from-green-600 to-teal-500 px-6 py-3 font-medium text-white shadow-sm transition-all hover:shadow-md hover:from-green-700 hover:to-teal-600"
+					class="rounded-2xl bg-gradient-to-r from-green-600 to-teal-500 px-6 py-3 font-medium text-white shadow-sm transition-all hover:from-green-700 hover:to-teal-600 hover:shadow-md"
 				>
 					Show More Questions
 				</button>
@@ -275,16 +264,18 @@
 					<h2 class="text-xl font-semibold text-gray-800">What I Know Now</h2>
 					<button
 						onclick={resetProgress}
-						class="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200 transition-colors"
+						class="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-700 transition-colors hover:bg-red-200"
 					>
 						Reset Progress
 					</button>
 				</div>
-				<KnowledgeTree 
-					groupedAnsweredQuestions={groupedAnsweredQuestions()} 
-					{categoryIcons} 
+				<KnowledgeTree
+					groupedAnsweredQuestions={groupedAnsweredQuestions()}
+					{categoryIcons}
 					{justAddedId}
-					onAnimationComplete={() => { justAddedId = null; }}
+					onAnimationComplete={() => {
+						justAddedId = null;
+					}}
 				/>
 			</div>
 		{/if}
@@ -292,13 +283,11 @@
 		<!-- Empty state when no questions are active -->
 		{#if activeQuestions.length === 0 && !hasMoreQuestions()}
 			<div class="rounded-2xl bg-gradient-to-r from-green-50 to-teal-50 p-8 text-center">
-				<div class="text-4xl mb-4">🎉</div>
-				<h3 class="text-xl font-semibold text-gray-800 mb-2">
+				<div class="mb-4 text-4xl">🎉</div>
+				<h3 class="mb-2 text-xl font-semibold text-gray-800">
 					Mashaallah! You've completed all questions!
 				</h3>
-				<p class="text-gray-600">
-					Check your knowledge tree below to review what you've learned.
-				</p>
+				<p class="text-gray-600">Check your knowledge tree below to review what you've learned.</p>
 			</div>
 		{/if}
 	{/if}

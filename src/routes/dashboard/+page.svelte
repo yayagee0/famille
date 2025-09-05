@@ -128,14 +128,26 @@
 	<!-- Header with Global Sound Toggle -->
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="{currentTheme === 'neo' ? 'neo-gradient-text' : ''} text-2xl font-bold {currentTheme === 'neo' ? '' : 'text-gray-900'}">Dashboard</h1>
-			<p class="mt-1 text-sm {currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-500'}">Welcome to your family hub</p>
+			<h1
+				class="{currentTheme === 'neo'
+					? 'neo-gradient-text'
+					: ''} text-2xl font-bold {currentTheme === 'neo' ? '' : 'text-gray-900'}"
+			>
+				Dashboard
+			</h1>
+			<p class="mt-1 text-sm {currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-500'}">
+				Welcome to your family hub
+			</p>
 		</div>
 		<button
 			onclick={toggleSound}
-			class="rounded-lg p-2 transition-all duration-200 {currentTheme === 'neo' 
-				? ($soundEnabled ? 'neo-button border border-cyan-400/50 bg-cyan-500/20 text-cyan-400' : 'neo-glass text-slate-400 hover:bg-white/10')
-				: ($soundEnabled ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' : 'bg-gray-100 text-gray-400 hover:bg-gray-200')}"
+			class="rounded-lg p-2 transition-all duration-200 {currentTheme === 'neo'
+				? $soundEnabled
+					? 'neo-button border border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
+					: 'neo-glass text-slate-400 hover:bg-white/10'
+				: $soundEnabled
+					? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+					: 'bg-gray-100 text-gray-400 hover:bg-gray-200'}"
 			aria-label={$soundEnabled ? 'Disable sounds' : 'Enable sounds'}
 			title={$soundEnabled ? 'Sound ON - Click to mute' : 'Sound OFF - Click to enable'}
 		>
@@ -151,7 +163,13 @@
 	<section>
 		<div class="mb-4 flex items-center gap-2">
 			<span class="text-2xl">🌙</span>
-			<h2 class="{currentTheme === 'neo' ? 'neo-gradient-text' : ''} text-xl font-semibold {currentTheme === 'neo' ? '' : 'text-gray-800'}">Spiritual</h2>
+			<h2
+				class="{currentTheme === 'neo'
+					? 'neo-gradient-text'
+					: ''} text-xl font-semibold {currentTheme === 'neo' ? '' : 'text-gray-800'}"
+			>
+				Spiritual
+			</h2>
 		</div>
 		<DailyAyah />
 	</section>
@@ -160,7 +178,13 @@
 	<section>
 		<div class="mb-6 flex items-center gap-2">
 			<span class="text-2xl">👨‍👩‍👧</span>
-			<h2 class="{currentTheme === 'neo' ? 'neo-gradient-text' : ''} text-xl font-semibold {currentTheme === 'neo' ? '' : 'text-gray-800'}">Family</h2>
+			<h2
+				class="{currentTheme === 'neo'
+					? 'neo-gradient-text'
+					: ''} text-xl font-semibold {currentTheme === 'neo' ? '' : 'text-gray-800'}"
+			>
+				Family
+			</h2>
 		</div>
 
 		<div class="space-y-6">
@@ -177,14 +201,21 @@
 						<LoadingSpinner size="medium" message="Loading highlights..." />
 					{:else if familyHighlights.length === 0}
 						<div class="py-8 text-center">
-							<p class="{currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-500'}">✨ No recent activity to highlight</p>
-							<p class="mt-1 text-sm {currentTheme === 'neo' ? 'text-slate-400' : 'text-gray-400'}">Start sharing to see family highlights!</p>
+							<p class={currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-500'}>
+								✨ No recent activity to highlight
+							</p>
+							<p class="mt-1 text-sm {currentTheme === 'neo' ? 'text-slate-400' : 'text-gray-400'}">
+								Start sharing to see family highlights!
+							</p>
 						</div>
 					{:else}
 						<div class="space-y-3">
 							{#each familyHighlights as highlight, i (highlight.id)}
 								<div
-									class="flex items-center space-x-3 rounded-xl p-3 transition-all duration-300 hover:scale-105 hover:shadow-sm {currentTheme === 'neo' ? 'neo-glass hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'}"
+									class="flex items-center space-x-3 rounded-xl p-3 transition-all duration-300 hover:scale-105 hover:shadow-sm {currentTheme ===
+									'neo'
+										? 'neo-glass hover:bg-white/10'
+										: 'bg-gray-50 hover:bg-gray-100'}"
 									style="animation: slideIn 0.5s ease-out {i * 150}ms both"
 								>
 									<div class="flex-shrink-0">
@@ -203,7 +234,9 @@
 										{/if}
 									</div>
 									<div class="flex-1">
-										<p class="text-sm {currentTheme === 'neo' ? 'text-slate-200' : 'text-gray-700'}">
+										<p
+											class="text-sm {currentTheme === 'neo' ? 'text-slate-200' : 'text-gray-700'}"
+										>
 											<span class="font-medium">{highlight.author.displayName}</span>
 											shared {highlight.emoji} • {highlight.timeAgo}
 										</p>
@@ -216,7 +249,9 @@
 					<div class="mt-6 text-center">
 						<a
 							href="/feed"
-							class="inline-flex items-center gap-1 text-sm font-medium {currentTheme === 'neo' ? 'text-cyan-400 hover:text-cyan-300' : 'text-indigo-600 hover:text-indigo-500'} transition-colors"
+							class="inline-flex items-center gap-1 text-sm font-medium {currentTheme === 'neo'
+								? 'text-cyan-400 hover:text-cyan-300'
+								: 'text-indigo-600 hover:text-indigo-500'} transition-colors"
 						>
 							View all activity →
 						</a>
@@ -228,14 +263,21 @@
 						<LoadingSpinner size="medium" message="Loading highlights..." />
 					{:else if familyHighlights.length === 0}
 						<div class="py-8 text-center">
-							<p class="{currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-500'}">✨ No recent activity to highlight</p>
-							<p class="mt-1 text-sm {currentTheme === 'neo' ? 'text-slate-400' : 'text-gray-400'}">Start sharing to see family highlights!</p>
+							<p class={currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-500'}>
+								✨ No recent activity to highlight
+							</p>
+							<p class="mt-1 text-sm {currentTheme === 'neo' ? 'text-slate-400' : 'text-gray-400'}">
+								Start sharing to see family highlights!
+							</p>
 						</div>
 					{:else}
 						<div class="space-y-3">
 							{#each familyHighlights as highlight, i (highlight.id)}
 								<div
-									class="flex items-center space-x-3 rounded-xl p-3 transition-all duration-300 hover:scale-105 hover:shadow-sm {currentTheme === 'neo' ? 'neo-glass hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'}"
+									class="flex items-center space-x-3 rounded-xl p-3 transition-all duration-300 hover:scale-105 hover:shadow-sm {currentTheme ===
+									'neo'
+										? 'neo-glass hover:bg-white/10'
+										: 'bg-gray-50 hover:bg-gray-100'}"
 									style="animation: slideIn 0.5s ease-out {i * 150}ms both"
 								>
 									<div class="flex-shrink-0">
@@ -254,7 +296,9 @@
 										{/if}
 									</div>
 									<div class="flex-1">
-										<p class="text-sm {currentTheme === 'neo' ? 'text-slate-200' : 'text-gray-700'}">
+										<p
+											class="text-sm {currentTheme === 'neo' ? 'text-slate-200' : 'text-gray-700'}"
+										>
 											<span class="font-medium">{highlight.author.displayName}</span>
 											shared {highlight.emoji} • {highlight.timeAgo}
 										</p>
@@ -267,7 +311,9 @@
 					<div class="mt-6 text-center">
 						<a
 							href="/feed"
-							class="inline-flex items-center gap-1 text-sm font-medium {currentTheme === 'neo' ? 'text-cyan-400 hover:text-cyan-300' : 'text-indigo-600 hover:text-indigo-500'} transition-colors"
+							class="inline-flex items-center gap-1 text-sm font-medium {currentTheme === 'neo'
+								? 'text-cyan-400 hover:text-cyan-300'
+								: 'text-indigo-600 hover:text-indigo-500'} transition-colors"
 						>
 							View all activity →
 						</a>

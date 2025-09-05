@@ -42,7 +42,8 @@
 			const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
 			const userData = userDoc.data();
 			userDisplayName = getDisplayName(userData?.email, { nickname: userData?.nickname });
-			userAvatarUrl = userData?.avatarUrl || userData?.photoURL || auth.currentUser?.photoURL || null;
+			userAvatarUrl =
+				userData?.avatarUrl || userData?.photoURL || auth.currentUser?.photoURL || null;
 		} catch (error) {
 			console.error('Error loading user data:', error);
 			userDisplayName = getDisplayName(auth.currentUser?.email, { nickname: undefined });
@@ -231,8 +232,9 @@
 	}
 
 	function getAnswerClass(option: number): string {
-		const baseClass = 'w-full p-4 rounded-xl border-2 transition-all duration-200 text-lg font-semibold';
-		
+		const baseClass =
+			'w-full p-4 rounded-xl border-2 transition-all duration-200 text-lg font-semibold';
+
 		if (!showResult) {
 			return `${baseClass} border-gray-300 bg-white hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer`;
 		}
@@ -344,7 +346,6 @@
 				<span>Start Game</span>
 			</button>
 		</div>
-
 	{:else if gameState === 'playing'}
 		<!-- Game Screen -->
 		<div>
@@ -368,7 +369,9 @@
 				</div>
 				<div class="h-2 w-full rounded-full bg-gray-200">
 					<div
-						class="h-2 rounded-full transition-all duration-1000 {timeLeft <= 3 ? 'bg-red-500' : 'bg-indigo-500'}"
+						class="h-2 rounded-full transition-all duration-1000 {timeLeft <= 3
+							? 'bg-red-500'
+							: 'bg-indigo-500'}"
 						style="width: {getProgressPercentage()}%"
 					></div>
 				</div>
@@ -376,13 +379,13 @@
 
 			<!-- Question -->
 			<div class="mb-6 text-center">
-				<h3 class="text-3xl font-bold text-gray-900 mb-4">
+				<h3 class="mb-4 text-3xl font-bold text-gray-900">
 					{questions[currentQuestion]?.question}
 				</h3>
 			</div>
 
 			<!-- Answer Options -->
-			<div class="grid grid-cols-2 gap-3 mb-4">
+			<div class="mb-4 grid grid-cols-2 gap-3">
 				{#each questions[currentQuestion]?.options || [] as option (option)}
 					<button
 						class={getAnswerClass(option)}
@@ -398,14 +401,14 @@
 			{#if showResult}
 				<div class="text-center">
 					{#if selectedAnswer === questions[currentQuestion]?.correctAnswer}
-						<div class="text-green-600 font-semibold">✅ Correct! +10 points</div>
+						<div class="font-semibold text-green-600">✅ Correct! +10 points</div>
 					{:else if selectedAnswer === null}
-						<div class="text-yellow-600 font-semibold">⏰ Time's up!</div>
+						<div class="font-semibold text-yellow-600">⏰ Time's up!</div>
 						<div class="text-sm text-gray-600">
 							Correct answer: {questions[currentQuestion]?.correctAnswer}
 						</div>
 					{:else}
-						<div class="text-red-600 font-semibold">❌ Wrong!</div>
+						<div class="font-semibold text-red-600">❌ Wrong!</div>
 						<div class="text-sm text-gray-600">
 							Correct answer: {questions[currentQuestion]?.correctAnswer}
 						</div>
@@ -413,19 +416,20 @@
 				</div>
 			{/if}
 		</div>
-
 	{:else if gameState === 'finished'}
 		<!-- Results Screen -->
 		<div class="text-center">
 			<div class="mb-4">
 				{#if userAvatarUrl}
 					<img
-						class="mx-auto h-16 w-16 rounded-full object-cover mb-3"
+						class="mx-auto mb-3 h-16 w-16 rounded-full object-cover"
 						src={userAvatarUrl}
 						alt={userDisplayName}
 					/>
 				{:else}
-					<div class="mx-auto h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center mb-3">
+					<div
+						class="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gray-300"
+					>
 						<User class="h-8 w-8 text-gray-500" />
 					</div>
 				{/if}
@@ -434,7 +438,7 @@
 
 			<div class="mb-6">
 				<h3 class="mb-2 text-2xl font-bold text-gray-900">Round Complete!</h3>
-				<div class="text-4xl font-bold text-indigo-600 mb-2">{score} points</div>
+				<div class="mb-2 text-4xl font-bold text-indigo-600">{score} points</div>
 				<div class="text-gray-600">
 					{Math.floor(score / 10)} out of {questions.length} correct answers
 				</div>
@@ -446,7 +450,9 @@
 					<div class="text-sm text-gray-600">Correct</div>
 				</div>
 				<div class="text-center">
-					<div class="text-2xl font-bold text-gray-900">{questions.length - Math.floor(score / 10)}</div>
+					<div class="text-2xl font-bold text-gray-900">
+						{questions.length - Math.floor(score / 10)}
+					</div>
 					<div class="text-sm text-gray-600">Wrong</div>
 				</div>
 				<div class="text-center">

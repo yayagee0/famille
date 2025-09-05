@@ -26,20 +26,20 @@ describe('Islamic Q&A Data Structure', () => {
 	});
 
 	it('should have unique question IDs', () => {
-		const ids = islamicQuestions.map(q => q.id);
+		const ids = islamicQuestions.map((q) => q.id);
 		const uniqueIds = new Set(ids);
 		expect(uniqueIds.size).toBe(ids.length);
 	});
 
 	it('should have questions in multiple categories', () => {
-		const categories = new Set(islamicQuestions.map(q => q.category));
+		const categories = new Set(islamicQuestions.map((q) => q.category));
 		expect(categories.size).toBeGreaterThan(1);
 		expect(categories.has('Allah')).toBe(true);
 	});
 
 	it('should aggregate all required categories', () => {
-		const categories = new Set(islamicQuestions.map(q => q.category));
-		
+		const categories = new Set(islamicQuestions.map((q) => q.category));
+
 		// Check that we have questions from key expected categories
 		expect(categories.has('Allah')).toBe(true);
 		expect(categories.has('Prophet')).toBe(true);
@@ -47,20 +47,22 @@ describe('Islamic Q&A Data Structure', () => {
 		expect(categories.has('Life & Death')).toBe(true);
 		expect(categories.has('Good Character')).toBe(true);
 		expect(categories.has('Identity')).toBe(true);
-		
+
 		// Check that we have a Quran category (Unicode-safe check)
-		const hasQuranCategory = Array.from(categories).some(cat => cat.includes('Qur') && cat.includes('an'));
+		const hasQuranCategory = Array.from(categories).some(
+			(cat) => cat.includes('Qur') && cat.includes('an')
+		);
 		expect(hasQuranCategory).toBe(true);
-		
+
 		// Verify we have exactly 7 categories
 		expect(categories.size).toBe(7);
-		
+
 		// Verify we have a reasonable number of questions
 		expect(islamicQuestions.length).toBeGreaterThan(10);
 	});
 
 	it('should have MCQ questions with options', () => {
-		const mcqQuestions = islamicQuestions.filter(q => q.format === 'mcq');
+		const mcqQuestions = islamicQuestions.filter((q) => q.format === 'mcq');
 		mcqQuestions.forEach((question) => {
 			expect(question.options).toBeDefined();
 			expect(Array.isArray(question.options)).toBe(true);
