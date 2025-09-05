@@ -11,7 +11,8 @@
 	import { initializeWidgetContext, clearWidgetContext } from '$lib/widget-context';
 	import Nav from '$lib/Nav.svelte';
 	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
-	import { registerServiceWorker, isOnline } from '$lib/offline';
+	import { registerServiceWorker } from '$lib/offline';
+	// isOnline removed - unused import
 
 	let { children } = $props();
 	let user: User | null = $state(null);

@@ -26,7 +26,7 @@
 	{#if type === 'dots'}
 		<div class="flex space-x-1">
 			{#each Array(3) as _, dotIndex (dotIndex)}
-				<!-- dotIndex is used, _ is intentionally unused -->
+				<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 				<div
 					class="{dotSizeClasses[size]} animate-bounce rounded-full bg-indigo-600"
 					style="animation-delay: {dotIndex * 0.2}s"

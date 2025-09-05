@@ -137,9 +137,10 @@
 
 			<!-- Progress indicators -->
 			<div class="mb-4 flex justify-center space-x-2">
-				{#each selected.facts as _, i}
+				{#each selected.facts as _, progressStep (progressStep)}
+					<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 					<div
-						class="h-3 w-3 rounded-full transition-all duration-300 {i <= step
+						class="h-3 w-3 rounded-full transition-all duration-300 {progressStep <= step
 							? 'scale-110 bg-gradient-to-r from-purple-500 to-pink-500'
 							: 'bg-gray-300'}"
 					></div>

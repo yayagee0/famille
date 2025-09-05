@@ -168,7 +168,8 @@
 		{#if loading}
 			<!-- Skeleton Loader -->
 			<div class="animate-pulse space-y-3">
-				{#each Array(3) as _, i}
+				{#each Array(3) as _, loadingIndex (loadingIndex)}
+					<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 					<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
 						<div class="flex items-start justify-between">
 							<div class="flex-1 space-y-2">

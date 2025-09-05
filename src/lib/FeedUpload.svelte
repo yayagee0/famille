@@ -351,7 +351,7 @@
 			/>
 
 			{#each pollOptions as _, optionIndex (optionIndex)}
-				<!-- optionIndex is used, _ is intentionally unused -->
+				<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 				<div class="flex items-center space-x-2">
 					<input
 						type="text"
