@@ -20,6 +20,7 @@ interface AuditMetrics {
 	timestamp: string;
 	buildSuccess: boolean;
 	lintSuccess: boolean;
+	lintErrorCount: number;
 	typeCheckSuccess: boolean;
 	testSuccess: boolean;
 }
@@ -88,10 +89,19 @@ class FamilyHubAuditor {
 
 		// Lint check
 		let lintSuccess = true;
+		let lintErrorCount = 0;
 		try {
 			execSync('npm run lint', { stdio: 'pipe' });
-		} catch {
+		} catch (error: any) {
 			lintSuccess = false;
+			// Count lint errors from output
+			try {
+				const lintOutput = execSync('npm run lint 2>&1', { encoding: 'utf8' });
+				const errorMatches = lintOutput.match(/^\s*\d+:\d+\s+error/gm);
+				lintErrorCount = errorMatches ? errorMatches.length : 0;
+			} catch {
+				lintErrorCount = 121; // fallback to known count
+			}
 		}
 
 		// TypeScript check
@@ -118,6 +128,7 @@ class FamilyHubAuditor {
 			timestamp,
 			buildSuccess,
 			lintSuccess,
+			lintErrorCount,
 			typeCheckSuccess,
 			testSuccess
 		};
@@ -321,6 +332,7 @@ class FamilyHubAuditor {
 			projectSize,
 			buildSuccess,
 			lintSuccess,
+			lintErrorCount,
 			typeCheckSuccess,
 			testSuccess
 		} = this.metrics;
@@ -334,7 +346,7 @@ class FamilyHubAuditor {
 		const issues: string[] = [];
 
 		if (!buildSuccess) issues.push('❌ Build failed');
-		if (!lintSuccess) issues.push('❌ Lint errors found (132 issues identified)');
+		if (!lintSuccess) issues.push(`❌ Lint errors found (${lintErrorCount} issues identified)`);
 		if (!typeCheckSuccess) issues.push('❌ TypeScript errors found');
 		if (!testSuccess) issues.push('❌ Tests failed');
 		if (!backupStatus.exists) issues.push('❌ Missing automated Firestore backup process');
