@@ -199,7 +199,7 @@
 			</div>
 		{:else}
 			<div class="space-y-4">
-				{#each similarities as similarity, i}
+				{#each similarities as similarity, i (`${similarity.category}-${i}`)}
 					<div
 						class="rounded-lg border border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4 transition-all duration-300 hover:scale-105 hover:shadow-md"
 						style="animation-delay: {i * 150}ms"

@@ -182,7 +182,7 @@
 
 					<!-- Floating celebration emojis -->
 					<div class="relative mb-4 h-16 overflow-hidden">
-						{#each ['⭐', '🌟', '✨', '🎊', '🎈'] as emoji, i}
+						{#each ['⭐', '🌟', '✨', '🎊', '🎈'] as emoji, i (emoji)}
 							<div
 								class="animate-confetti absolute animate-pulse text-2xl"
 								style="left: {20 + i * 15}%; animation-delay: {i * 0.2}s;"

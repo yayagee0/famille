@@ -648,7 +648,7 @@
 				<!-- Answered Questions (Traits) -->
 				{#if userAnswers.length > 0}
 					<div class="mb-6 space-y-3">
-						{#each userAnswers as answer}
+						{#each userAnswers as answer (answer.questionId)}
 							{#await renderTrait(answer)}
 								<div class="h-12 animate-pulse rounded-lg bg-gray-200"></div>
 							{:then traitText}
@@ -696,13 +696,13 @@
 						<h4 class="text-md mb-4 font-medium text-gray-900">Answer These Questions</h4>
 
 						<div class="space-y-6">
-							{#each currentQuestions as question}
+							{#each currentQuestions as question (question.id)}
 								<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
 									<h5 class="mb-3 font-medium text-gray-900">{question.text}</h5>
 
 									{#if question.type === 'multiple-choice'}
 										<div class="mb-3 space-y-2">
-											{#each question.options || [] as option}
+											{#each question.options || [] as option (option)}
 												<button
 													onclick={() => handleAnswerSelection(question.id, option)}
 													class="w-full rounded-lg border p-3 text-left transition-colors {selectedAnswers[
