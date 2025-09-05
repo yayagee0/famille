@@ -146,6 +146,7 @@
 			answeredIds.clear();
 			answeredIds = new Set(answeredIds); // Trigger reactivity
 			updateQuestionLists();
+			justAddedId = null; // Reset animation state
 			
 		} catch (error) {
 			console.error('Failed to reset progress:', error);
