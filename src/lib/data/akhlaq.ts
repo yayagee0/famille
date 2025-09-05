@@ -25,7 +25,12 @@ export const akhlaqQuestions = [
     category: "Good Character",
     question_en: "Why should we share?",
     question_ar: "لماذا يجب أن نشارك؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "Because sharing makes others happy and Allah rewards us",
+      "Because we lose things when we share",
+      "Because everyone forces us"
+    ],
     feedback_en: "Sharing makes others happy and brings us reward from Allah.",
     feedback_ar: "وَيُؤْثِرُونَ عَلَى أَنفُسِهِمْ وَلَوْ كَانَ بِهِمْ خَصَاصَةٌ",
     reference: "Qur’an 59:9"
@@ -56,7 +61,12 @@ export const akhlaqQuestions = [
     category: "Good Character",
     question_en: "What should we do if someone is mean to us?",
     question_ar: "ماذا نفعل إذا كان شخص ما لئيمًا معنا؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "Be patient and respond with good",
+      "Fight back with worse",
+      "Ignore forever"
+    ],
     feedback_en: "We should stay patient, not fight back with bad, and respond with good.",
     feedback_ar: "ادْفَعْ بِالَّتِي هِيَ أَحْسَنُ",
     reference: "Qur’an 41:34"
@@ -87,7 +97,12 @@ export const akhlaqQuestions = [
     category: "Good Character",
     question_en: "Why should we say sorry when we hurt someone?",
     question_ar: "لماذا نقول آسف عندما نؤذي شخصاً؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "Because it fixes hearts and Allah loves those who repent",
+      "Because it’s silly",
+      "Because everyone else does"
+    ],
     feedback_en: "Saying sorry fixes hearts, and Allah loves those who repent.",
     feedback_ar: "إِنَّ اللَّهَ يُحِبُّ التَّوَّابِينَ",
     reference: "Qur’an 2:222"
