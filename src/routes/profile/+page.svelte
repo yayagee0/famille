@@ -20,6 +20,10 @@
 	import ErrorMessage from '$lib/ErrorMessage.svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { validateImageFile } from '$lib/schemas';
+	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import GlassCard from '$lib/themes/neo/components/GlassCard.svelte';
+	import GlassChip from '$lib/themes/neo/components/GlassChip.svelte';
+	import { themeStore } from '$lib/themes/neo';
 
 	let user = $state(auth.currentUser);
 	let displayName = $state('');
@@ -41,6 +45,15 @@
 	let selectedAnswers = $state<Record<string, string>>({});
 	let customAnswers = $state<Record<string, string>>({});
 	let showOtherInput = $state<Record<string, boolean>>({});
+	let currentTheme = $state('default');
+
+	// Subscribe to theme changes
+	$effect(() => {
+		const unsubscribe = themeStore.subscribe((theme) => {
+			currentTheme = theme;
+		});
+		return unsubscribe;
+	});
 
 	// Categories for balanced rotation
 	const categoryOrder = [
@@ -519,23 +532,21 @@
 		{/if}
 
 		<!-- 1. Identity Section (Avatar + Nickname) -->
-		<div class="rounded-2xl bg-white shadow-sm">
-			<div class="px-6 py-5">
-				<h3 class="mb-4 text-lg font-semibold text-gray-900">Identity</h3>
-
+		{#if currentTheme === 'neo'}
+			<GlassCard header="🔮 Identity" glow={true}>
 				<div class="flex items-center space-x-6">
 					<div class="flex-shrink-0">
 						{#if previewUrl}
-							<img class="h-20 w-20 rounded-full object-cover" src={previewUrl} alt="Preview" />
+							<img class="h-20 w-20 rounded-full object-cover border-2 border-cyan-400/50" src={previewUrl} alt="Preview" />
 						{:else if user.photoURL}
 							<img
-								class="h-20 w-20 rounded-full object-cover"
+								class="h-20 w-20 rounded-full object-cover border-2 border-cyan-400/50"
 								src={user.photoURL}
 								alt={getDisplayName(user?.email, { nickname: undefined })}
 							/>
 						{:else}
-							<div class="flex h-20 w-20 items-center justify-center rounded-full bg-gray-300">
-								<User class="h-8 w-8 text-gray-500" />
+							<div class="flex h-20 w-20 items-center justify-center rounded-full neo-glass border border-white/30">
+								<User class="h-8 w-8 text-slate-400" />
 							</div>
 						{/if}
 					</div>
@@ -543,7 +554,7 @@
 					<div class="flex-1 space-y-4">
 						<!-- Avatar Upload -->
 						<div>
-							<label for="avatarUpload" class="mb-2 block text-sm font-medium text-gray-700">
+							<label for="avatarUpload" class="mb-2 block text-sm font-medium text-slate-300">
 								Profile Picture
 							</label>
 							<input
@@ -552,21 +563,21 @@
 								accept="image/*"
 								onchange={handleAvatarUpload}
 								disabled={isUploading}
-								class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 disabled:opacity-50"
+								class="block w-full text-sm text-slate-400 file:mr-4 file:rounded-lg file:border-0 file:neo-glass file:px-4 file:py-2 file:text-sm file:font-medium file:text-cyan-400 hover:file:bg-white/15 disabled:opacity-50"
 							/>
 							{#if isUploading}
 								<div class="mt-2 flex items-center">
 									<div
-										class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-indigo-600"
+										class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-cyan-400"
 									></div>
-									<span class="text-sm text-gray-500">Uploading...</span>
+									<span class="text-sm text-slate-400">Uploading...</span>
 								</div>
 							{/if}
 						</div>
 
 						<!-- Display Name -->
 						<div>
-							<label for="displayName" class="mb-1 block text-sm font-medium text-gray-700">
+							<label for="displayName" class="mb-1 block text-sm font-medium text-slate-300">
 								Display Name
 							</label>
 							<input
@@ -575,13 +586,13 @@
 								bind:value={displayName}
 								placeholder="Enter your display name"
 								disabled={isSaving}
-								class="mb-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+								class="mb-2 w-full rounded-lg border neo-glass border-white/20 px-3 py-2 text-sm text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 disabled:opacity-50"
 							/>
 						</div>
 
 						<!-- Nickname -->
 						<div>
-							<label for="nickname" class="mb-1 block text-sm font-medium text-gray-700">
+							<label for="nickname" class="mb-1 block text-sm font-medium text-slate-300">
 								Nickname
 							</label>
 							<div class="flex flex-col gap-2 sm:flex-row">
@@ -591,55 +602,157 @@
 									bind:value={nickname}
 									placeholder="Enter your nickname (optional)"
 									disabled={isSaving}
-									class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+									class="flex-1 rounded-lg border neo-glass border-white/20 px-3 py-2 text-sm text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 disabled:opacity-50"
 								/>
-								<button
+								<GlassChip 
 									onclick={handleSaveProfile}
-									disabled={isSaving || !displayName.trim()}
-									class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+									variant="accent"
 								>
 									{#if isSaving}
-										<div
-											class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"
-										></div>
+										<div class="mr-1 h-4 w-4 animate-spin rounded-full border-b-2 border-cyan-400"></div>
 										Saving...
 									{:else}
-										<Save class="mr-2 h-4 w-4" />
+										<Save class="h-4 w-4" />
 										Save
 									{/if}
-								</button>
+								</GlassChip>
+							</div>
+						</div>
+
+						<!-- Theme Preference -->
+						<div>
+							<ThemeToggle variant="full" showLabel={true} />
+						</div>
+					</div>
+				</div>
+			</GlassCard>
+		{:else}
+			<div class="bg-white shadow-sm rounded-2xl">
+				<div class="px-6 py-5">
+					<h3 class="mb-4 text-lg font-semibold text-gray-900">Identity</h3>
+
+					<div class="flex items-center space-x-6">
+						<div class="flex-shrink-0">
+							{#if previewUrl}
+								<img class="h-20 w-20 rounded-full object-cover" src={previewUrl} alt="Preview" />
+							{:else if user.photoURL}
+								<img
+									class="h-20 w-20 rounded-full object-cover"
+									src={user.photoURL}
+									alt={getDisplayName(user?.email, { nickname: undefined })}
+								/>
+							{:else}
+								<div class="flex h-20 w-20 items-center justify-center rounded-full bg-gray-300">
+									<User class="h-8 w-8 text-gray-500" />
+								</div>
+							{/if}
+						</div>
+
+						<div class="flex-1 space-y-4">
+							<!-- Avatar Upload -->
+							<div>
+								<label for="avatarUpload" class="mb-2 block text-sm font-medium text-gray-700">
+									Profile Picture
+								</label>
+								<input
+									id="avatarUpload"
+									type="file"
+									accept="image/*"
+									onchange={handleAvatarUpload}
+									disabled={isUploading}
+									class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 disabled:opacity-50"
+								/>
+								{#if isUploading}
+									<div class="mt-2 flex items-center">
+										<div
+											class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-indigo-600"
+										></div>
+										<span class="text-sm text-gray-500">Uploading...</span>
+									</div>
+								{/if}
+							</div>
+
+							<!-- Display Name -->
+							<div>
+								<label for="displayName" class="mb-1 block text-sm font-medium text-gray-700">
+									Display Name
+								</label>
+								<input
+									id="displayName"
+									type="text"
+									bind:value={displayName}
+									placeholder="Enter your display name"
+									disabled={isSaving}
+									class="mb-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+								/>
+							</div>
+
+							<!-- Nickname -->
+							<div>
+								<label for="nickname" class="mb-1 block text-sm font-medium text-gray-700">
+									Nickname
+								</label>
+								<div class="flex flex-col gap-2 sm:flex-row">
+									<input
+										id="nickname"
+										type="text"
+										bind:value={nickname}
+										placeholder="Enter your nickname (optional)"
+										disabled={isSaving}
+										class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+									/>
+									<button
+										onclick={handleSaveProfile}
+										disabled={isSaving || !displayName.trim()}
+										class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+									>
+										{#if isSaving}
+											<div
+												class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"
+											></div>
+											Saving...
+										{:else}
+											<Save class="mr-2 h-4 w-4" />
+											Save
+										{/if}
+									</button>
+								</div>
+							</div>
+
+							<!-- Theme Preference -->
+							<div>
+								<ThemeToggle variant="full" showLabel={true} />
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		{/if}
 
 		<!-- 2. My Identity Traits Section -->
-		<div class="rounded-2xl bg-white shadow-sm">
-			<div class="px-6 py-5">
+		{#if currentTheme === 'neo'}
+			<GlassCard header="✨ My Identity Traits" glow={true}>
 				<div class="mb-4 flex items-center justify-between">
 					<div>
-						<h3 class="text-lg font-semibold text-gray-900">My Identity Traits</h3>
-						<p class="text-sm text-gray-600">Build your character profile by answering questions</p>
+						<p class="text-sm text-slate-400">Build your character profile by answering questions</p>
 					</div>
 					<div class="text-right">
-						<div class="text-2xl font-bold text-indigo-600">
+						<div class="text-2xl font-bold neo-gradient-text">
 							{userAnswers.length}/{totalQuestions}
 						</div>
-						<div class="text-xs text-gray-500">Answered</div>
+						<div class="text-xs text-slate-500">Answered</div>
 					</div>
 				</div>
 
 				<!-- Progress Bar -->
 				<div class="mb-6">
-					<div class="mb-1 flex items-center justify-between text-sm text-gray-600">
+					<div class="mb-1 flex items-center justify-between text-sm text-slate-400">
 						<span>Profile Completion</span>
 						<span>{progressPercentage}%</span>
 					</div>
-					<div class="h-2 w-full rounded-full bg-gray-200">
+					<div class="h-2 w-full rounded-full neo-glass">
 						<div
-							class="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-300"
+							class="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-magenta-500 transition-all duration-300"
 							style="width: {progressPercentage}%"
 						></div>
 					</div>
@@ -650,29 +763,23 @@
 					<div class="mb-6 space-y-3">
 						{#each userAnswers as answer (answer.questionId)}
 							{#await renderTrait(answer)}
-								<div class="h-12 animate-pulse rounded-lg bg-gray-200"></div>
+								<div class="h-12 animate-pulse rounded-lg neo-glass"></div>
 							{:then traitText}
 								<div
-									class="rounded-lg border border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 p-4"
+									class="rounded-lg neo-glass border border-white/20 p-4 neo-row-hover"
 								>
 									<div class="flex items-start justify-between">
-										<p class="flex-1 pr-3 text-sm text-gray-800">{traitText}</p>
+										<p class="flex-1 pr-3 text-sm text-slate-200">{traitText}</p>
 										<div class="flex flex-col items-end space-y-1">
-											<span
-												class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium {getCategoryBadgeClass(
-													answer.category
-												)}"
-											>
+											<GlassChip size="small" variant="accent">
 												{getCategoryIcon(answer.category)}
 												{answer.category}
-											</span>
+											</GlassChip>
 											{#if answer.custom}
-												<span
-													class="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700"
-												>
-													<Star class="mr-1 h-3 w-3" />
+												<GlassChip size="small" variant="default">
+													<Star class="h-3 w-3" />
 													unique
-												</span>
+												</GlassChip>
 											{/if}
 										</div>
 									</div>
@@ -682,9 +789,9 @@
 					</div>
 				{:else}
 					<div class="mb-6 py-8 text-center">
-						<Trophy class="mx-auto mb-3 h-12 w-12 text-gray-400" />
-						<h4 class="mb-2 text-lg font-medium text-gray-900">Start Building Your Identity</h4>
-						<p class="text-sm text-gray-500">
+						<Trophy class="mx-auto mb-3 h-12 w-12 text-slate-400" />
+						<h4 class="mb-2 text-lg font-medium neo-gradient-text">Start Building Your Identity</h4>
+						<p class="text-sm text-slate-400">
 							Answer questions to discover and share your unique traits!
 						</p>
 					</div>
@@ -692,24 +799,24 @@
 
 				<!-- Current Questions Section -->
 				{#if showQuestions && currentQuestions.length > 0}
-					<div class="border-t border-gray-200 pt-6">
-						<h4 class="text-md mb-4 font-medium text-gray-900">Answer These Questions</h4>
+					<div class="border-t border-white/20 pt-6">
+						<h4 class="text-md mb-4 font-medium neo-gradient-text">Answer These Questions</h4>
 
 						<div class="space-y-6">
 							{#each currentQuestions as question (question.id)}
-								<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-									<h5 class="mb-3 font-medium text-gray-900">{question.text}</h5>
+								<div class="rounded-lg border neo-glass border-white/20 p-4">
+									<h5 class="mb-3 font-medium text-slate-200">{question.text}</h5>
 
 									{#if question.type === 'multiple-choice'}
 										<div class="mb-3 space-y-2">
 											{#each question.options || [] as option (option)}
 												<button
 													onclick={() => handleAnswerSelection(question.id, option)}
-													class="w-full rounded-lg border p-3 text-left transition-colors {selectedAnswers[
+													class="w-full rounded-lg border p-3 text-left transition-colors neo-row-hover {selectedAnswers[
 														question.id
 													] === option
-														? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-														: 'border-gray-200 bg-white hover:bg-gray-50'}"
+														? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
+														: 'border-white/20 text-slate-200'}"
 												>
 													{option}
 												</button>
@@ -718,11 +825,11 @@
 											{#if question.allowOther}
 												<button
 													onclick={() => handleAnswerSelection(question.id, 'Other', true)}
-													class="w-full rounded-lg border p-3 text-left transition-colors {selectedAnswers[
+													class="w-full rounded-lg border p-3 text-left transition-colors neo-row-hover {selectedAnswers[
 														question.id
 													] === 'Other' || showOtherInput[question.id]
-														? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-														: 'border-gray-200 bg-white hover:bg-gray-50'}"
+														? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
+														: 'border-white/20 text-slate-200'}"
 												>
 													Other
 												</button>
@@ -734,7 +841,7 @@
 														bind:value={customAnswers[question.id]}
 														onchange={() =>
 															handleCustomAnswer(question.id, customAnswers[question.id])}
-														class="mt-2 w-full rounded-lg border border-gray-300 p-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+														class="mt-2 w-full rounded-lg border neo-glass border-white/20 p-2 text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
 													/>
 												{/if}
 											{/if}
@@ -744,71 +851,143 @@
 										<textarea
 											placeholder="Share your thoughts..."
 											bind:value={selectedAnswers[question.id]}
-											class="w-full resize-none rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+											class="w-full resize-none rounded-lg border neo-glass border-white/20 p-3 text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
 											rows="3"
 										></textarea>
 									{/if}
 
 									<div class="mt-3 flex items-center justify-between">
-										<span
-											class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800"
-										>
+										<GlassChip size="small" variant="accent">
 											{question.category}
-										</span>
+										</GlassChip>
 									</div>
 								</div>
 							{/each}
 						</div>
 
 						<div class="mt-6 flex items-center space-x-3">
-							<button
+							<GlassChip 
 								onclick={saveAnswers}
-								disabled={isAnswering || Object.keys(selectedAnswers).length === 0}
-								class="inline-flex items-center rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+								variant="accent"
 							>
 								{#if isAnswering}
-									<div class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+									<div class="mr-1 h-4 w-4 animate-spin rounded-full border-b-2 border-lime-400"></div>
 									Saving...
 								{:else}
-									<Heart class="mr-2 h-4 w-4" />
+									<Heart class="h-4 w-4" />
 									Save Answers
 								{/if}
-							</button>
+							</GlassChip>
 
-							<button
+							<GlassChip 
 								onclick={() => {
 									showQuestions = false;
 									currentQuestions = [];
 								}}
-								class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
 							>
 								Cancel
-							</button>
+							</GlassChip>
 						</div>
 					</div>
 				{:else}
 					<!-- Answer More Button -->
 					<div class="flex justify-center">
-						<button
+						<GlassChip 
 							onclick={loadNextQuestions}
-							disabled={isLoadingQuestions || userAnswers.length >= totalQuestions}
-							class="inline-flex items-center rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+							variant="accent"
+							size="large"
 						>
 							{#if isLoadingQuestions}
-								<div class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+								<div class="mr-1 h-4 w-4 animate-spin rounded-full border-b-2 border-lime-400"></div>
 								Loading Questions...
 							{:else if userAnswers.length >= totalQuestions}
-								<Trophy class="mr-2 h-4 w-4" />
+								<Trophy class="h-4 w-4" />
 								All Questions Completed! 🎉
 							{:else}
-								<Plus class="mr-2 h-4 w-4" />
+								<Plus class="h-4 w-4" />
 								Answer More Questions
 							{/if}
-						</button>
+						</GlassChip>
 					</div>
 				{/if}
+			</GlassCard>
+		{:else}
+			<div class="rounded-2xl bg-white shadow-sm">
+				<div class="px-6 py-5">
+					<div class="mb-4 flex items-center justify-between">
+						<div>
+							<h3 class="text-lg font-semibold text-gray-900">My Identity Traits</h3>
+							<p class="text-sm text-gray-600">Build your character profile by answering questions</p>
+						</div>
+						<div class="text-right">
+							<div class="text-2xl font-bold text-indigo-600">
+								{userAnswers.length}/{totalQuestions}
+							</div>
+							<div class="text-xs text-gray-500">Answered</div>
+						</div>
+					</div>
+
+					<!-- Progress Bar -->
+					<div class="mb-6">
+						<div class="mb-1 flex items-center justify-between text-sm text-gray-600">
+							<span>Profile Completion</span>
+							<span>{progressPercentage}%</span>
+						</div>
+						<div class="h-2 w-full rounded-full bg-gray-200">
+							<div
+								class="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-300"
+								style="width: {progressPercentage}%"
+							></div>
+						</div>
+					</div>
+
+					<!-- Answered Questions (Traits) -->
+					{#if userAnswers.length > 0}
+						<div class="mb-6 space-y-3">
+							{#each userAnswers as answer (answer.questionId)}
+								{#await renderTrait(answer)}
+									<div class="h-12 animate-pulse rounded-lg bg-gray-200"></div>
+								{:then traitText}
+									<div
+										class="rounded-lg border border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 p-4"
+									>
+										<div class="flex items-start justify-between">
+											<p class="flex-1 pr-3 text-sm text-gray-800">{traitText}</p>
+											<div class="flex flex-col items-end space-y-1">
+												<span
+													class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium {getCategoryBadgeClass(
+														answer.category
+													)}"
+												>
+													{getCategoryIcon(answer.category)}
+													{answer.category}
+												</span>
+												{#if answer.custom}
+													<span
+														class="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700"
+													>
+														<Star class="mr-1 h-3 w-3" />
+														unique
+													</span>
+												{/if}
+											</div>
+										</div>
+									</div>
+								{/await}
+							{/each}
+						</div>
+					{:else}
+						<div class="mb-6 py-8 text-center">
+							<Trophy class="mx-auto mb-3 h-12 w-12 text-gray-400" />
+							<h4 class="mb-2 text-lg font-medium text-gray-900">Start Building Your Identity</h4>
+							<p class="text-sm text-gray-500">
+								Answer questions to discover and share your unique traits!
+							</p>
+						</div>
+					{/if}
+				</div>
 			</div>
-		</div>
+		{/if}
 
 		<!-- 3. Account Information Section -->
 		<div class="rounded-2xl bg-white shadow-sm">

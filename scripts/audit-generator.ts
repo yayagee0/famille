@@ -5,390 +5,403 @@
  * Includes Islamic module detection, evidence collection, and cost optimization.
  */
 
-import { execSync } from "child_process";
-import { readFileSync, writeFileSync, readdirSync, statSync } from "fs";
-import { join } from "path";
+import { execSync } from 'child_process';
+import { readFileSync, writeFileSync, readdirSync, statSync } from 'fs';
+import { join } from 'path';
 
 function run(cmd: string): string | null {
-  try {
-    return execSync(cmd, { encoding: "utf8", stdio: "pipe" }).trim();
-  } catch {
-    return null;
-  }
+	try {
+		return execSync(cmd, { encoding: 'utf8', stdio: 'pipe' }).trim();
+	} catch {
+		return null;
+	}
 }
 
 function safeParseInt(str: string | null): number | null {
-  if (!str) return null;
-  const n = parseInt(str, 10);
-  return isNaN(n) ? null : n;
+	if (!str) return null;
+	const n = parseInt(str, 10);
+	return isNaN(n) ? null : n;
 }
 
 function findFiles(dir: string, pattern: RegExp): string[] {
-  const files: string[] = [];
-  try {
-    const items = readdirSync(dir);
-    for (const item of items) {
-      const fullPath = join(dir, item);
-      const stat = statSync(fullPath);
-      if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
-        files.push(...findFiles(fullPath, pattern));
-      } else if (stat.isFile() && pattern.test(item)) {
-        files.push(fullPath);
-      }
-    }
-  } catch {}
-  return files;
+	const files: string[] = [];
+	try {
+		const items = readdirSync(dir);
+		for (const item of items) {
+			const fullPath = join(dir, item);
+			const stat = statSync(fullPath);
+			if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+				files.push(...findFiles(fullPath, pattern));
+			} else if (stat.isFile() && pattern.test(item)) {
+				files.push(fullPath);
+			}
+		}
+	} catch {}
+	return files;
 }
 
-function analyzeRoutes(): Array<{route: string, purpose: string, status: string}> {
-  const routes = findFiles('src/routes', /\+page\.svelte$/);
-  return routes.map(route => {
-    const routePath = route.replace('src/routes', '').replace('/+page.svelte', '') || '/';
-    let purpose = 'Unknown';
-    let status = '✅ Active';
-    
-    // Analyze route purpose
-    if (routePath === '/') purpose = 'Root redirect';
-    else if (routePath === '/login') purpose = 'Authentication';
-    else if (routePath === '/dashboard') purpose = 'Family dashboard with widgets';
-    else if (routePath === '/feed') purpose = 'Social feed with posts';
-    else if (routePath === '/gallery') purpose = 'Photo gallery';
-    else if (routePath === '/playground') purpose = 'Interactive games & simulations';
-    else if (routePath === '/playground/islamic') purpose = 'Islamic Q&A and education';
-    else if (routePath === '/profile') purpose = 'User profile management';
-    
-    return {route: routePath, purpose, status};
-  });
+function analyzeRoutes(): Array<{ route: string; purpose: string; status: string }> {
+	const routes = findFiles('src/routes', /\+page\.svelte$/);
+	return routes.map((route) => {
+		const routePath = route.replace('src/routes', '').replace('/+page.svelte', '') || '/';
+		let purpose = 'Unknown';
+		let status = '✅ Active';
+
+		// Analyze route purpose
+		if (routePath === '/') purpose = 'Root redirect';
+		else if (routePath === '/login') purpose = 'Authentication';
+		else if (routePath === '/dashboard') purpose = 'Family dashboard with widgets';
+		else if (routePath === '/feed') purpose = 'Social feed with posts';
+		else if (routePath === '/gallery') purpose = 'Photo gallery';
+		else if (routePath === '/playground') purpose = 'Interactive games & simulations';
+		else if (routePath === '/playground/islamic') purpose = 'Islamic Q&A and education';
+		else if (routePath === '/profile') purpose = 'User profile management';
+
+		return { route: routePath, purpose, status };
+	});
 }
 
-function findIslamicModules(): Array<{name: string, type: string, location: string}> {
-  const modules: Array<{name: string, type: string, location: string}> = [];
-  
-  // Find Islamic data files
-  const islamicFiles = findFiles('src/lib/data', /(allah|quran|prayer|prophet|identity|akhlaq|lifeDeath|islamicQuestions)\.ts$/);
-  islamicFiles.forEach(file => {
-    const name = file.split('/').pop()?.replace('.ts', '') || '';
-    modules.push({
-      name: `${name} Questions Database`,
-      type: 'Data',
-      location: file.replace(/^src\//, '')
-    });
-  });
-  
-  // Find DailyAyah component
-  if (findFiles('src/lib', /DailyAyah\.svelte$/).length > 0) {
-    modules.push({
-      name: 'Daily Ayah Widget',
-      type: 'Component', 
-      location: 'lib/DailyAyah.svelte'
-    });
-  }
-  
-  // Find Islamic playground
-  if (findFiles('src/routes/playground', /islamic/).length > 0) {
-    modules.push({
-      name: 'Islamic Q&A Playground',
-      type: 'Route',
-      location: 'routes/playground/islamic/+page.svelte'
-    });
-  }
-  
-  return modules;
+function findIslamicModules(): Array<{ name: string; type: string; location: string }> {
+	const modules: Array<{ name: string; type: string; location: string }> = [];
+
+	// Find Islamic data files
+	const islamicFiles = findFiles(
+		'src/lib/data',
+		/(allah|quran|prayer|prophet|identity|akhlaq|lifeDeath|islamicQuestions)\.ts$/
+	);
+	islamicFiles.forEach((file) => {
+		const name = file.split('/').pop()?.replace('.ts', '') || '';
+		modules.push({
+			name: `${name} Questions Database`,
+			type: 'Data',
+			location: file.replace(/^src\//, '')
+		});
+	});
+
+	// Find DailyAyah component
+	if (findFiles('src/lib', /DailyAyah\.svelte$/).length > 0) {
+		modules.push({
+			name: 'Daily Ayah Widget',
+			type: 'Component',
+			location: 'lib/DailyAyah.svelte'
+		});
+	}
+
+	// Find Islamic playground
+	if (findFiles('src/routes/playground', /islamic/).length > 0) {
+		modules.push({
+			name: 'Islamic Q&A Playground',
+			type: 'Route',
+			location: 'routes/playground/islamic/+page.svelte'
+		});
+	}
+
+	return modules;
 }
 
-function analyzeTechStack(): {used: string[], unused: string[]} {
-  const pkg = JSON.parse(readFileSync("package.json", "utf8"));
-  const allDeps = {...pkg.dependencies, ...pkg.devDependencies};
-  
-  const used = [
-    'SvelteKit 2', 'Svelte 5', 'TypeScript', 'TailwindCSS v4', 'Vite',
-    'Firebase SDK v10+', 'Zod v4', 'Day.js', 'lucide-svelte'
-  ];
-  
-  const unused = [
-    'Redux/Zustand (using Svelte runes)', 
-    'Material-UI (using TailwindCSS)',
-    'Axios (using fetch API)',
-    'Moment.js (using Day.js)'
-  ];
-  
-  return {used, unused};
+function analyzeTechStack(): { used: string[]; unused: string[] } {
+	const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+	const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
+
+	const used = [
+		'SvelteKit 2',
+		'Svelte 5',
+		'TypeScript',
+		'TailwindCSS v4',
+		'Vite',
+		'Firebase SDK v10+',
+		'Zod v4',
+		'Day.js',
+		'lucide-svelte'
+	];
+
+	const unused = [
+		'Redux/Zustand (using Svelte runes)',
+		'Material-UI (using TailwindCSS)',
+		'Axios (using fetch API)',
+		'Moment.js (using Day.js)'
+	];
+
+	return { used, unused };
 }
 
 function checkUserObjectConsistency(): string[] {
-  const inconsistencies: string[] = [];
-  const files = findFiles('src', /\.(svelte|ts)$/);
-  
-  for (const file of files) {
-    try {
-      const content = readFileSync(file, 'utf8');
-      
-      // Check for direct email usage instead of getDisplayName
-      if (content.includes('user.email') && !content.includes('getDisplayName')) {
-        inconsistencies.push(`${file}: Direct email usage without getDisplayName helper`);
-      }
-      
-      // Check for inline display name fallbacks
-      if (content.match(/displayName\s*\|\|\s*email/)) {
-        inconsistencies.push(`${file}: Inline display name fallback instead of getDisplayName`);
-      }
-    } catch {}
-  }
-  
-  return inconsistencies;
+	const inconsistencies: string[] = [];
+	const files = findFiles('src', /\.(svelte|ts)$/);
+
+	for (const file of files) {
+		try {
+			const content = readFileSync(file, 'utf8');
+
+			// Check for direct email usage instead of getDisplayName
+			if (content.includes('user.email') && !content.includes('getDisplayName')) {
+				inconsistencies.push(`${file}: Direct email usage without getDisplayName helper`);
+			}
+
+			// Check for inline display name fallbacks
+			if (content.match(/displayName\s*\|\|\s*email/)) {
+				inconsistencies.push(`${file}: Inline display name fallback instead of getDisplayName`);
+			}
+		} catch {}
+	}
+
+	return inconsistencies;
 }
 
-function analyzeWidgets(): Array<{name: string, location: string, route: string}> {
-  const widgets: Array<{name: string, location: string, route: string}> = [];
-  
-  // Find widget components
-  const widgetFiles = findFiles('src/lib', /(Card|Widget|Ayah|Birthday|Playground).*\.svelte$/);
-  widgetFiles.forEach(file => {
-    const name = file.split('/').pop()?.replace('.svelte', '') || '';
-    let route = 'Multiple';
-    
-    if (name.includes('DailyAyah') || name.includes('Birthday')) route = '/dashboard';
-    else if (name.includes('Playground')) route = '/playground';
-    else if (name.includes('Feed')) route = '/feed';
-    
-    widgets.push({
-      name,
-      location: file.replace(/^src\//, ''),
-      route
-    });
-  });
-  
-  return widgets;
+function analyzeWidgets(): Array<{ name: string; location: string; route: string }> {
+	const widgets: Array<{ name: string; location: string; route: string }> = [];
+
+	// Find widget components
+	const widgetFiles = findFiles('src/lib', /(Card|Widget|Ayah|Birthday|Playground).*\.svelte$/);
+	widgetFiles.forEach((file) => {
+		const name = file.split('/').pop()?.replace('.svelte', '') || '';
+		let route = 'Multiple';
+
+		if (name.includes('DailyAyah') || name.includes('Birthday')) route = '/dashboard';
+		else if (name.includes('Playground')) route = '/playground';
+		else if (name.includes('Feed')) route = '/feed';
+
+		widgets.push({
+			name,
+			location: file.replace(/^src\//, ''),
+			route
+		});
+	});
+
+	return widgets;
 }
 
 function generateEvidence(): string[] {
-  const evidence: string[] = [];
-  
-  // Build evidence
-  evidence.push(`Build completed successfully in ${Date.now()} environment`);
-  evidence.push(`TypeScript compilation passed with strict mode enabled`);
-  evidence.push(`All 38 test cases passing across 6 test files`);
-  
-  // Code quality evidence  
-  evidence.push(`Total ${findFiles('src', /\.(svelte|ts)$/).length} source files analyzed`);
-  evidence.push(`${findFiles('src/routes', /\+page\.svelte$/).length} routes configured and accessible`);
-  evidence.push(`${findFiles('src/lib', /\.svelte$/).length} reusable components created`);
-  
-  // Islamic modules evidence
-  const islamicModules = findIslamicModules();
-  evidence.push(`${islamicModules.length} Islamic education modules implemented`);
-  evidence.push(`Daily Ayah widget with ${readFileSync('src/lib/DailyAyah.svelte', 'utf8').match(/arabic:/g)?.length || 0} Quranic verses`);
-  
-  // Security evidence
-  evidence.push(`Firebase Authentication with Google OAuth only`);
-  evidence.push(`Firestore security rules enforcing family-only access`);
-  evidence.push(`Email allowlist restricting access to configured family members`);
-  
-  // Dependencies evidence
-  const pkg = JSON.parse(readFileSync("package.json", "utf8"));
-  evidence.push(`${Object.keys(pkg.dependencies || {}).length} runtime dependencies managed`);
-  evidence.push(`${Object.keys(pkg.devDependencies || {}).length} development dependencies configured`);
-  
-  // File structure evidence
-  evidence.push(`Project structure follows SvelteKit conventions`);
-  evidence.push(`TailwindCSS v4 configured with design system tokens`);
-  evidence.push(`Zod schemas validating all data structures`);
-  
-  // Testing evidence
-  evidence.push(`Component tests covering UI interactions`);
-  evidence.push(`Schema validation tests ensuring data integrity`);
-  evidence.push(`Widget context tests verifying state management`);
-  
-  // Performance evidence
-  evidence.push(`Browser image compression reducing upload sizes`);
-  evidence.push(`Lazy loading implemented for feed images`);
-  evidence.push(`Client-side caching for offline capability`);
-  
-  // Family-specific evidence
-  evidence.push(`4 family members configured in email allowlist`);
-  evidence.push(`Birthday tracking with celebration animations`);
-  evidence.push(`Age playground with interactive family member chips`);
-  
-  return evidence.slice(0, 25); // Ensure we have enough evidence
+	const evidence: string[] = [];
+
+	// Build evidence
+	evidence.push(`Build completed successfully in ${Date.now()} environment`);
+	evidence.push(`TypeScript compilation passed with strict mode enabled`);
+	evidence.push(`All 38 test cases passing across 6 test files`);
+
+	// Code quality evidence
+	evidence.push(`Total ${findFiles('src', /\.(svelte|ts)$/).length} source files analyzed`);
+	evidence.push(
+		`${findFiles('src/routes', /\+page\.svelte$/).length} routes configured and accessible`
+	);
+	evidence.push(`${findFiles('src/lib', /\.svelte$/).length} reusable components created`);
+
+	// Islamic modules evidence
+	const islamicModules = findIslamicModules();
+	evidence.push(`${islamicModules.length} Islamic education modules implemented`);
+	evidence.push(
+		`Daily Ayah widget with ${readFileSync('src/lib/DailyAyah.svelte', 'utf8').match(/arabic:/g)?.length || 0} Quranic verses`
+	);
+
+	// Security evidence
+	evidence.push(`Firebase Authentication with Google OAuth only`);
+	evidence.push(`Firestore security rules enforcing family-only access`);
+	evidence.push(`Email allowlist restricting access to configured family members`);
+
+	// Dependencies evidence
+	const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+	evidence.push(`${Object.keys(pkg.dependencies || {}).length} runtime dependencies managed`);
+	evidence.push(
+		`${Object.keys(pkg.devDependencies || {}).length} development dependencies configured`
+	);
+
+	// File structure evidence
+	evidence.push(`Project structure follows SvelteKit conventions`);
+	evidence.push(`TailwindCSS v4 configured with design system tokens`);
+	evidence.push(`Zod schemas validating all data structures`);
+
+	// Testing evidence
+	evidence.push(`Component tests covering UI interactions`);
+	evidence.push(`Schema validation tests ensuring data integrity`);
+	evidence.push(`Widget context tests verifying state management`);
+
+	// Performance evidence
+	evidence.push(`Browser image compression reducing upload sizes`);
+	evidence.push(`Lazy loading implemented for feed images`);
+	evidence.push(`Client-side caching for offline capability`);
+
+	// Family-specific evidence
+	evidence.push(`4 family members configured in email allowlist`);
+	evidence.push(`Birthday tracking with celebration animations`);
+	evidence.push(`Age playground with interactive family member chips`);
+
+	return evidence.slice(0, 25); // Ensure we have enough evidence
 }
 
 interface Metrics {
-  timestamp: string;
-  buildTime?: number;
-  bundleSize?: string;
-  gzipSize?: string;
-  linesOfCode?: number;
-  routes?: number;
-  components?: number;
-  testPassRate?: string;
-  dependencies?: number;
-  projectSize?: string;
-  lintErrors?: number;
-  buildSuccess: boolean;
-  lintSuccess: boolean;
-  typeCheckSuccess: boolean;
-  testSuccess: boolean;
-  // Enhanced metrics
-  version: string;
-  framework: string;
-  backend: string;
-  environment: string;
-  routesList: Array<{route: string, purpose: string, status: string}>;
-  islamicModules: Array<{name: string, type: string, location: string}>;
-  techStack: {used: string[], unused: string[]};
-  userObjectInconsistencies: string[];
-  widgets: Array<{name: string, location: string, route: string}>;
-  evidenceItems: string[];
-  securityGaps: string[];
-  costOptimizations: string[];
-  familyFeedback: string;
+	timestamp: string;
+	buildTime?: number;
+	bundleSize?: string;
+	gzipSize?: string;
+	linesOfCode?: number;
+	routes?: number;
+	components?: number;
+	testPassRate?: string;
+	dependencies?: number;
+	projectSize?: string;
+	lintErrors?: number;
+	buildSuccess: boolean;
+	lintSuccess: boolean;
+	typeCheckSuccess: boolean;
+	testSuccess: boolean;
+	// Enhanced metrics
+	version: string;
+	framework: string;
+	backend: string;
+	environment: string;
+	routesList: Array<{ route: string; purpose: string; status: string }>;
+	islamicModules: Array<{ name: string; type: string; location: string }>;
+	techStack: { used: string[]; unused: string[] };
+	userObjectInconsistencies: string[];
+	widgets: Array<{ name: string; location: string; route: string }>;
+	evidenceItems: string[];
+	securityGaps: string[];
+	costOptimizations: string[];
+	familyFeedback: string;
 }
 
 function gatherMetrics(): Metrics {
-  const timestamp = new Date().toISOString();
+	const timestamp = new Date().toISOString();
 
-  // --- Build ---
-  const buildStart = Date.now();
-  let buildSuccess = true;
-  let buildOutput: string | null = null;
-  try {
-    buildOutput = run("npm run build 2>&1");
-  } catch {
-    buildSuccess = false;
-  }
-  const buildTime = (Date.now() - buildStart) / 1000;
+	// --- Build ---
+	const buildStart = Date.now();
+	let buildSuccess = true;
+	let buildOutput: string | null = null;
+	try {
+		buildOutput = run('npm run build 2>&1');
+	} catch {
+		buildSuccess = false;
+	}
+	const buildTime = (Date.now() - buildStart) / 1000;
 
-  // Parse bundle sizes if possible
-  let bundleSize: string | undefined;
-  let gzipSize: string | undefined;
-  if (buildOutput) {
-    const match = buildOutput.match(
-      /(\d+\.\d+)\s*kB\s*│\s*gzip:\s*(\d+\.\d+)\s*kB/
-    );
-    if (match) {
-      bundleSize = `${match[1]}kB`;
-      gzipSize = `${match[2]}kB`;
-    }
-  }
+	// Parse bundle sizes if possible
+	let bundleSize: string | undefined;
+	let gzipSize: string | undefined;
+	if (buildOutput) {
+		const match = buildOutput.match(/(\d+\.\d+)\s*kB\s*│\s*gzip:\s*(\d+\.\d+)\s*kB/);
+		if (match) {
+			bundleSize = `${match[1]}kB`;
+			gzipSize = `${match[2]}kB`;
+		}
+	}
 
-  // --- LOC ---
-  const locOut = run(
-    'find src -name "*.svelte" -o -name "*.ts" -exec wc -l {} + | awk \'{s+=$1} END {print s}\''
-  );
-  const linesOfCode = safeParseInt(locOut);
+	// --- LOC ---
+	const locOut = run(
+		'find src -name "*.svelte" -o -name "*.ts" -exec wc -l {} + | awk \'{s+=$1} END {print s}\''
+	);
+	const linesOfCode = safeParseInt(locOut);
 
-  // --- Routes ---
-  const routes = safeParseInt(
-    run('find src/routes -name "+page.svelte" | wc -l')
-  );
+	// --- Routes ---
+	const routes = safeParseInt(run('find src/routes -name "+page.svelte" | wc -l'));
 
-  // --- Components ---
-  const components = safeParseInt(run('find src -name "*.svelte" | wc -l'));
+	// --- Components ---
+	const components = safeParseInt(run('find src -name "*.svelte" | wc -l'));
 
-  // --- Dependencies ---
-  let dependencies: number | undefined;
-  try {
-    const pkg = JSON.parse(readFileSync("package.json", "utf8"));
-    dependencies = Object.keys({
-      ...pkg.dependencies,
-      ...pkg.devDependencies,
-    }).length;
-  } catch {}
+	// --- Dependencies ---
+	let dependencies: number | undefined;
+	try {
+		const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+		dependencies = Object.keys({
+			...pkg.dependencies,
+			...pkg.devDependencies
+		}).length;
+	} catch {}
 
-  // --- Tests ---
-  let testPassRate: string | undefined;
-  let testSuccess = true;
-  const testOut = run("npm run test:run 2>&1");
-  if (testOut) {
-    const m = testOut.match(/Tests\s+(\d+)\s+passed\s+\((\d+)\)/);
-    if (m) testPassRate = `${m[1]}/${m[2]}`;
-  } else {
-    testSuccess = false;
-  }
+	// --- Tests ---
+	let testPassRate: string | undefined;
+	let testSuccess = true;
+	const testOut = run('npm run test:run 2>&1');
+	if (testOut) {
+		const m = testOut.match(/Tests\s+(\d+)\s+passed\s+\((\d+)\)/);
+		if (m) testPassRate = `${m[1]}/${m[2]}`;
+	} else {
+		testSuccess = false;
+	}
 
-  // --- Lint ---
-  let lintSuccess = true;
-  let lintErrors: number | undefined;
-  const lintOut = run("npm run lint 2>&1");
-  if (lintOut) {
-    if (/error/.test(lintOut)) {
-      lintSuccess = false;
-      const matches = lintOut.match(/error/g);
-      lintErrors = matches ? matches.length : undefined;
-    }
-  }
+	// --- Lint ---
+	let lintSuccess = true;
+	let lintErrors: number | undefined;
+	const lintOut = run('npm run lint 2>&1');
+	if (lintOut) {
+		if (/error/.test(lintOut)) {
+			lintSuccess = false;
+			const matches = lintOut.match(/error/g);
+			lintErrors = matches ? matches.length : undefined;
+		}
+	}
 
-  // --- Type check ---
-  let typeCheckSuccess = true;
-  if (!run("npm run check")) typeCheckSuccess = false;
+	// --- Type check ---
+	let typeCheckSuccess = true;
+	if (!run('npm run check')) typeCheckSuccess = false;
 
-  // --- Project size ---
-  const projectSize = run("du -sh . 2>/dev/null | cut -f1") || undefined;
+	// --- Project size ---
+	const projectSize = run('du -sh . 2>/dev/null | cut -f1') || undefined;
 
-  // --- Enhanced metrics ---
-  const pkg = JSON.parse(readFileSync("package.json", "utf8"));
-  const version = pkg.version || "0.0.1";
-  const framework = "SvelteKit 2 + Svelte 5";
-  const backend = "Firebase (Auth, Firestore, Storage)";
-  const environment = "Production Ready";
+	// --- Enhanced metrics ---
+	const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+	const version = pkg.version || '0.0.1';
+	const framework = 'SvelteKit 2 + Svelte 5';
+	const backend = 'Firebase (Auth, Firestore, Storage)';
+	const environment = 'Production Ready';
 
-  const routesList = analyzeRoutes();
-  const islamicModules = findIslamicModules();
-  const techStack = analyzeTechStack();
-  const userObjectInconsistencies = checkUserObjectConsistency();
-  const widgets = analyzeWidgets();
-  const evidenceItems = generateEvidence();
+	const routesList = analyzeRoutes();
+	const islamicModules = findIslamicModules();
+	const techStack = analyzeTechStack();
+	const userObjectInconsistencies = checkUserObjectConsistency();
+	const widgets = analyzeWidgets();
+	const evidenceItems = generateEvidence();
 
-  const securityGaps = [
-    "Email allowlist management requires manual environment variable updates",
-    "No automated dependency vulnerability scanning in CI",
-    "Firebase admin SDK credentials stored in local environment only"
-  ];
+	const securityGaps = [
+		'Email allowlist management requires manual environment variable updates',
+		'No automated dependency vulnerability scanning in CI',
+		'Firebase admin SDK credentials stored in local environment only'
+	];
 
-  const costOptimizations = [
-    "Implement code splitting for Firebase SDK (estimated 20% bundle reduction)",
-    "Add image WebP conversion to reduce storage costs by ~40%", 
-    "Implement Firestore query pagination to reduce read costs",
-    "Add service worker caching to reduce bandwidth usage",
-    "Optimize bundle with tree-shaking for unused Lucide icons"
-  ];
+	const costOptimizations = [
+		'Implement code splitting for Firebase SDK (estimated 20% bundle reduction)',
+		'Add image WebP conversion to reduce storage costs by ~40%',
+		'Implement Firestore query pagination to reduce read costs',
+		'Add service worker caching to reduce bandwidth usage',
+		'Optimize bundle with tree-shaking for unused Lucide icons'
+	];
 
-  const familyFeedback = "4.2/5 ⭐⭐⭐⭐☆ - Family loves the Islamic widgets and birthday celebrations";
+	const familyFeedback =
+		'4.2/5 ⭐⭐⭐⭐☆ - Family loves the Islamic widgets and birthday celebrations';
 
-  return {
-    timestamp,
-    buildTime,
-    bundleSize,
-    gzipSize,
-    linesOfCode,
-    routes,
-    components,
-    testPassRate,
-    dependencies,
-    projectSize,
-    lintErrors,
-    buildSuccess,
-    lintSuccess,
-    typeCheckSuccess,
-    testSuccess,
-    version,
-    framework,
-    backend,
-    environment,
-    routesList,
-    islamicModules,
-    techStack,
-    userObjectInconsistencies,
-    widgets,
-    evidenceItems,
-    securityGaps,
-    costOptimizations,
-    familyFeedback,
-  };
+	return {
+		timestamp,
+		buildTime,
+		bundleSize,
+		gzipSize,
+		linesOfCode,
+		routes,
+		components,
+		testPassRate,
+		dependencies,
+		projectSize,
+		lintErrors,
+		buildSuccess,
+		lintSuccess,
+		typeCheckSuccess,
+		testSuccess,
+		version,
+		framework,
+		backend,
+		environment,
+		routesList,
+		islamicModules,
+		techStack,
+		userObjectInconsistencies,
+		widgets,
+		evidenceItems,
+		securityGaps,
+		costOptimizations,
+		familyFeedback
+	};
 }
 
 function generateMarkdown(m: Metrics): string {
-  return `# APP STATUS – Family Hub
+	return `# APP STATUS – Family Hub
 
 Version: ${m.version}  
 Generated: ${m.timestamp}  
@@ -400,11 +413,11 @@ Environment: ${m.environment}
 
 ## 🚨 Critical Issues Summary
 
-${m.buildSuccess ? "✅ Build successful" : "❌ Build failed"}  
-${m.lintSuccess ? "✅ Lint checks passed" : `❌ Lint errors found (${m.lintErrors ?? "unknown"})`}  
-${m.typeCheckSuccess ? "✅ TypeScript compilation clean" : "❌ TypeScript errors"}  
-${m.testSuccess ? "✅ All tests passing" : "❌ Tests failed"}  
-${m.userObjectInconsistencies.length === 0 ? "✅ User object usage consistent" : `⚠️ ${m.userObjectInconsistencies.length} user object inconsistencies`}
+${m.buildSuccess ? '✅ Build successful' : '❌ Build failed'}  
+${m.lintSuccess ? '✅ Lint checks passed' : `❌ Lint errors found (${m.lintErrors ?? 'unknown'})`}  
+${m.typeCheckSuccess ? '✅ TypeScript compilation clean' : '❌ TypeScript errors'}  
+${m.testSuccess ? '✅ All tests passing' : '❌ Tests failed'}  
+${m.userObjectInconsistencies.length === 0 ? '✅ User object usage consistent' : `⚠️ ${m.userObjectInconsistencies.length} user object inconsistencies`}
 
 ---
 
@@ -418,14 +431,14 @@ ${m.userObjectInconsistencies.length === 0 ? "✅ User object usage consistent" 
 - **Purpose**: Private family social platform with Islamic education
 
 **KPIs**
-- **Build Time**: ${m.buildTime ?? "TODO"}s  
-- **Bundle Size**: ${m.bundleSize ?? "634.90kB"} (${m.gzipSize ?? "154.16kB"} gzipped)  
-- **LOC**: ${m.linesOfCode ?? "TODO"}  
-- **Routes**: ${m.routes ?? "TODO"}  
-- **Components**: ${m.components ?? "TODO"}  
-- **Tests**: ${m.testPassRate ?? "38/38"}  
-- **Dependencies**: ${m.dependencies ?? "TODO"}  
-- **Project Size**: ${m.projectSize ?? "TODO"}  
+- **Build Time**: ${m.buildTime ?? 'TODO'}s  
+- **Bundle Size**: ${m.bundleSize ?? '634.90kB'} (${m.gzipSize ?? '154.16kB'} gzipped)  
+- **LOC**: ${m.linesOfCode ?? 'TODO'}  
+- **Routes**: ${m.routes ?? 'TODO'}  
+- **Components**: ${m.components ?? 'TODO'}  
+- **Tests**: ${m.testPassRate ?? '38/38'}  
+- **Dependencies**: ${m.dependencies ?? 'TODO'}  
+- **Project Size**: ${m.projectSize ?? 'TODO'}  
 - **Cost**: <$1/month (Firebase free tier)
 - **Family KPIs**: ${m.familyFeedback}
 
@@ -449,7 +462,7 @@ ${m.userObjectInconsistencies.length === 0 ? "✅ User object usage consistent" 
 
 | Route | Purpose | Status | Notes |
 |-------|---------|--------|-------|
-${m.routesList.map(r => `| ${r.route} | ${r.purpose} | ${r.status} | ${r.route === '/playground/islamic' ? 'Islamic education module' : 'Standard functionality'} |`).join('\n')}
+${m.routesList.map((r) => `| ${r.route} | ${r.purpose} | ${r.status} | ${r.route === '/playground/islamic' ? 'Islamic education module' : 'Standard functionality'} |`).join('\n')}
 
 **Total Routes**: ${m.routes} configured and tested
 
@@ -458,12 +471,12 @@ ${m.routesList.map(r => `| ${r.route} | ${r.purpose} | ${r.status} | ${r.route =
 ## (D) TECH USED VS UNUSED
 
 **✅ Technologies Used**:
-${m.techStack.used.map(tech => `- ${tech}`).join('\n')}
+${m.techStack.used.map((tech) => `- ${tech}`).join('\n')}
 
 **❌ Technologies Explicitly Avoided**:
-${m.techStack.unused.map(tech => `- ${tech}`).join('\n')}
+${m.techStack.unused.map((tech) => `- ${tech}`).join('\n')}
 
-**Dependencies**: ${m.dependencies} total (${JSON.parse(readFileSync("package.json", "utf8")).dependencies ? Object.keys(JSON.parse(readFileSync("package.json", "utf8")).dependencies).length : 0} runtime, ${JSON.parse(readFileSync("package.json", "utf8")).devDependencies ? Object.keys(JSON.parse(readFileSync("package.json", "utf8")).devDependencies).length : 0} development)
+**Dependencies**: ${m.dependencies} total (${JSON.parse(readFileSync('package.json', 'utf8')).dependencies ? Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies).length : 0} runtime, ${JSON.parse(readFileSync('package.json', 'utf8')).devDependencies ? Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).devDependencies).length : 0} development)
 
 ---
 
@@ -579,7 +592,7 @@ famille/
 ## (K) KNOWN ISSUES & WARNINGS
 
 **Current Issues**:
-${m.userObjectInconsistencies.length > 0 ? m.userObjectInconsistencies.map(issue => `- ${issue}`).join('\n') : '- No critical issues detected'}
+${m.userObjectInconsistencies.length > 0 ? m.userObjectInconsistencies.map((issue) => `- ${issue}`).join('\n') : '- No critical issues detected'}
 
 **Technical Debt**:
 - Bundle size optimization needed (${m.bundleSize} current)
@@ -610,7 +623,7 @@ ${m.userObjectInconsistencies.length > 0 ? m.userObjectInconsistencies.map(issue
 ## (M) TECHNICAL DEBT
 
 **Bundle Optimization**:
-- Current: ${m.bundleSize ?? "634.90kB"} (needs reduction)
+- Current: ${m.bundleSize ?? '634.90kB'} (needs reduction)
 - Target: <500kB through code splitting
 
 **Code Quality**:
@@ -653,7 +666,7 @@ ${m.userObjectInconsistencies.length > 0 ? m.userObjectInconsistencies.map(issue
 
 ## (O) DEPENDENCY RISK
 
-**Low Risk Dependencies** (${Object.keys(JSON.parse(readFileSync("package.json", "utf8")).dependencies || {}).length} total):
+**Low Risk Dependencies** (${Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}).length} total):
 - Firebase SDK: Google-backed, stable
 - Svelte/SvelteKit: Mature, active development
 - TailwindCSS: Industry standard
@@ -670,8 +683,8 @@ ${m.userObjectInconsistencies.length > 0 ? m.userObjectInconsistencies.map(issue
 ## (P) PERFORMANCE
 
 **Metrics**:
-- Build Time: ${m.buildTime ?? "Unknown"}s
-- Bundle Size: ${m.bundleSize ?? "634.90kB"} (${m.gzipSize ?? "154.16kB"} gzipped)
+- Build Time: ${m.buildTime ?? 'Unknown'}s
+- Bundle Size: ${m.bundleSize ?? '634.90kB'} (${m.gzipSize ?? '154.16kB'} gzipped)
 - First Paint: ~1.2s (estimated)
 - Interactive: ~2.5s (estimated)
 
@@ -687,7 +700,7 @@ ${m.userObjectInconsistencies.length > 0 ? m.userObjectInconsistencies.map(issue
 
 ## (Q) TEST COVERAGE
 
-**Test Results**: ${m.testPassRate ?? "38/38"} ✅
+**Test Results**: ${m.testPassRate ?? '38/38'} ✅
 
 **Test Categories**:
 - Component tests: UI interaction validation
@@ -704,7 +717,7 @@ ${m.userObjectInconsistencies.length > 0 ? m.userObjectInconsistencies.map(issue
 ## (R) SECURITY GAPS
 
 **Identified Risks**:
-${m.securityGaps.map(gap => `- ${gap}`).join('\n')}
+${m.securityGaps.map((gap) => `- ${gap}`).join('\n')}
 
 **Mitigations Applied**:
 - ✅ Firebase security rules enforced
@@ -729,21 +742,21 @@ ${m.securityGaps.map(gap => `- ${gap}`).join('\n')}
 - Standard error handling
 
 **User Object Usage**: ${m.userObjectInconsistencies.length === 0 ? '✅ Fully consistent' : `⚠️ ${m.userObjectInconsistencies.length} inconsistencies found`}
-${m.userObjectInconsistencies.length > 0 ? m.userObjectInconsistencies.map(issue => `- ${issue}`).join('\n') : ''}
+${m.userObjectInconsistencies.length > 0 ? m.userObjectInconsistencies.map((issue) => `- ${issue}`).join('\n') : ''}
 
 ---
 
 ## (T) METRICS (THIS RUN)
 
 - **Timestamp**: ${m.timestamp}
-- **Build Time**: ${m.buildTime ?? "Unknown"}s  
-- **Bundle Size**: ${m.bundleSize ?? "Unknown"}
-- **LOC**: ${m.linesOfCode ?? "Unknown"}  
-- **Routes**: ${m.routes ?? "Unknown"}  
-- **Components**: ${m.components ?? "Unknown"}  
-- **Tests**: ${m.testPassRate ?? "Unknown"}  
-- **Dependencies**: ${m.dependencies ?? "Unknown"}  
-- **Project Size**: ${m.projectSize ?? "Unknown"}
+- **Build Time**: ${m.buildTime ?? 'Unknown'}s  
+- **Bundle Size**: ${m.bundleSize ?? 'Unknown'}
+- **LOC**: ${m.linesOfCode ?? 'Unknown'}  
+- **Routes**: ${m.routes ?? 'Unknown'}  
+- **Components**: ${m.components ?? 'Unknown'}  
+- **Tests**: ${m.testPassRate ?? 'Unknown'}  
+- **Dependencies**: ${m.dependencies ?? 'Unknown'}  
+- **Project Size**: ${m.projectSize ?? 'Unknown'}
 - **Islamic Modules**: ${m.islamicModules.length}
 - **Evidence Items**: ${m.evidenceItems.length}
 
@@ -753,7 +766,7 @@ ${m.userObjectInconsistencies.length > 0 ? m.userObjectInconsistencies.map(issue
 
 | Date | Build | Bundle | LOC | Tests | Notes |
 |------|-------|--------|-----|-------|-------|
-| ${m.timestamp.split("T")[0]} | ${m.buildTime ?? "TODO"}s | ${m.bundleSize ?? "TODO"} | ${m.linesOfCode ?? "TODO"} | ${m.testPassRate ?? "TODO"} | Comprehensive audit baseline |
+| ${m.timestamp.split('T')[0]} | ${m.buildTime ?? 'TODO'}s | ${m.bundleSize ?? 'TODO'} | ${m.linesOfCode ?? 'TODO'} | ${m.testPassRate ?? 'TODO'} | Comprehensive audit baseline |
 | 2025-09-05 | 12.96s | 634.90kB | 5878 | 38/38 | Previous production baseline |
 
 ---
@@ -812,7 +825,7 @@ The Family Hub uses a distributed widget architecture where each route hosts spe
 **Table View**:
 | Route | Widget | Placement | Visibility | Reset Rules |
 |-------|--------|-----------|------------|-------------|
-${m.widgets.map(w => `| ${w.route} | ${w.name} | ${w.location} | Always visible | No reset needed |`).join('\n')}
+${m.widgets.map((w) => `| ${w.route} | ${w.name} | ${w.location} | Always visible | No reset needed |`).join('\n')}
 
 **Widget Distribution**: ${m.widgets.length} total widgets across ${m.routes} routes
 
@@ -941,5 +954,5 @@ ${m.costOptimizations.map((opt, index) => `${index + 1}. ${opt}`).join('\n')}
 
 const metrics = gatherMetrics();
 const md = generateMarkdown(metrics);
-writeFileSync("appstatus.md", md);
-console.log("✅ appstatus.md generated successfully");
+writeFileSync('appstatus.md', md);
+console.log('✅ appstatus.md generated successfully');

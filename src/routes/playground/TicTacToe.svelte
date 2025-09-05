@@ -1,14 +1,12 @@
 <script lang="ts">
 	import { auth, db } from '$lib/firebase';
-	import {
-		addDoc,
-		collection,
-		serverTimestamp
-	} from 'firebase/firestore';
+	import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 	import { RotateCcw, Trophy, Bot, User } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { playSound } from '$lib/sound';
 	import { recordWin, recordLoss } from '$lib/gameUtils';
+	import { triggerParticleBurst } from '$lib/themes/neo/utils/particles';
+	import { themeStore } from '$lib/themes/neo';
 
 	type Player = 'X' | 'O' | null;
 	type Board = Player[];
@@ -20,6 +18,15 @@
 	let isPlayerTurn = $state(true);
 	let difficulty = $state<Difficulty>('hard');
 	let isThinking = $state(false);
+	let currentTheme = $state('default');
+
+	// Subscribe to theme changes
+	$effect(() => {
+		const unsubscribe = themeStore.subscribe((theme) => {
+			currentTheme = theme;
+		});
+		return unsubscribe;
+	});
 
 	function resetGame() {
 		board = Array(9).fill(null);
@@ -122,6 +129,10 @@
 			gameResult = winner === 'X' ? 'win' : 'lose';
 			if (gameResult === 'win') {
 				playSound('/sounds/victory.mp3');
+				// Trigger Neo particles for victory celebration
+				if (currentTheme === 'neo') {
+					triggerParticleBurst(15, 4000); // 15 particles for 4 seconds
+				}
 			}
 			await saveGame();
 			return;
@@ -186,8 +197,6 @@
 			console.error('Error saving game:', error);
 		}
 	}
-
-
 
 	function getCellClass(index: number) {
 		const baseClass =

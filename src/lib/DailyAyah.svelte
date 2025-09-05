@@ -4,6 +4,8 @@
 	import { Moon, Sun, Volume2 } from 'lucide-svelte';
 	import { cacheAyat, getCachedAyat } from '$lib/offline';
 	import PlayCard from '$lib/components/PlayCard.svelte';
+	import GlassCard from '$lib/themes/neo/components/GlassCard.svelte';
+	import { themeStore } from '$lib/themes/neo';
 	import { playSound } from '$lib/sound';
 
 	// Extended array of ayat with simplified kids meanings
@@ -109,6 +111,15 @@
 
 	// Theme state
 	let isDarkTheme = $state(false);
+	let currentTheme = $state('default');
+
+	// Subscribe to theme changes
+	$effect(() => {
+		const unsubscribe = themeStore.subscribe((theme) => {
+			currentTheme = theme;
+		});
+		return unsubscribe;
+	});
 
 	function adjustFontSize(newSize: 'small' | 'medium' | 'large') {
 		fontSize = newSize;
@@ -145,101 +156,179 @@
 	);
 </script>
 
-<PlayCard header="📖 Daily Ayah">
-	<div class={themeClasses}>
-		<div class="mb-4 flex items-center justify-between">
-			<!-- Sound Button -->
-			<button
-				onclick={playAyahSound}
-				class="rounded-lg p-2 transition-all duration-200 {isDarkTheme
-					? 'bg-opacity-10 hover:bg-opacity-20 bg-white text-blue-400'
-					: 'bg-blue-100 text-blue-600 hover:bg-blue-200'}"
-				aria-label="Play Ayah sound"
-				title="Play peaceful sound"
-			>
-				<Volume2 class="h-4 w-4" />
-			</button>
-
-			<!-- Controls Row -->
-			<div class="flex items-center space-x-4">
-				<!-- Theme Toggle -->
+{#if currentTheme === 'neo'}
+	<GlassCard header="📖 Daily Ayah" glow={true} shimmer={true}>
+		<div class="text-center">
+			<div class="mb-4 flex items-center justify-between">
+				<!-- Sound Button -->
 				<button
-					onclick={toggleTheme}
-					class="rounded-lg p-2 transition-all duration-200 {isDarkTheme
-						? 'bg-opacity-10 hover:bg-opacity-20 bg-white text-yellow-400'
-						: 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
-					aria-label={isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme'}
+					onclick={playAyahSound}
+					class="rounded-lg p-2 transition-all duration-200 neo-glass hover:bg-white/15 text-cyan-400 hover:text-cyan-300"
+					aria-label="Play Ayah sound"
+					title="Play peaceful sound"
 				>
-					{#if isDarkTheme}
-						<Sun class="h-4 w-4" />
-					{:else}
-						<Moon class="h-4 w-4" />
-					{/if}
+					<Volume2 class="h-4 w-4" />
 				</button>
 
-				<!-- Font size controls -->
-				<div class="flex items-center space-x-1">
+				<!-- Controls Row -->
+				<div class="flex items-center space-x-4">
+					<!-- Theme Toggle -->
 					<button
-						onclick={() => adjustFontSize('small')}
-						class="rounded px-2 py-1 text-xs transition-colors {fontSize === 'small'
-							? isDarkTheme
-								? 'bg-green-600 text-white'
-								: 'bg-green-100 text-green-700'
-							: isDarkTheme
-								? 'text-gray-300 hover:text-white'
-								: 'text-gray-500 hover:text-gray-700'}"
-						aria-label="Small font size"
+						onclick={toggleTheme}
+						class="rounded-lg p-2 transition-all duration-200 neo-glass hover:bg-white/15 text-slate-300 hover:text-white"
+						aria-label={isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme'}
 					>
-						A-
+						{#if isDarkTheme}
+							<Sun class="h-4 w-4" />
+						{:else}
+							<Moon class="h-4 w-4" />
+						{/if}
 					</button>
-					<button
-						onclick={() => adjustFontSize('medium')}
-						class="rounded px-2 py-1 text-sm transition-colors {fontSize === 'medium'
-							? isDarkTheme
-								? 'bg-green-600 text-white'
-								: 'bg-green-100 text-green-700'
-							: isDarkTheme
-								? 'text-gray-300 hover:text-white'
-								: 'text-gray-500 hover:text-gray-700'}"
-						aria-label="Medium font size"
-					>
-						A
-					</button>
-					<button
-						onclick={() => adjustFontSize('large')}
-						class="rounded px-2 py-1 text-base transition-colors {fontSize === 'large'
-							? isDarkTheme
-								? 'bg-green-600 text-white'
-								: 'bg-green-100 text-green-700'
-							: isDarkTheme
-								? 'text-gray-300 hover:text-white'
-								: 'text-gray-500 hover:text-gray-700'}"
-						aria-label="Large font size"
-					>
-						A+
-					</button>
+
+					<!-- Font size controls -->
+					<div class="flex items-center space-x-1">
+						<button
+							onclick={() => adjustFontSize('small')}
+							class="rounded px-2 py-1 text-xs transition-colors neo-row-hover {fontSize === 'small'
+								? 'bg-cyan-600/30 text-cyan-300 border border-cyan-400/30'
+								: 'text-slate-400 hover:text-cyan-400'}"
+							aria-label="Small font size"
+						>
+							A-
+						</button>
+						<button
+							onclick={() => adjustFontSize('medium')}
+							class="rounded px-2 py-1 text-sm transition-colors neo-row-hover {fontSize === 'medium'
+								? 'bg-cyan-600/30 text-cyan-300 border border-cyan-400/30'
+								: 'text-slate-400 hover:text-cyan-400'}"
+							aria-label="Medium font size"
+						>
+							A
+						</button>
+						<button
+							onclick={() => adjustFontSize('large')}
+							class="rounded px-2 py-1 text-base transition-colors neo-row-hover {fontSize === 'large'
+								? 'bg-cyan-600/30 text-cyan-300 border border-cyan-400/30'
+								: 'text-slate-400 hover:text-cyan-400'}"
+							aria-label="Large font size"
+						>
+							A+
+						</button>
+					</div>
 				</div>
 			</div>
-		</div>
 
-		<p
-			class="font-arabic mb-3 text-2xl leading-relaxed md:text-3xl {isDarkTheme
-				? 'text-white'
-				: 'text-gray-900'}"
-		>
-			{todayAyah.arabic}
-		</p>
-		<p class="mb-2 text-gray-600 italic">
-			"{todayAyah.translation}"
-		</p>
-		<p class="mt-1 text-sm {isDarkTheme ? 'text-green-300' : 'text-green-600'}">
-			👶 {todayAyah.kids}
-		</p>
-		<p class="mt-1 text-sm {isDarkTheme ? 'text-gray-400' : 'text-gray-500'}">
-			— {todayAyah.reference}
-		</p>
-	</div>
-</PlayCard>
+			<p class="font-arabic mb-3 text-2xl leading-relaxed md:text-3xl text-slate-100 arabic-text">
+				{todayAyah.arabic}
+			</p>
+			<p class="mb-2 text-slate-300 italic">
+				"{todayAyah.translation}"
+			</p>
+			<p class="mt-1 text-sm text-lime-400">
+				👶 {todayAyah.kids}
+			</p>
+			<p class="mt-1 text-sm text-slate-400">
+				— {todayAyah.reference}
+			</p>
+		</div>
+	</GlassCard>
+{:else}
+	<PlayCard header="📖 Daily Ayah">
+		<div class={themeClasses}>
+			<div class="mb-4 flex items-center justify-between">
+				<!-- Sound Button -->
+				<button
+					onclick={playAyahSound}
+					class="rounded-lg p-2 transition-all duration-200 {isDarkTheme
+						? 'bg-opacity-10 hover:bg-opacity-20 bg-white text-blue-400'
+						: 'bg-blue-100 text-blue-600 hover:bg-blue-200'}"
+					aria-label="Play Ayah sound"
+					title="Play peaceful sound"
+				>
+					<Volume2 class="h-4 w-4" />
+				</button>
+
+				<!-- Controls Row -->
+				<div class="flex items-center space-x-4">
+					<!-- Theme Toggle -->
+					<button
+						onclick={toggleTheme}
+						class="rounded-lg p-2 transition-all duration-200 {isDarkTheme
+							? 'bg-opacity-10 hover:bg-opacity-20 bg-white text-yellow-400'
+							: 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
+						aria-label={isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme'}
+					>
+						{#if isDarkTheme}
+							<Sun class="h-4 w-4" />
+						{:else}
+							<Moon class="h-4 w-4" />
+						{/if}
+					</button>
+
+					<!-- Font size controls -->
+					<div class="flex items-center space-x-1">
+						<button
+							onclick={() => adjustFontSize('small')}
+							class="rounded px-2 py-1 text-xs transition-colors {fontSize === 'small'
+								? isDarkTheme
+									? 'bg-green-600 text-white'
+									: 'bg-green-100 text-green-700'
+								: isDarkTheme
+									? 'text-gray-300 hover:text-white'
+									: 'text-gray-500 hover:text-gray-700'}"
+							aria-label="Small font size"
+						>
+							A-
+						</button>
+						<button
+							onclick={() => adjustFontSize('medium')}
+							class="rounded px-2 py-1 text-sm transition-colors {fontSize === 'medium'
+								? isDarkTheme
+									? 'bg-green-600 text-white'
+									: 'bg-green-100 text-green-700'
+								: isDarkTheme
+									? 'text-gray-300 hover:text-white'
+									: 'text-gray-500 hover:text-gray-700'}"
+							aria-label="Medium font size"
+						>
+							A
+						</button>
+						<button
+							onclick={() => adjustFontSize('large')}
+							class="rounded px-2 py-1 text-base transition-colors {fontSize === 'large'
+								? isDarkTheme
+									? 'bg-green-600 text-white'
+									: 'bg-green-100 text-green-700'
+								: isDarkTheme
+									? 'text-gray-300 hover:text-white'
+									: 'text-gray-500 hover:text-gray-700'}"
+							aria-label="Large font size"
+						>
+							A+
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<p
+				class="font-arabic mb-3 text-2xl leading-relaxed md:text-3xl {isDarkTheme
+					? 'text-white'
+					: 'text-gray-900'}"
+			>
+				{todayAyah.arabic}
+			</p>
+			<p class="mb-2 text-gray-600 italic">
+				"{todayAyah.translation}"
+			</p>
+			<p class="mt-1 text-sm {isDarkTheme ? 'text-green-300' : 'text-green-600'}">
+				👶 {todayAyah.kids}
+			</p>
+			<p class="mt-1 text-sm {isDarkTheme ? 'text-gray-400' : 'text-gray-500'}">
+				— {todayAyah.reference}
+			</p>
+		</div>
+	</PlayCard>
+{/if}
 
 <style>
 	.font-arabic {

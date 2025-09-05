@@ -7,9 +7,9 @@ import { auth, db } from '$lib/firebase';
 import { doc, setDoc, serverTimestamp, increment } from 'firebase/firestore';
 
 export interface GameResult {
-	score?: number;    // Points scored (for point-based games like Math Game)
-	wins?: number;     // Wins increment (for win/loss games like Tic-Tac-Toe)
-	losses?: number;   // Losses increment (for win/loss games like Tic-Tac-Toe)
+	score?: number; // Points scored (for point-based games like Math Game)
+	wins?: number; // Wins increment (for win/loss games like Tic-Tac-Toe)
+	losses?: number; // Losses increment (for win/loss games like Tic-Tac-Toe)
 }
 
 /**
@@ -29,7 +29,7 @@ export async function recordGameResult(
 
 	try {
 		const resultRef = doc(db, 'games', gameId, 'results', userId);
-		
+
 		// Build the update object
 		const updateData: any = {
 			updatedAt: serverTimestamp()
@@ -52,7 +52,6 @@ export async function recordGameResult(
 
 		// Save to Firestore with merge to handle missing documents
 		await setDoc(resultRef, updateData, { merge: true });
-
 	} catch (error) {
 		console.error('Error recording game result:', error);
 		throw error;

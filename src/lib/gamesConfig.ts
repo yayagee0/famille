@@ -35,10 +35,10 @@ export function getGamesInOrder(): GameConfig[] {
 
 // Get game config by ID
 export function getGameConfig(gameId: string): GameConfig | undefined {
-	return GAMES_CONFIG.find(game => game.id === gameId);
+	return GAMES_CONFIG.find((game) => game.id === gameId);
 }
 
 // Get all game IDs
 export function getAllGameIds(): string[] {
-	return GAMES_CONFIG.map(game => game.id);
+	return GAMES_CONFIG.map((game) => game.id);
 }
