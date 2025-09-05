@@ -58,7 +58,12 @@ export const quranQuestions = [
     category: "Qur’an",
     question_en: "Does the Qur’an ever get old?",
     question_ar: "هل القرآن يصبح قديماً؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "No, the Qur’an is always fresh guidance until the end of time",
+      "Yes, it becomes old after many years",
+      "It is only for the past"
+    ],
     feedback_en: "No, the Qur’an is always fresh guidance until the end of time.",
     feedback_ar: "لَا يَأْتِيهِ الْبَاطِلُ مِن بَيْنِ يَدَيْهِ وَلَا مِنْ خَلْفِهِ",
     reference: "Qur’an 41:42"
@@ -68,7 +73,12 @@ export const quranQuestions = [
     category: "Qur’an",
     question_en: "Why should we listen to Qur’an recitation?",
     question_ar: "لماذا يجب أن نستمع إلى تلاوة القرآن؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "Because listening brings peace to our hearts",
+      "Because it’s just a habit",
+      "Because it helps us sleep only"
+    ],
     feedback_en: "Because listening brings peace to our hearts.",
     feedback_ar: "أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ",
     reference: "Qur’an 13:28"
