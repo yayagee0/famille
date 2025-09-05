@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import type { Snippet } from 'svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -16,9 +17,9 @@
 		size?: 'small' | 'medium' | 'large';
 		disabled?: boolean;
 		loading?: boolean;
-		children?: any;
+		children?: Snippet;
 		onclick?: () => void;
-		[key: string]: any;
+		[key: string]: unknown;
 	} = $props();
 
 	const baseClasses =

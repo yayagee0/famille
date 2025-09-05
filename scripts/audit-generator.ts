@@ -247,7 +247,7 @@ class FamilyHubAuditor {
 		}
 	}
 
-	private analyzeBandwidthOptimization(): { current: any; recommendations: string[] } {
+	private analyzeBandwidthOptimization(): { current: unknown; recommendations: string[] } {
 		const recommendations = [
 			'Implement WebP image conversion for 40-60% size reduction',
 			'Add lazy loading for non-critical images and components',

@@ -27,7 +27,7 @@ const db = admin.firestore();
 interface BackupData {
 	timestamp: string;
 	collections: {
-		[key: string]: any[];
+		[key: string]: FirebaseFirestore.DocumentData[];
 	};
 	metadata: {
 		exportedAt: string;
@@ -37,11 +37,11 @@ interface BackupData {
 	};
 }
 
-async function backupCollection(collectionName: string): Promise<any[]> {
+async function backupCollection(collectionName: string): Promise<FirebaseFirestore.DocumentData[]> {
 	console.log(`📦 Backing up collection: ${collectionName}`);
 
 	const snapshot = await db.collection(collectionName).get();
-	const documents: any[] = [];
+	const documents: FirebaseFirestore.DocumentData[] = [];
 
 	snapshot.forEach((doc) => {
 		documents.push({
@@ -55,12 +55,12 @@ async function backupCollection(collectionName: string): Promise<any[]> {
 	return documents;
 }
 
-async function backupSubcollections(parentPath: string): Promise<any[]> {
+async function backupSubcollections(parentPath: string): Promise<FirebaseFirestore.DocumentData[]> {
 	console.log(`📦 Checking subcollections in: ${parentPath}`);
 
 	const parentRef = db.doc(parentPath);
 	const subcollections = await parentRef.listCollections();
-	const allDocs: any[] = [];
+	const allDocs: FirebaseFirestore.DocumentData[] = [];
 
 	for (const subcollection of subcollections) {
 		console.log(`📦 Backing up subcollection: ${subcollection.path}`);
@@ -112,7 +112,7 @@ async function performBackup(): Promise<void> {
 		// Backup user-specific subcollections (userAnswers)
 		try {
 			console.log('📦 Backing up user answers...');
-			const userAnswers: any[] = [];
+			const userAnswers: FirebaseFirestore.DocumentData[] = [];
 
 			// Get all users
 			const usersSnapshot = await db.collection('users').get();
