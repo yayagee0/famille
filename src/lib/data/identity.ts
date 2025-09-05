@@ -15,7 +15,12 @@ export const identityQuestions = [
     category: "Identity",
     question_en: "Who are Muslims?",
     question_ar: "من هم المسلمون؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "People who believe in Allah and follow Prophet Muhammad ﷺ",
+      "People from a specific country",
+      "Only people who speak Arabic"
+    ],
     feedback_en: "Muslims are people who believe in Allah and follow Prophet Muhammad ﷺ.",
     feedback_ar: "وَمَنْ أَحْسَنُ قَوْلًا مِمَّن دَعَا إِلَى اللَّهِ وَعَمِلَ صَالِحًا",
     reference: "Qur’an 41:33"
@@ -25,7 +30,12 @@ export const identityQuestions = [
     category: "Identity",
     question_en: "How do we become Muslim?",
     question_ar: "كيف نصبح مسلمين؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "By saying the Shahada: 'There is no god but Allah, and Muhammad is His Messenger'",
+      "By being born in a Muslim country",
+      "By going to Hajj once"
+    ],
     feedback_en: "By saying the Shahada: 'There is no god but Allah, and Muhammad is His Messenger.'",
     feedback_ar: "لَا إِلَٰهَ إِلَّا اللَّهُ مُحَمَّدٌ رَسُولُ اللَّهِ",
     reference: "Hadith – Bukhari"
@@ -35,7 +45,12 @@ export const identityQuestions = [
     category: "Identity",
     question_en: "Why do Muslims say As-salamu alaykum?",
     question_ar: "لماذا يقول المسلمون السلام عليكم؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "Because it means 'Peace be upon you' and spreads love",
+      "Because it’s just a tradition",
+      "Because it’s a secret code"
+    ],
     feedback_en: "Because it means 'Peace be upon you,' and spreads love.",
     feedback_ar: "أفشوا السلام بينكم",
     reference: "Hadith – Muslim"
@@ -56,7 +71,12 @@ export const identityQuestions = [
     category: "Identity",
     question_en: "What is Ramadan?",
     question_ar: "ما هو رمضان؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "The month of fasting, Qur’an, and mercy",
+      "A Muslim festival",
+      "A holiday for food only"
+    ],
     feedback_en: "Ramadan is the month of fasting, Qur’an, and mercy.",
     feedback_ar: "شَهْرُ رَمَضَانَ الَّذِي أُنزِلَ فِيهِ الْقُرْآنُ",
     reference: "Qur’an 2:185"
@@ -77,7 +97,12 @@ export const identityQuestions = [
     category: "Identity",
     question_en: "What is Eid?",
     question_ar: "ما هو العيد؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "A celebration after Ramadan and Hajj where Muslims thank Allah and spread joy",
+      "A Muslim wedding",
+      "A weekly Friday prayer"
+    ],
     feedback_en: "Eid is a celebration after Ramadan and Hajj where Muslims thank Allah and spread joy.",
     feedback_ar: "وَلِتُكْمِلُوا الْعِدَّةَ وَلِتُكَبِّرُوا اللَّهَ عَلَى مَا هَدَاكُمْ",
     reference: "Qur’an 2:185"
@@ -87,7 +112,12 @@ export const identityQuestions = [
     category: "Identity",
     question_en: "What is Hajj?",
     question_ar: "ما هو الحج؟",
-    format: "story",
+    format: "mcq",
+    options: [
+      "The pilgrimage to Makkah that Muslims must do once in their life if they can",
+      "A celebration after fasting",
+      "A type of prayer"
+    ],
     feedback_en: "Hajj is the pilgrimage to Makkah that Muslims must do once in their life if they can.",
     feedback_ar: "وَلِلَّهِ عَلَى النَّاسِ حِجُّ الْبَيْتِ",
     reference: "Qur’an 3:97"
