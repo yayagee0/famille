@@ -1,3 +1,5 @@
+// src/lib/questions/prophet.ts
+
 export const prophetQuestions = [
   {
     id: "prophet-1",
@@ -122,5 +124,156 @@ export const prophetQuestions = [
     feedback_en: "Because he is the last messenger and the best example for all people.",
     feedback_ar: "خاتم النبيين",
     reference: "Qur’an 33:40"
+  },
+  {
+    id: "prophet-11",
+    category: "Prophet",
+    question_en: "When was Prophet Muhammad ﷺ born?",
+    question_ar: "متى وُلِد النبي محمد ﷺ؟",
+    format: "mcq",
+    options: [
+      "Year of the Elephant (عام الفيل, ~570 CE)",
+      "500 CE",
+      "After the Qur’an was revealed"
+    ],
+    feedback_en: "He was born in the Year of the Elephant (~570 CE).",
+    feedback_ar: "وُلِد النبي ﷺ عام الفيل",
+    reference: "Seerah – Ibn Hisham"
+  },
+  {
+    id: "prophet-12",
+    category: "Prophet",
+    question_en: "Who was the father of Prophet Muhammad ﷺ?",
+    question_ar: "من هو والد النبي محمد ﷺ؟",
+    format: "mcq",
+    options: ["Abdullah ibn Abd al-Muttalib", "Abu Talib", "Abdul Muttalib"],
+    feedback_en: "His father was Abdullah ibn Abd al-Muttalib.",
+    feedback_ar: "أبوه عبد الله بن عبد المطلب",
+    reference: "Seerah"
+  },
+  {
+    id: "prophet-13",
+    category: "Prophet",
+    question_en: "Who was the mother of Prophet Muhammad ﷺ?",
+    question_ar: "من هي والدة النبي محمد ﷺ؟",
+    format: "mcq",
+    options: ["Aminah bint Wahb", "Khadijah", "Fatimah"],
+    feedback_en: "His mother was Aminah bint Wahb.",
+    feedback_ar: "أمه آمنة بنت وهب",
+    reference: "Seerah"
+  },
+  {
+    id: "prophet-14",
+    category: "Prophet",
+    question_en: "Was Prophet Muhammad ﷺ an orphan?",
+    question_ar: "هل كان النبي محمد ﷺ يتيماً؟",
+    format: "mcq",
+    options: ["Yes, his parents died when he was young", "No", "Only his father died"],
+    feedback_en: "Yes, he lost his father before birth and his mother when he was very young.",
+    feedback_ar: "مَّا وَدَّعَكَ رَبُّكَ وَمَا قَلَى",
+    reference: "Qur’an 93:3-6"
+  },
+  {
+    id: "prophet-15",
+    category: "Prophet",
+    question_en: "Who raised Prophet Muhammad ﷺ after his parents passed away?",
+    question_ar: "من ربّى النبي محمد ﷺ بعد وفاة والديه؟",
+    format: "mcq",
+    options: ["His grandfather Abdul Muttalib, then his uncle Abu Talib", "Only his father", "His teacher"],
+    feedback_en: "He was first raised by his grandfather Abdul Muttalib, then by his uncle Abu Talib.",
+    feedback_ar: "ربّاه جدّه عبد المطلب ثم عمه أبو طالب",
+    reference: "Seerah"
+  },
+  {
+    id: "prophet-16",
+    category: "Prophet",
+    question_en: "What was Prophet Muhammad ﷺ called before becoming a prophet?",
+    question_ar: "بماذا كان يُلقّب النبي محمد ﷺ قبل أن يصبح نبيًا؟",
+    format: "mcq",
+    options: ["Al-Amin (The Trustworthy)", "Al-Malik (The King)", "Al-Qawi (The Strong)"],
+    feedback_en: "He was known as Al-Amin (The Trustworthy).",
+    feedback_ar: "كان يُلقّب بالأمين",
+    reference: "Seerah"
+  },
+  {
+    id: "prophet-17",
+    category: "Prophet",
+    question_en: "At what age did Prophet Muhammad ﷺ receive revelation and become a Prophet?",
+    question_ar: "في أي عمر أصبح النبي محمد ﷺ نبيًا؟",
+    format: "mcq",
+    options: ["40 years old", "25 years old", "50 years old"],
+    feedback_en: "He received revelation at the age of 40.",
+    feedback_ar: "بُعث نبيًا وهو في سن الأربعين",
+    reference: "Qur’an 96:1-5, Seerah"
+  },
+  {
+    id: "prophet-18",
+    category: "Prophet",
+    question_en: "Who was the first wife of Prophet Muhammad ﷺ?",
+    question_ar: "من كانت أول زوجة للنبي محمد ﷺ؟",
+    format: "mcq",
+    options: ["Khadijah bint Khuwaylid", "Aisha bint Abi Bakr", "Hafsa bint Umar"],
+    feedback_en: "His first wife was Khadijah bint Khuwaylid.",
+    feedback_ar: "خديجة بنت خويلد رضي الله عنها",
+    reference: "Seerah"
+  },
+  {
+    id: "prophet-19",
+    category: "Prophet",
+    question_en: "How long were Prophet Muhammad ﷺ and Khadijah married until she passed away?",
+    question_ar: "كم سنة عاش النبي محمد ﷺ مع خديجة حتى وفاتها؟",
+    format: "mcq",
+    options: ["About 25 years", "10 years", "40 years"],
+    feedback_en: "They were married for about 25 years until she passed away.",
+    feedback_ar: "تزوجا حوالي ٢٥ سنة حتى وفاتها",
+    reference: "Seerah"
+  },
+  {
+    id: "prophet-20",
+    category: "Prophet",
+    question_en: "Did Prophet Muhammad ﷺ have children?",
+    question_ar: "هل كان للنبي محمد ﷺ أولاد؟",
+    format: "mcq",
+    options: ["Yes, sons and daughters", "No children", "Only one son"],
+    feedback_en: "Yes, he had sons and daughters. The most known are Fatimah, Ruqayyah, Umm Kulthum, Zaynab, Qasim, Abdullah, and Ibrahim.",
+    feedback_ar: "نعم، كان له أولاد وبنات، منهم فاطمة، رقية، أم كلثوم، زينب، القاسم، عبد الله، وإبراهيم",
+    reference: "Seerah"
+  },
+  {
+    id: "prophet-21",
+    category: "Prophet",
+    question_en: "How old was Prophet Muhammad ﷺ when he passed away?",
+    question_ar: "كم كان عمر النبي محمد ﷺ عندما توفي؟",
+    format: "mcq",
+    options: ["63 years old", "50 years old", "70 years old"],
+    feedback_en: "He passed away at the age of 63.",
+    feedback_ar: "توفي النبي ﷺ عن عمر 63 سنة",
+    reference: "Seerah"
+  },
+  {
+    id: "prophet-22",
+    category: "Prophet",
+    question_en: "When and where did Prophet Muhammad ﷺ die?",
+    question_ar: "متى وأين توفي النبي محمد ﷺ؟",
+    format: "mcq",
+    options: [
+      "In Madinah, year 11 AH (632 CE)",
+      "In Makkah, year 10 AH",
+      "In Jerusalem, year 15 AH"
+    ],
+    feedback_en: "He passed away in Madinah in the year 11 AH (632 CE).",
+    feedback_ar: "توفي في المدينة المنورة سنة 11 هـ (632 م)",
+    reference: "Seerah"
+  },
+  {
+    id: "prophet-23",
+    category: "Prophet",
+    question_en: "What was the Prophet Muhammad ﷺ’s job before Prophethood?",
+    question_ar: "ما هو عمل النبي محمد ﷺ قبل النبوة؟",
+    format: "mcq",
+    options: ["Shepherd and honest merchant (تاجر أمين)", "King", "Farmer only"],
+    feedback_en: "He worked as a shepherd in his youth and later as a trustworthy merchant (Al-Amin).",
+    feedback_ar: "كان راعياً ثم تاجراً أميناً قبل النبوة",
+    reference: "Hadith – Bukhari, Seerah"
   }
 ];
