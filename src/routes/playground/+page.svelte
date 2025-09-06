@@ -43,7 +43,7 @@
 			>
 				🎮 Play Area
 			</h1>
-			<p class="mt-1 text-sm {currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-500'}">
+			<p class="mt-1 text-sm {currentTheme === 'neo' ? '' : 'text-gray-500'}" style="{currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}">>
 				Fun simulations and activities for everyone in the family
 			</p>
 		</div>
@@ -54,9 +54,10 @@
 			class="flex items-center space-x-2 rounded-lg px-3 py-2 text-sm transition-colors {currentTheme ===
 			'neo'
 				? $soundEnabled
-					? 'neo-button border border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
-					: 'neo-glass text-slate-400 hover:bg-white/10'
+					? 'neo-button'
+					: 'neo-glass hover:bg-white/10'
 				: 'bg-gray-100 hover:bg-gray-200'}"
+			style="{currentTheme === 'neo' && $soundEnabled ? 'border-color: var(--neo-cyan); background: var(--neo-glass-medium); color: var(--neo-cyan);' : currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}"
 			title={$soundEnabled ? 'Turn off sound' : 'Turn on sound'}
 		>
 			{#if $soundEnabled}
@@ -155,7 +156,7 @@
 				{#if currentTheme === 'neo'}
 					<GlassCard header="🕌 Islam – Our Identity" glow={true} shimmer={true}>
 						<div class="space-y-4 text-center">
-							<p class="text-slate-200">
+							<p style="color: var(--neo-text-primary);">
 								Learn about our beautiful faith through interactive questions and reflections.
 							</p>
 							<a

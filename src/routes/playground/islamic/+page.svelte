@@ -240,9 +240,9 @@
 				<span class="text-3xl">🕌</span>
 				<h1 class="text-2xl font-bold {currentTheme === 'neo' ? 'neo-gradient-text' : ''}">Islam – Our Identity</h1>
 			</div>
-			<p class="{currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-600'}">Learn about our beautiful faith through questions and reflections</p>
+			<p class="{currentTheme === 'neo' ? '' : 'text-gray-600'}" style="{currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}">Learn about our beautiful faith through questions and reflections</p>
 			{#if userNickname}
-				<p class="mt-2 text-sm font-medium {currentTheme === 'neo' ? 'text-lime-400' : 'text-green-700'}">
+				<p class="mt-2 text-sm font-medium {currentTheme === 'neo' ? '' : 'text-green-700'}" style="{currentTheme === 'neo' ? 'color: var(--neo-lime);' : ''}">
 					Welcome back, {userNickname}! 🌟
 				</p>
 			{/if}
@@ -269,9 +269,10 @@
 			<div class="text-center">
 				<button
 					onclick={showMoreQuestions}
-					class="rounded-2xl px-6 py-3 font-medium text-white shadow-sm transition-all {currentTheme === 'neo' 
-						? 'neo-button border border-lime-400/50 bg-lime-500/20 text-lime-400 hover:bg-lime-500/30' 
-						: 'bg-gradient-to-r from-green-600 to-teal-500 hover:from-green-700 hover:to-teal-600 hover:shadow-md'}"
+					class="rounded-2xl px-6 py-3 font-medium shadow-sm transition-all {currentTheme === 'neo' 
+						? 'neo-button' 
+						: 'bg-gradient-to-r from-green-600 to-teal-500 hover:from-green-700 hover:to-teal-600 hover:shadow-md text-white'}"
+					style="{currentTheme === 'neo' ? 'border-color: var(--neo-lime); background: var(--neo-glass-medium); color: var(--neo-lime);' : ''}"
 				>
 					Show More Questions
 				</button>
@@ -286,8 +287,9 @@
 					<button
 						onclick={resetProgress}
 						class="rounded-lg px-3 py-1 text-sm font-medium transition-colors {currentTheme === 'neo' 
-							? 'neo-glass border border-red-400/30 text-red-400 hover:bg-red-500/20' 
+							? 'neo-glass hover:bg-white/10' 
 							: 'bg-red-100 text-red-700 hover:bg-red-200'}"
+						style="{currentTheme === 'neo' ? 'border-color: var(--neo-magenta); color: var(--neo-magenta);' : ''}"
 					>
 						Reset Progress
 					</button>
@@ -319,13 +321,14 @@
 		<!-- Empty state when no questions are active -->
 		{#if activeQuestions.length === 0 && !hasMoreQuestions()}
 			<div class="rounded-2xl p-8 text-center {currentTheme === 'neo' 
-				? 'neo-glass border border-lime-400/30' 
-				: 'bg-gradient-to-r from-green-50 to-teal-50'}">
+				? 'neo-glass' 
+				: 'bg-gradient-to-r from-green-50 to-teal-50'}"
+				style="{currentTheme === 'neo' ? 'border-color: var(--neo-lime);' : ''}">
 				<div class="mb-4 text-4xl">🎉</div>
 				<h3 class="mb-2 text-xl font-semibold {currentTheme === 'neo' ? 'neo-gradient-text' : 'text-gray-800'}">
 					Mashaallah! You've completed all questions!
 				</h3>
-				<p class="{currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-600'}">Check your knowledge tree below to review what you've learned.</p>
+				<p class="{currentTheme === 'neo' ? '' : 'text-gray-600'}" style="{currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}">Check your knowledge tree below to review what you've learned.</p>
 			</div>
 		{/if}
 	{/if}

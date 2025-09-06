@@ -326,7 +326,7 @@
 <div class="mx-auto max-w-2xl space-y-6">
 	<div>
 		<h1 class="{currentTheme === 'neo' ? 'neo-gradient-text' : ''} text-2xl font-bold {currentTheme === 'neo' ? '' : 'text-gray-900'}">Family Feed</h1>
-		<p class="mt-1 text-sm {currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-500'}">Share moments and stay connected</p>
+		<p class="mt-1 text-sm {currentTheme === 'neo' ? '' : 'text-gray-500'}" style="{currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}">Share moments and stay connected</p>
 	</div>
 
 	<!-- Offline Indicator -->
@@ -351,7 +351,7 @@
 			<LoadingSpinner size="large" message="Loading family feed..." />
 		{:else if posts.length === 0}
 			<div class="{currentTheme === 'neo' ? 'neo-glass border border-white/10' : 'bg-white shadow'} rounded py-8 text-center">
-				<p class="{currentTheme === 'neo' ? 'text-slate-300' : 'text-gray-600'}">No posts yet — be the first!</p>
+				<p class="{currentTheme === 'neo' ? '' : 'text-gray-600'}" style="{currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}">No posts yet — be the first!</p>
 			</div>
 		{:else}
 			<div class="space-y-6">
@@ -366,8 +366,8 @@
 										<div class="h-10 w-10 rounded-full neo-glass border border-white/20"></div>
 									{/if}
 									<div>
-										<p class="text-sm font-medium text-slate-200">{post.author?.displayName}</p>
-										<p class="text-xs text-slate-400">
+										<p class="text-sm font-medium" style="color: var(--neo-text-primary);">{post.author?.displayName}</p>
+										<p class="text-xs" style="color: var(--neo-text-secondary);">
 											{#if post.createdAt}
 												{dayjs(
 													post.createdAt?.toDate ? post.createdAt.toDate() : post.createdAt
@@ -378,7 +378,7 @@
 								</div>
 
 								{#if post.text}
-									<p class="mb-4 text-slate-200">{post.text}</p>
+									<p class="mb-4" style="color: var(--neo-text-primary);">{post.text}</p>
 								{/if}
 
 								{#if post.imagePath}
@@ -390,16 +390,16 @@
 										>
 											{#each post.imagePaths.slice(0, 6) as imagePath, index (imagePath)}
 												<div class="relative">
-													<img
-														src={imagePath}
-														alt=""
-														class="max-h-[600px] w-full rounded-xl object-contain transition-all duration-300 hover:scale-105 bg-slate-800 border-2 border-cyan-400/30 hover:border-cyan-400/80 hover:shadow-lg shadow-cyan-400/30 hover:shadow-cyan-400/50 {index === 5 && post.imagePaths.length > 6 ? 'opacity-75' : ''}"
-													/>
+									<img
+										src={imagePath}
+										alt=""
+										class="max-h-[600px] w-full rounded-xl object-contain neo-image-glow {index === 5 && post.imagePaths.length > 6 ? 'opacity-75' : ''}"
+									/>
 													{#if index === 5 && post.imagePaths.length > 6}
 														<div
 															class="bg-opacity-50 absolute inset-0 flex items-center justify-center rounded-lg bg-black"
 														>
-															<span class="text-lg font-bold text-white"
+															<span class="text-lg font-bold" style="color: var(--neo-text-primary);"
 																>+{post.imagePaths.length - 6}</span
 															>
 														</div>
@@ -411,7 +411,7 @@
 										<img
 											src={post.imagePath}
 											alt=""
-											class="mb-4 max-h-[600px] w-full rounded-xl object-contain transition-all duration-300 hover:scale-105 bg-slate-800 border-2 border-cyan-400/30 hover:border-cyan-400/80 hover:shadow-lg shadow-cyan-400/30 hover:shadow-cyan-400/50"
+											class="mb-4 max-h-[600px] w-full rounded-xl object-contain neo-image-glow"
 										/>
 									{/if}
 								{/if}
@@ -450,21 +450,22 @@
 											<button
 												onclick={() => voteInPoll(post, index)}
 												disabled={!user}
-												class="mb-3 w-full rounded-lg border p-3 text-left transition-colors neo-row-hover {isUserVoted ? 'border-cyan-400/50 bg-cyan-500/20' : 'border-white/20'} disabled:cursor-not-allowed disabled:opacity-50"
+												class="mb-3 w-full rounded-lg border p-3 text-left transition-colors neo-row-hover disabled:cursor-not-allowed disabled:opacity-50 {isUserVoted ? 'neo-glass' : ''}"
+												style="{isUserVoted ? 'border-color: var(--neo-cyan); background: var(--neo-glass-medium);' : 'border-color: var(--neo-border);'}"
 											>
 												<div class="flex items-center justify-between">
-													<span class="font-medium text-slate-200">{opt.text}</span>
-													<div class="text-sm text-slate-400">
+													<span class="font-medium" style="color: var(--neo-text-primary);">{opt.text}</span>
+													<div class="text-sm" style="color: var(--neo-text-secondary);">
 														{#await voterNamesPromise}
-															<span class="text-slate-500">Loading...</span>
+															<span style="color: var(--neo-text-muted);">Loading...</span>
 														{:then voterNames}
 															{#if voterNames}
 																<span>{voterNames}</span>
 															{:else}
-																<span class="text-slate-500">No votes yet</span>
+																<span style="color: var(--neo-text-muted);">No votes yet</span>
 															{/if}
 														{:catch}
-															<span class="text-slate-500">Error loading</span>
+															<span style="color: var(--neo-text-muted);">Error loading</span>
 														{/await}
 													</div>
 												</div>
@@ -474,8 +475,8 @@
 										{#if user && getUserVote(post.poll) !== null}
 											{@const userVoteIndex = getUserVote(post.poll)}
 											{#if userVoteIndex !== null}
-												<div class="mt-3 border-t border-white/20 pt-3">
-													<p class="text-sm font-medium text-cyan-400">
+												<div class="mt-3 pt-3" style="border-top: 1px solid var(--neo-border);">
+													<p class="text-sm font-medium" style="color: var(--neo-cyan);">
 														You voted: {post.poll.options[userVoteIndex].text}
 													</p>
 												</div>
@@ -493,14 +494,14 @@
 											size="small"
 											variant={isUserLiked(post) ? 'accent' : 'default'}
 										>
-											<Heart class="h-4 w-4 {isUserLiked(post) ? 'fill-magenta-500 text-magenta-500' : 'text-slate-400'}" />
+											<Heart class="h-4 w-4" style={isUserLiked(post) ? 'fill: var(--neo-magenta); color: var(--neo-magenta);' : 'color: var(--neo-text-secondary);'} />
 											<span class="text-xs">{post.likes?.length || 0} {(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span>
 										</GlassChip>
 										<GlassChip 
 											onclick={() => toggleComments(post.id)}
 											size="small"
 										>
-											<MessageCircle class="h-4 w-4 text-slate-400" />
+											<MessageCircle class="h-4 w-4" style="color: var(--neo-text-secondary);" />
 											<span class="text-xs">{post.comments?.length || 0} {(post.comments?.length || 0) === 1 ? 'comment' : 'comments'}</span>
 										</GlassChip>
 									</div>
@@ -522,9 +523,9 @@
 											<div class="mb-4 space-y-3">
 												{#each post.comments as comment (comment)}
 													<div class="text-sm">
-														<span class="font-medium text-slate-200">{comment.author}</span>
-														<span class="ml-2 text-slate-300">{comment.text}</span>
-														<div class="mt-1 text-xs text-slate-500">
+														<span class="font-medium" style="color: var(--neo-text-primary);">{comment.author}</span>
+														<span class="ml-2" style="color: var(--neo-text-secondary);">{comment.text}</span>
+														<div class="mt-1 text-xs" style="color: var(--neo-text-muted);">
 															{dayjs(
 																comment.createdAt?.toDate
 																	? comment.createdAt.toDate()
@@ -554,7 +555,7 @@
 															addComment(post.id);
 														}
 													}}
-													class="flex-1 rounded-lg border px-3 py-2 text-sm focus:ring-2 neo-glass border-white/20 text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-cyan-400/50"
+													class="flex-1 rounded-lg border px-3 py-2 text-sm neo-input"
 												/>
 												<GlassChip 
 													onclick={() => addComment(post.id)}
