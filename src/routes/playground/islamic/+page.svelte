@@ -152,9 +152,11 @@
 			answeredIds = new Set(answeredIds); // Trigger reactivity
 			justAddedId = null; // Reset animation state
 			
-			// Reload fresh data from islamicQuestions
-			allQuestions = [...islamicQuestions as Question[]];
+			// Reload fresh data from islamicQuestions (ensure new/updated questions are reflected)
+			allQuestions = islamicQuestions as Question[];
 			updateQuestionLists();
+			
+			console.log('Progress reset'); // Debug logging
 			
 		} catch (error) {
 			console.error('Failed to reset progress:', error);
