@@ -1,0 +1,76 @@
+{
+  id: "allah-11",
+  category: "Allah",
+  question_en: "Does Allah have a family or children?",
+  question_ar: "هل لله عائلة أو أولاد؟",
+  format: "mcq",
+  options: ["No, Allah is One and has no family", "Yes, He has sons", "Yes, He has daughters"],
+  feedback_en: "Allah is One. He has no family, no sons, no daughters.",
+  feedback_ar: "لَمْ يَلِدْ وَلَمْ يُولَدْ",
+  reference: "Qur’an 112:3 (Surah Al-Ikhlas)"
+},
+{
+  id: "allah-12",
+  category: "Allah",
+  question_en: "How many gods are there?",
+  question_ar: "كم إله يوجد؟",
+  format: "mcq",
+  options: ["Only One, Allah", "Many gods", "Not sure"],
+  feedback_en: "There is only One God, Allah.",
+  feedback_ar: "وَإِلَـٰهُكُمْ إِلَـٰهٌ وَاحِدٌ",
+  reference: "Qur’an 2:163"
+},
+{
+  id: "allah-13",
+  category: "Allah",
+  question_en: "What are the 99 Names of Allah?",
+  question_ar: "ما هي أسماء الله الحسنى؟",
+  format: "open",
+  feedback_en: "They are Allah’s beautiful names that describe His attributes, like Ar-Rahman (The Most Merciful).",
+  feedback_ar: "وَلِلَّهِ الْأَسْمَاءُ الْحُسْنَىٰ فَادْعُوهُ بِهَا",
+  reference: "Qur’an 7:180"
+},
+{
+  id: "allah-14",
+  category: "Allah",
+  question_en: "Does Allah hear and see everything?",
+  question_ar: "هل الله يسمع ويرى كل شيء؟",
+  format: "mcq",
+  options: ["Yes, always", "No", "Sometimes"],
+  feedback_en: "Yes, Allah hears and sees everything, even our whispers.",
+  feedback_ar: "إِنَّهُ هُوَ السَّمِيعُ الْبَصِيرُ",
+  reference: "Qur’an 42:11"
+},
+{
+  id: "allah-15",
+  category: "Allah",
+  question_en: "Is Allah close to us?",
+  question_ar: "هل الله قريب منا؟",
+  format: "mcq",
+  options: ["Yes, closer than our jugular vein", "No, very far away", "Only in the sky"],
+  feedback_en: "Allah is closer to us than our jugular vein.",
+  feedback_ar: "وَنَحْنُ أَقْرَبُ إِلَيْهِ مِنْ حَبْلِ الْوَرِيدِ",
+  reference: "Qur’an 50:16"
+},
+{
+  id: "allah-16",
+  category: "Allah",
+  question_en: "Who controls everything in the universe?",
+  question_ar: "من يسيطر على كل شيء في الكون؟",
+  format: "mcq",
+  options: ["Allah", "People", "Nature"],
+  feedback_en: "Allah controls everything in the heavens and the earth.",
+  feedback_ar: "أَلَا لَهُ الْخَلْقُ وَالْأَمْرُ",
+  reference: "Qur’an 7:54"
+},
+{
+  id: "allah-17",
+  category: "Allah",
+  question_en: "Is Allah merciful and just?",
+  question_ar: "هل الله رحيم وعادل؟",
+  format: "mcq",
+  options: ["Yes, He is Most Merciful and Most Just", "Only merciful", "Only just"],
+  feedback_en: "Allah is both Most Merciful and Most Just.",
+  feedback_ar: "إِنَّ اللَّهَ غَفُورٌ رَّحِيمٌ • وَاللَّهُ لَا يُحِبُّ الظَّالِمِينَ",
+  reference: "Qur’an 16:18 / 3:57"
+}
