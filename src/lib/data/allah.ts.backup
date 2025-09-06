@@ -75,4 +75,4 @@ export const allahQuestions = [
   feedback_ar: "إِنَّ اللَّهَ غَفُورٌ رَّحِيمٌ • وَاللَّهُ لَا يُحِبُّ الظَّالِمِينَ",
   reference: "Qur’an 16:18 / 3:57"
 }
-];
+];\n
