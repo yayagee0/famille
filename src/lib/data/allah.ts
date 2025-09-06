@@ -1,122 +1,76 @@
-export const allahQuestions = [
-  {
-    id: "allah-1",
-    category: "Allah",
-    question_en: "Who created the world?",
-    question_ar: "من خلق العالم؟",
-    format: "mcq",
-    options: ["Allah (الله)", "People", "Angels"],
-    feedback_en: "Allah created everything we see and don’t see.",
-    feedback_ar: "اللَّهُ خَالِقُ كُلِّ شَيْءٍ",
-    reference: "Qur’an 39:62"
-  },
-  {
-    id: "allah-2",
-    category: "Allah",
-    question_en: "Does Allah love us?",
-    question_ar: "هل الله يحبنا؟",
-    format: "mcq",
-    options: [
-      "Yes, Allah loves all His creations and especially those who do good",
-      "No, Allah only loves some people",
-      "Not sure"
-    ],
-    feedback_en: "Yes, Allah loves all His creations, and He loves most those who do good.",
-    feedback_ar: "إِنَّ اللَّهَ يُحِبُّ الْمُحْسِنِينَ",
-    reference: "Qur’an 3:134"
-  },
-  {
-    id: "allah-3",
-    category: "Allah",
-    question_en: "Why should we say Alhamdulillah?",
-    question_ar: "لماذا نقول الحمد لله؟",
-    format: "open",
-    feedback_en: "Because we thank Allah for everything He gave us.",
-    feedback_ar: "فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ",
-    reference: "Qur’an 2:152"
-  },
-  {
-    id: "allah-4",
-    category: "Allah",
-    question_en: "Can we see Allah?",
-    question_ar: "هل نستطيع أن نرى الله؟",
-    format: "mcq",
-    options: [
-      "No, not in this life but in Paradise insha’Allah",
-      "Yes, we can see Him anytime",
-      "Maybe only in dreams"
-    ],
-    feedback_en: "No, we cannot see Allah in this life, but we will see Him in Paradise insha’Allah.",
-    feedback_ar: "لَا تُدْرِكُهُ الْأَبْصَارُ",
-    reference: "Qur’an 6:103"
-  },
-  {
-    id: "allah-5",
-    category: "Allah",
-    question_en: "Does Allah forgive mistakes?",
-    question_ar: "هل الله يغفر الأخطاء؟",
-    format: "mcq",
-    options: ["Yes, if we ask Allah", "No", "Only sometimes"],
-    feedback_en: "Allah forgives all sins when we truly repent.",
-    feedback_ar: "إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا",
-    reference: "Qur’an 39:53"
-  },
-  {
-    id: "allah-6",
-    category: "Allah",
-    question_en: "Who gives us food, water, and life?",
-    question_ar: "من يعطينا الطعام والماء والحياة؟",
-    format: "mcq",
-    options: ["Allah (الله)", "Our parents", "The earth"],
-    feedback_en: "Allah provides everything, even through parents and nature.",
-    feedback_ar: "وَمَا مِن دَابَّةٍ فِي الْأَرْضِ إِلَّا عَلَى اللَّهِ رِزْقُهَا",
-    reference: "Qur’an 11:6"
-  },
-  {
-    id: "allah-7",
-    category: "Allah",
-    question_en: "Does Allah get tired?",
-    question_ar: "هل يتعب الله؟",
-    format: "mcq",
-    options: ["Yes", "No, Allah never gets tired or needs rest", "Sometimes"],
-    feedback_en: "No, Allah never gets tired or needs rest.",
-    feedback_ar: "وَمَا مَسَّنَا مِن لُّغُوبٍ",
-    reference: "Qur’an 50:38"
-  },
-  {
-    id: "allah-8",
-    category: "Allah",
-    question_en: "Why should we love Allah?",
-    question_ar: "لماذا يجب أن نحب الله؟",
-    format: "open",
-    feedback_en: "Because Allah made us, takes care of us, and gives us everything.",
-    feedback_ar: "يُحِبُّهُمْ وَيُحِبُّونَهُ",
-    reference: "Qur’an 5:54"
-  },
-  {
-    id: "allah-9",
-    category: "Allah",
-    question_en: "Does Allah sleep?",
-    question_ar: "هل ينام الله؟",
-    format: "mcq",
-    options: ["Yes", "No, Allah never sleeps (لا ينام الله)", "Sometimes"],
-    feedback_en: "Allah never sleeps. He always watches over us.",
-    feedback_ar: "لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ",
-    reference: "Qur’an 2:255 (Ayat al-Kursi)"
-  },
-  {
-    id: "allah-10",
-    category: "Allah",
-    question_en: "Why should we trust Allah?",
-    question_ar: "لماذا يجب أن نثق بالله؟",
-    format: "mcq",
-    options: [
-      "Because Allah knows what is best for us",
-      "Because people always know better",
-      "Because life is random"
-    ],
-    feedback_en: "Because Allah knows what is best for us, even when we don’t understand.",
-    feedback_ar: "وَعَلَى اللَّهِ فَتَوَكَّلُوا إِن كُنتُم مُّؤْمِنِينَ",
-    reference: "Qur’an 5:23"
-  }
-];
+{
+  id: "allah-11",
+  category: "Allah",
+  question_en: "Does Allah have a family or children?",
+  question_ar: "هل لله عائلة أو أولاد؟",
+  format: "mcq",
+  options: ["No, Allah is One and has no family", "Yes, He has sons", "Yes, He has daughters"],
+  feedback_en: "Allah is One. He has no family, no sons, no daughters.",
+  feedback_ar: "لَمْ يَلِدْ وَلَمْ يُولَدْ",
+  reference: "Qur’an 112:3 (Surah Al-Ikhlas)"
+},
+{
+  id: "allah-12",
+  category: "Allah",
+  question_en: "How many gods are there?",
+  question_ar: "كم إله يوجد؟",
+  format: "mcq",
+  options: ["Only One, Allah", "Many gods", "Not sure"],
+  feedback_en: "There is only One God, Allah.",
+  feedback_ar: "وَإِلَـٰهُكُمْ إِلَـٰهٌ وَاحِدٌ",
+  reference: "Qur’an 2:163"
+},
+{
+  id: "allah-13",
+  category: "Allah",
+  question_en: "What are the 99 Names of Allah?",
+  question_ar: "ما هي أسماء الله الحسنى؟",
+  format: "open",
+  feedback_en: "They are Allah’s beautiful names that describe His attributes, like Ar-Rahman (The Most Merciful).",
+  feedback_ar: "وَلِلَّهِ الْأَسْمَاءُ الْحُسْنَىٰ فَادْعُوهُ بِهَا",
+  reference: "Qur’an 7:180"
+},
+{
+  id: "allah-14",
+  category: "Allah",
+  question_en: "Does Allah hear and see everything?",
+  question_ar: "هل الله يسمع ويرى كل شيء؟",
+  format: "mcq",
+  options: ["Yes, always", "No", "Sometimes"],
+  feedback_en: "Yes, Allah hears and sees everything, even our whispers.",
+  feedback_ar: "إِنَّهُ هُوَ السَّمِيعُ الْبَصِيرُ",
+  reference: "Qur’an 42:11"
+},
+{
+  id: "allah-15",
+  category: "Allah",
+  question_en: "Is Allah close to us?",
+  question_ar: "هل الله قريب منا؟",
+  format: "mcq",
+  options: ["Yes, closer than our jugular vein", "No, very far away", "Only in the sky"],
+  feedback_en: "Allah is closer to us than our jugular vein.",
+  feedback_ar: "وَنَحْنُ أَقْرَبُ إِلَيْهِ مِنْ حَبْلِ الْوَرِيدِ",
+  reference: "Qur’an 50:16"
+},
+{
+  id: "allah-16",
+  category: "Allah",
+  question_en: "Who controls everything in the universe?",
+  question_ar: "من يسيطر على كل شيء في الكون؟",
+  format: "mcq",
+  options: ["Allah", "People", "Nature"],
+  feedback_en: "Allah controls everything in the heavens and the earth.",
+  feedback_ar: "أَلَا لَهُ الْخَلْقُ وَالْأَمْرُ",
+  reference: "Qur’an 7:54"
+},
+{
+  id: "allah-17",
+  category: "Allah",
+  question_en: "Is Allah merciful and just?",
+  question_ar: "هل الله رحيم وعادل؟",
+  format: "mcq",
+  options: ["Yes, He is Most Merciful and Most Just", "Only merciful", "Only just"],
+  feedback_en: "Allah is both Most Merciful and Most Just.",
+  feedback_ar: "إِنَّ اللَّهَ غَفُورٌ رَّحِيمٌ • وَاللَّهُ لَا يُحِبُّ الظَّالِمِينَ",
+  reference: "Qur’an 16:18 / 3:57"
+}
