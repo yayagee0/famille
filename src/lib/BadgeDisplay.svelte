@@ -59,7 +59,6 @@
 				})
 				.filter(Boolean)
 				.slice(0, maxDisplay);
-
 		} catch (error) {
 			console.error('[BadgeDisplay] Failed to load badges:', error);
 		} finally {
@@ -149,7 +148,7 @@
 	async function showBadgeAnimation(lottieUrl: string) {
 		console.log('[BadgeDisplay] Playing badge animation:', lottieUrl);
 		showLottieAnimation = lottieUrl;
-		
+
 		// Hide animation after 3 seconds
 		setTimeout(() => {
 			showLottieAnimation = null;
@@ -187,17 +186,21 @@
 				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
 					{#each userBadges as badge (badge.id)}
 						{@const RarityIcon = getRarityIcon(badge.template.rarity)}
-						
+
 						<button
 							onclick={() => showBadgeAnimation(badge.template.lottieUrl)}
-							class="group rounded-xl border p-3 transition-all hover:scale-105 {getRarityStyles(badge.template.rarity)}"
+							class="group rounded-xl border p-3 transition-all hover:scale-105 {getRarityStyles(
+								badge.template.rarity
+							)}"
 						>
 							<div class="space-y-2">
 								<!-- Badge Icon/Animation Placeholder -->
-								<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-500/20">
+								<div
+									class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-500/20"
+								>
 									<RarityIcon class="h-6 w-6 {getRarityColor(badge.template.rarity)}" />
 								</div>
-								
+
 								<!-- Badge Name -->
 								<div class="text-center">
 									<h3 class="text-sm font-medium text-slate-200 group-hover:text-lime-400">
@@ -235,17 +238,21 @@
 			<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
 				{#each userBadges as badge (badge.id)}
 					{@const RarityIcon = getRarityIcon(badge.template.rarity)}
-					
+
 					<button
 						onclick={() => showBadgeAnimation(badge.template.lottieUrl)}
-						class="group rounded-xl border p-3 transition-all hover:scale-105 hover:shadow-md {getRarityStyles(badge.template.rarity)}"
+						class="group rounded-xl border p-3 transition-all hover:scale-105 hover:shadow-md {getRarityStyles(
+							badge.template.rarity
+						)}"
 					>
 						<div class="space-y-2">
 							<!-- Badge Icon/Animation Placeholder -->
-							<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/50">
+							<div
+								class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/50"
+							>
 								<RarityIcon class="h-6 w-6 {getRarityColor(badge.template.rarity)}" />
 							</div>
-							
+
 							<!-- Badge Name -->
 							<div class="text-center">
 								<h3 class="text-sm font-medium text-gray-800 group-hover:text-indigo-600">

@@ -133,11 +133,7 @@ query(
 **Query Path**: Used for recent badge display and notifications
 
 ```javascript
-query(
-	collection(db, 'users', userId, 'badges'),
-	orderBy('earnedAt', 'desc'),
-	limit(10)
-);
+query(collection(db, 'users', userId, 'badges'), orderBy('earnedAt', 'desc'), limit(10));
 ```
 
 These indexes will be automatically suggested in the Firebase Console when the queries are first executed. You can also create them manually:

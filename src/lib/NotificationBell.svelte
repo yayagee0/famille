@@ -13,7 +13,7 @@
 
 	let notifications = $state<any[]>([]);
 	let showDropdown = $state(false);
-	let unreadCount = $derived(notifications.filter(n => !n.read).length);
+	let unreadCount = $derived(notifications.filter((n) => !n.read).length);
 	let unsubscribe: (() => void) | null = null;
 
 	onMount(() => {
@@ -48,18 +48,18 @@
 		if (!notification.read) {
 			await markNotificationAsRead(user.uid, notification.id);
 		}
-		
+
 		// Navigate to link if provided
 		if (notification.link) {
 			window.location.href = notification.link;
 		}
-		
+
 		showDropdown = false;
 	}
 
 	function formatTime(timestamp: any) {
 		if (!timestamp) return '';
-		
+
 		// Handle Firestore Timestamp
 		const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
 		return dayjs(date).fromNow();
@@ -84,7 +84,7 @@
 <div class="notification-dropdown relative">
 	<button
 		onclick={toggleDropdown}
-		class="relative rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+		class="relative rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
 		aria-label="Notifications"
 	>
 		<Bell class="h-6 w-6" />
@@ -99,7 +99,7 @@
 
 	{#if showDropdown}
 		<div
-			class="absolute right-0 z-50 mt-2 w-80 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+			class="ring-opacity-5 absolute right-0 z-50 mt-2 w-80 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black focus:outline-none"
 		>
 			<div class="p-4">
 				<div class="flex items-center justify-between">
@@ -128,19 +128,19 @@
 						>
 							<div class="flex items-start space-x-3">
 								<span class="text-2xl">{getNotificationIcon(notification.type)}</span>
-								<div class="flex-1 min-w-0">
+								<div class="min-w-0 flex-1">
 									<div class="flex items-center justify-between">
-										<p class="text-sm font-medium text-gray-900 truncate">
+										<p class="truncate text-sm font-medium text-gray-900">
 											{notification.title}
 										</p>
 										{#if !notification.read}
 											<span class="ml-2 h-2 w-2 rounded-full bg-blue-500"></span>
 										{/if}
 									</div>
-									<p class="text-sm text-gray-500 mt-1 line-clamp-2">
+									<p class="mt-1 line-clamp-2 text-sm text-gray-500">
 										{notification.body}
 									</p>
-									<p class="text-xs text-gray-400 mt-1">
+									<p class="mt-1 text-xs text-gray-400">
 										{formatTime(notification.createdAt)}
 									</p>
 								</div>
@@ -152,7 +152,7 @@
 
 			{#if notifications.length > 0}
 				<div class="border-t border-gray-100 p-4">
-					<button class="text-sm text-indigo-600 hover:text-indigo-500 font-medium">
+					<button class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
 						View all notifications
 					</button>
 				</div>
