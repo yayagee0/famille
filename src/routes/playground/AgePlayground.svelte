@@ -166,9 +166,14 @@
 			<!-- Age display -->
 			<div class="text-center">
 				{#if currentTheme === 'neo'}
-					<div class="neo-glass inline-flex items-center space-x-2 rounded-xl border px-4 py-2" style="border-color: var(--neo-lime);">
+					<div
+						class="neo-glass inline-flex items-center space-x-2 rounded-xl border px-4 py-2"
+						style="border-color: var(--neo-lime);"
+					>
 						<span class="text-2xl">🎂</span>
-						<span class="text-xl font-bold" style="color: var(--neo-lime);">{formatAge(targetAge)}</span>
+						<span class="text-xl font-bold" style="color: var(--neo-lime);"
+							>{formatAge(targetAge)}</span
+						>
 					</div>
 				{:else}
 					<div
@@ -205,12 +210,17 @@
 			<div class="grid gap-3 sm:grid-cols-2">
 				{#each ageCalculations as member (member.email)}
 					{#if currentTheme === 'neo'}
-						<div class="neo-glass neo-row-hover rounded-xl border p-4 text-center" style="border-color: var(--neo-border);">
+						<div
+							class="neo-glass neo-row-hover rounded-xl border p-4 text-center"
+							style="border-color: var(--neo-border);"
+						>
 							<div class="mb-2 text-2xl">{memberEmojis[member.email] || '👤'}</div>
 							<div class="text-sm font-medium" style="color: var(--neo-text-secondary);">
 								{getDisplayName(member.email, { nickname: member.nickname })}
 							</div>
-							<div class="text-lg font-bold" style="color: var(--neo-cyan);">{formatAge(member.ageAtTarget)}</div>
+							<div class="text-lg font-bold" style="color: var(--neo-cyan);">
+								{formatAge(member.ageAtTarget)}
+							</div>
 							<div class="text-xs" style="color: var(--neo-text-muted);">
 								{member.ageDifference > 0 ? '+' : ''}{member.ageDifference} years from now
 							</div>
@@ -232,7 +242,12 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="text-center {currentTheme === 'neo' ? '' : 'text-gray-600'}" style="{currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}">Select a family member to see age calculations</p>
+			<p
+				class="text-center {currentTheme === 'neo' ? '' : 'text-gray-600'}"
+				style={currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}
+			>
+				Select a family member to see age calculations
+			</p>
 		{/if}
 	{/if}
 </div>

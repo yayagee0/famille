@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { Image, Video, Youtube, BarChart3, Send, X } from 'lucide-svelte';
+	import { Image, Video, Youtube, BarChart3, Send, X, WifiOff } from 'lucide-svelte';
 	import { validatePost } from '$lib/schemas';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 	import { storage, db } from '$lib/firebase';
@@ -10,6 +10,7 @@
 	import GlassCard from '$lib/themes/neo/components/GlassCard.svelte';
 	import GlassChip from '$lib/themes/neo/components/GlassChip.svelte';
 	import { themeStore } from '$lib/themes/neo';
+	import { isOnline, queueOfflineAction } from '$lib/offline';
 
 	const dispatch = createEventDispatcher();
 
@@ -26,6 +27,7 @@
 	let previewUrls: string[] = $state([]);
 	let uploadProgress = $state('');
 	let currentTheme = $state('default');
+	let showOfflineWarning = $state(false);
 
 	// Subscribe to theme changes
 	$effect(() => {
@@ -36,6 +38,15 @@
 	});
 
 	function setPostType(type: typeof postType) {
+		// Check if trying to set media type while offline
+		if (!$isOnline && (type === 'photo' || type === 'video')) {
+			showOfflineWarning = true;
+			setTimeout(() => {
+				showOfflineWarning = false;
+			}, 4000);
+			return;
+		}
+
 		postType = type;
 		// Reset form when changing type
 		selectedFiles = null;
@@ -109,6 +120,15 @@
 			return; // No unreachable code after this - validation exit point
 		}
 
+		// Check if trying to upload media while offline
+		if (!$isOnline && (postType === 'photo' || postType === 'video')) {
+			showOfflineWarning = true;
+			setTimeout(() => {
+				showOfflineWarning = false;
+			}, 4000);
+			return;
+		}
+
 		// Main submission logic starts here - no unreachable code issue
 		isUploading = true;
 		uploadProgress = '';
@@ -117,8 +137,8 @@
 			let imagePaths: string[] = [];
 			let videoPaths: string[] = [];
 
-			// Handle file uploads FIRST before creating Firestore document
-			if (selectedFiles && (postType === 'photo' || postType === 'video')) {
+			// Handle file uploads FIRST before creating Firestore document (only when online)
+			if (selectedFiles && (postType === 'photo' || postType === 'video') && $isOnline) {
 				uploadProgress = 'Uploading files...';
 
 				for (const file of Array.from(selectedFiles)) {
@@ -143,7 +163,7 @@
 			}
 
 			// Now create Firestore document with uploaded URLs
-			uploadProgress = 'Creating post...';
+			uploadProgress = $isOnline ? 'Creating post...' : 'Queueing post for sync...';
 
 			// Create post object following unified Firestore schema
 			const postData = {
@@ -190,15 +210,25 @@
 				throw new Error('Invalid post data');
 			}
 
-			// Replace client timestamp with server timestamp for Firestore
-			const firestorePostData = {
-				...postData,
-				createdAt: serverTimestamp()
-			};
+			if ($isOnline) {
+				// Replace client timestamp with server timestamp for Firestore
+				const firestorePostData = {
+					...postData,
+					createdAt: serverTimestamp()
+				};
 
-			// Add to Firestore
-			await addDoc(collection(db, 'posts'), firestorePostData);
-			uploadProgress = 'Post created successfully!';
+				// Add to Firestore
+				await addDoc(collection(db, 'posts'), firestorePostData);
+				uploadProgress = 'Post created successfully!';
+			} else {
+				// Queue for offline sync (only text-based posts)
+				if (postType === 'text' || postType === 'youtube' || postType === 'poll') {
+					queueOfflineAction('post', postData);
+					uploadProgress = 'Post queued for sync when online!';
+				} else {
+					throw new Error('Media uploads require internet connection');
+				}
+			}
 
 			// Dispatch success event to parent
 			dispatch('post-created');
@@ -232,7 +262,7 @@
 						class="h-10 w-10 rounded-full border border-white/20"
 					/>
 				{:else}
-					<div class="h-10 w-10 rounded-full neo-glass border border-white/20"></div>
+					<div class="neo-glass h-10 w-10 rounded-full border border-white/20"></div>
 				{/if}
 				<div>
 					<p class="font-medium" style="color: var(--neo-text-primary);">
@@ -254,16 +284,28 @@
 					onclick={() => setPostType('photo')}
 					variant={postType === 'photo' ? 'accent' : 'default'}
 					size="small"
+					disabled={!$isOnline}
+					class={!$isOnline ? 'cursor-not-allowed opacity-50' : ''}
 				>
-					<Image class="mr-1 h-4 w-4" />
+					{#if !$isOnline}
+						<WifiOff class="mr-1 h-4 w-4" />
+					{:else}
+						<Image class="mr-1 h-4 w-4" />
+					{/if}
 					Photo
 				</GlassChip>
 				<GlassChip
 					onclick={() => setPostType('video')}
 					variant={postType === 'video' ? 'accent' : 'default'}
 					size="small"
+					disabled={!$isOnline}
+					class={!$isOnline ? 'cursor-not-allowed opacity-50' : ''}
 				>
-					<Video class="mr-1 h-4 w-4" />
+					{#if !$isOnline}
+						<WifiOff class="mr-1 h-4 w-4" />
+					{:else}
+						<Video class="mr-1 h-4 w-4" />
+					{/if}
 					Video
 				</GlassChip>
 				<GlassChip
@@ -284,13 +326,31 @@
 				</GlassChip>
 			</div>
 
+			<!-- Offline warning for media uploads -->
+			{#if showOfflineWarning}
+				<div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+					<div class="flex">
+						<div class="flex-shrink-0">
+							<WifiOff class="h-5 w-5 text-amber-400" />
+						</div>
+						<div class="ml-3">
+							<h3 class="text-sm font-medium text-amber-800">Internet needed for media uploads</h3>
+							<p class="mt-1 text-sm text-amber-700">
+								📡 Photo and video uploads require an internet connection. Try again once you're
+								back online.
+							</p>
+						</div>
+					</div>
+				</div>
+			{/if}
+
 			<!-- Content textarea -->
 			{#if postType !== 'poll'}
 				<div>
 					<textarea
 						bind:value={textContent}
 						placeholder="What's on your mind?"
-						class="w-full resize-none rounded-lg border px-3 py-3 neo-input"
+						class="neo-input w-full resize-none rounded-lg border px-3 py-3"
 						style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
 						rows="3"
 					></textarea>
@@ -305,7 +365,7 @@
 						multiple={postType === 'photo'}
 						accept={postType === 'photo' ? 'image/*' : 'video/*'}
 						onchange={handleFileSelect}
-						class="w-full rounded-lg border px-3 py-2 text-sm neo-input"
+						class="neo-input w-full rounded-lg border px-3 py-2 text-sm"
 						style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
 					/>
 				</div>
@@ -317,13 +377,18 @@
 					{#each previewUrls as url, index (url)}
 						<div class="relative">
 							{#if postType === 'photo'}
-								<img src={url} alt="Preview" class="h-20 w-20 rounded-lg object-cover neo-image-glow" />
+								<img
+									src={url}
+									alt="Preview"
+									class="neo-image-glow h-20 w-20 rounded-lg object-cover"
+								/>
 							{:else if postType === 'video'}
-								<video src={url} class="h-20 w-20 rounded-lg object-cover neo-image-glow" muted></video>
+								<video src={url} class="neo-image-glow h-20 w-20 rounded-lg object-cover" muted
+								></video>
 							{/if}
 							<button
 								onclick={() => removePreview(index)}
-								class="absolute -right-1 -top-1 rounded-full neo-glass border border-white/20 p-1"
+								class="neo-glass absolute -top-1 -right-1 rounded-full border border-white/20 p-1"
 								style="color: var(--neo-magenta);"
 							>
 								<X class="h-3 w-3" />
@@ -340,7 +405,7 @@
 						type="url"
 						bind:value={youtubeUrl}
 						placeholder="Enter YouTube URL"
-						class="w-full rounded-lg border px-3 py-2 neo-input"
+						class="neo-input w-full rounded-lg border px-3 py-2"
 						style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
 					/>
 				</div>
@@ -353,7 +418,7 @@
 						type="text"
 						bind:value={pollTitle}
 						placeholder="Poll question"
-						class="w-full rounded-lg border px-3 py-2 neo-input"
+						class="neo-input w-full rounded-lg border px-3 py-2"
 						style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
 					/>
 					{#each pollOptions as option, index (index)}
@@ -362,7 +427,7 @@
 								type="text"
 								bind:value={pollOptions[index]}
 								placeholder="Option {index + 1}"
-								class="flex-1 rounded-lg border px-3 py-2 neo-input"
+								class="neo-input flex-1 rounded-lg border px-3 py-2"
 								style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
 							/>
 							{#if pollOptions.length > 2}
@@ -372,26 +437,20 @@
 							{/if}
 						</div>
 					{/each}
-					<GlassChip onclick={addPollOption} size="small" variant="accent">
-						Add Option
-					</GlassChip>
+					<GlassChip onclick={addPollOption} size="small" variant="accent">Add Option</GlassChip>
 				</div>
 			{/if}
 
 			<!-- Upload progress -->
 			{#if uploadProgress}
-				<div class="rounded-lg neo-glass border border-white/20 p-3">
+				<div class="neo-glass rounded-lg border border-white/20 p-3">
 					<p class="text-sm" style="color: var(--neo-text-secondary);">{uploadProgress}</p>
 				</div>
 			{/if}
 
 			<!-- Submit button -->
 			<div class="flex justify-end">
-				<GlassChip
-					onclick={handleSubmit}
-					variant="accent"
-					disabled={isUploading}
-				>
+				<GlassChip onclick={handleSubmit} variant="accent" disabled={isUploading}>
 					{#if isUploading}
 						<div class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
 					{:else}

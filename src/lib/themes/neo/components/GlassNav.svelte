@@ -34,16 +34,18 @@
 <!-- Neo Glass Navigation Sidebar -->
 <aside class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
 	<!-- Glass sidebar with animated gradient background -->
-	<div class="neo-glass-nav relative flex grow flex-col overflow-y-auto border-r border-white/10 backdrop-blur-md">
+	<div
+		class="neo-glass-nav relative flex grow flex-col overflow-y-auto border-r border-white/10 backdrop-blur-md"
+	>
 		<!-- Animated gradient background layer -->
 		<div class="neo-nav-gradient absolute inset-0 opacity-5"></div>
-		
+
 		<!-- Content over the gradient -->
 		<div class="relative z-10 flex grow flex-col">
 			<!-- Logo/Header -->
 			<div class="flex h-16 shrink-0 items-center px-6">
 				<div class="flex items-center gap-3">
-					<div class="flex h-8 w-8 items-center justify-center rounded-lg neo-glass">
+					<div class="neo-glass flex h-8 w-8 items-center justify-center rounded-lg">
 						<span class="text-xl">👨‍👩‍👧</span>
 					</div>
 					<span class="neo-gradient-text text-xl font-bold">Family Hub</span>
@@ -59,9 +61,9 @@
 						<li>
 							<a
 								href={item.href}
-								class="group flex gap-x-3 rounded-xl p-3 text-sm font-semibold leading-6 transition-all duration-300 hover:scale-105 {isActive
+								class="group flex gap-x-3 rounded-xl p-3 text-sm leading-6 font-semibold transition-all duration-300 hover:scale-105 {isActive
 									? 'neo-nav-active text-white'
-									: 'text-slate-300 hover:text-white neo-glass hover:bg-white/10'}"
+									: 'neo-glass text-slate-300 hover:bg-white/10 hover:text-white'}"
 							>
 								<IconComponent
 									class="h-5 w-5 shrink-0 transition-colors duration-300 {isActive
@@ -80,7 +82,7 @@
 				</div>
 
 				<!-- Footer with user info -->
-				<div class="mt-6 pt-6 border-t border-white/10">
+				<div class="mt-6 border-t border-white/10 pt-6">
 					<div class="flex items-center gap-3 px-3 py-2">
 						<!-- User Avatar -->
 						<div class="flex-shrink-0">
@@ -91,15 +93,19 @@
 									class="h-8 w-8 rounded-full border border-white/20"
 								/>
 							{:else}
-								<div class="flex h-8 w-8 items-center justify-center rounded-full neo-glass border border-white/20 text-sm font-medium text-cyan-400">
-									{getDisplayName(user?.email, { nickname: user?.nickname }).charAt(0).toUpperCase()}
+								<div
+									class="neo-glass flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-sm font-medium text-cyan-400"
+								>
+									{getDisplayName(user?.email, { nickname: user?.nickname })
+										.charAt(0)
+										.toUpperCase()}
 								</div>
 							{/if}
 						</div>
 
 						<!-- User Name -->
-						<div class="flex-1 min-w-0">
-							<p class="text-sm font-medium text-slate-200 truncate">
+						<div class="min-w-0 flex-1">
+							<p class="truncate text-sm font-medium text-slate-200">
 								{getDisplayName(user?.email, { nickname: user?.nickname })}
 							</p>
 						</div>

@@ -248,7 +248,8 @@
 
 	function getAnswerClass(option: number): string {
 		if (currentTheme === 'neo') {
-			const baseClass = 'w-full p-4 rounded-xl border transition-all duration-200 text-lg font-semibold neo-glass border-white/20';
+			const baseClass =
+				'w-full p-4 rounded-xl border transition-all duration-200 text-lg font-semibold neo-glass border-white/20';
 
 			if (!showResult) {
 				return `${baseClass} cursor-pointer neo-row-hover`;
@@ -265,7 +266,8 @@
 				return `${baseClass} opacity-50`;
 			}
 		} else {
-			const baseClass = 'w-full p-4 rounded-xl border-2 transition-all duration-200 text-lg font-semibold';
+			const baseClass =
+				'w-full p-4 rounded-xl border-2 transition-all duration-200 text-lg font-semibold';
 
 			if (!showResult) {
 				return `${baseClass} border-gray-300 bg-white hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer`;
@@ -305,11 +307,13 @@
 		<!-- Header -->
 		<div class="flex items-center justify-between">
 			<div class="flex items-center space-x-3">
-				<div class="flex h-10 w-10 items-center justify-center rounded-xl neo-glass border border-white/20">
+				<div
+					class="neo-glass flex h-10 w-10 items-center justify-center rounded-xl border border-white/20"
+				>
 					<Brain class="h-5 w-5" style="color: var(--neo-cyan);" />
 				</div>
 				<div>
-					<h3 class="text-lg font-semibold neo-gradient-text">Math Game</h3>
+					<h3 class="neo-gradient-text text-lg font-semibold">Math Game</h3>
 					<p class="text-sm" style="color: var(--neo-text-secondary);">Test your math skills</p>
 				</div>
 			</div>
@@ -319,22 +323,37 @@
 				<div class="flex items-center space-x-2">
 					<button
 						onclick={() => (difficulty = 'easy')}
-						class="rounded-full px-3 py-1 text-xs transition-colors neo-glass border border-white/20 {difficulty === 'easy' ? 'neo-row-hover' : ''}"
-						style="{difficulty === 'easy' ? 'border-color: var(--neo-lime); color: var(--neo-lime);' : 'color: var(--neo-text-secondary);'}"
+						class="neo-glass rounded-full border border-white/20 px-3 py-1 text-xs transition-colors {difficulty ===
+						'easy'
+							? 'neo-row-hover'
+							: ''}"
+						style={difficulty === 'easy'
+							? 'border-color: var(--neo-lime); color: var(--neo-lime);'
+							: 'color: var(--neo-text-secondary);'}
 					>
 						Easy (1-5)
 					</button>
 					<button
 						onclick={() => (difficulty = 'medium')}
-						class="rounded-full px-3 py-1 text-xs transition-colors neo-glass border border-white/20 {difficulty === 'medium' ? 'neo-row-hover' : ''}"
-						style="{difficulty === 'medium' ? 'border-color: var(--neo-cyan); color: var(--neo-cyan);' : 'color: var(--neo-text-secondary);'}"
+						class="neo-glass rounded-full border border-white/20 px-3 py-1 text-xs transition-colors {difficulty ===
+						'medium'
+							? 'neo-row-hover'
+							: ''}"
+						style={difficulty === 'medium'
+							? 'border-color: var(--neo-cyan); color: var(--neo-cyan);'
+							: 'color: var(--neo-text-secondary);'}
 					>
 						Medium (1-12)
 					</button>
 					<button
 						onclick={() => (difficulty = 'hard')}
-						class="rounded-full px-3 py-1 text-xs transition-colors neo-glass border border-white/20 {difficulty === 'hard' ? 'neo-row-hover' : ''}"
-						style="{difficulty === 'hard' ? 'border-color: var(--neo-magenta); color: var(--neo-magenta);' : 'color: var(--neo-text-secondary);'}"
+						class="neo-glass rounded-full border border-white/20 px-3 py-1 text-xs transition-colors {difficulty ===
+						'hard'
+							? 'neo-row-hover'
+							: ''}"
+						style={difficulty === 'hard'
+							? 'border-color: var(--neo-magenta); color: var(--neo-magenta);'
+							: 'color: var(--neo-text-secondary);'}
 					>
 						Hard (1-20)
 					</button>
@@ -344,9 +363,11 @@
 
 		{#if gameState === 'setup'}
 			<!-- Setup Screen -->
-			<div class="text-center space-y-6">
+			<div class="space-y-6 text-center">
 				<div>
-					<h4 class="mb-2 text-xl font-bold neo-gradient-text">Ready to Challenge Your Math Skills?</h4>
+					<h4 class="neo-gradient-text mb-2 text-xl font-bold">
+						Ready to Challenge Your Math Skills?
+					</h4>
 					<p style="color: var(--neo-text-secondary);">
 						Answer 5 questions correctly to earn points. You have 10 seconds per question!
 					</p>
@@ -368,7 +389,7 @@
 				</div>
 
 				<button
-					class="flex items-center space-x-2 rounded-lg neo-button px-6 py-3 transition-colors duration-200"
+					class="neo-button flex items-center space-x-2 rounded-lg px-6 py-3 transition-colors duration-200"
 					style="border-color: var(--neo-cyan); color: var(--neo-cyan);"
 					onclick={startGame}
 				>
@@ -393,21 +414,26 @@
 				<div>
 					<div class="mb-2 flex items-center justify-between">
 						<span class="text-sm" style="color: var(--neo-text-secondary);">Time Left</span>
-						<span class="text-sm font-semibold" style="color: {timeLeft <= 3 ? 'var(--neo-magenta)' : 'var(--neo-text-primary)'};">
+						<span
+							class="text-sm font-semibold"
+							style="color: {timeLeft <= 3 ? 'var(--neo-magenta)' : 'var(--neo-text-primary)'};"
+						>
 							{timeLeft}s
 						</span>
 					</div>
-					<div class="h-2 w-full rounded-full neo-glass border border-white/20">
+					<div class="neo-glass h-2 w-full rounded-full border border-white/20">
 						<div
 							class="h-2 rounded-full transition-all duration-1000"
-							style="width: {getProgressPercentage()}%; background: {timeLeft <= 3 ? 'var(--neo-magenta)' : 'var(--neo-cyan)'};"
+							style="width: {getProgressPercentage()}%; background: {timeLeft <= 3
+								? 'var(--neo-magenta)'
+								: 'var(--neo-cyan)'};"
 						></div>
 					</div>
 				</div>
 
 				<!-- Question -->
 				<div class="text-center">
-					<h3 class="text-3xl font-bold neo-gradient-text">
+					<h3 class="neo-gradient-text text-3xl font-bold">
 						{questions[currentQuestion]?.question}
 					</h3>
 				</div>
@@ -419,10 +445,13 @@
 							class={getAnswerClass(option)}
 							onclick={() => selectAnswer(option)}
 							disabled={selectedAnswer !== null || showResult}
-							style="{!showResult ? 'color: var(--neo-text-primary);' : 
-								option === questions[currentQuestion].correctAnswer ? 'color: var(--neo-lime); border-color: var(--neo-lime);' :
-								option === selectedAnswer ? 'color: var(--neo-magenta); border-color: var(--neo-magenta);' : 
-								'color: var(--neo-text-muted);'}"
+							style={!showResult
+								? 'color: var(--neo-text-primary);'
+								: option === questions[currentQuestion].correctAnswer
+									? 'color: var(--neo-lime); border-color: var(--neo-lime);'
+									: option === selectedAnswer
+										? 'color: var(--neo-magenta); border-color: var(--neo-magenta);'
+										: 'color: var(--neo-text-muted);'}
 						>
 							{option}
 						</button>
@@ -433,7 +462,9 @@
 				{#if showResult}
 					<div class="text-center">
 						{#if selectedAnswer === questions[currentQuestion]?.correctAnswer}
-							<div class="font-semibold" style="color: var(--neo-lime);">✅ Correct! +10 points</div>
+							<div class="font-semibold" style="color: var(--neo-lime);">
+								✅ Correct! +10 points
+							</div>
 						{:else if selectedAnswer === null}
 							<div class="font-semibold" style="color: var(--neo-cyan);">⏰ Time's up!</div>
 							<div class="text-sm" style="color: var(--neo-text-secondary);">
@@ -450,24 +481,28 @@
 			</div>
 		{:else if gameState === 'finished'}
 			<!-- Results Screen -->
-			<div class="text-center space-y-6">
+			<div class="space-y-6 text-center">
 				<div>
 					{#if userAvatarUrl}
 						<img
-							class="mx-auto mb-3 h-16 w-16 rounded-full object-cover border border-white/20"
+							class="mx-auto mb-3 h-16 w-16 rounded-full border border-white/20 object-cover"
 							src={userAvatarUrl}
 							alt={userDisplayName}
 						/>
 					{:else}
-						<div class="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full neo-glass border border-white/20">
+						<div
+							class="neo-glass mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-white/20"
+						>
 							<User class="h-8 w-8" style="color: var(--neo-text-secondary);" />
 						</div>
 					{/if}
-					<div class="text-lg font-semibold" style="color: var(--neo-text-primary);">{userDisplayName}</div>
+					<div class="text-lg font-semibold" style="color: var(--neo-text-primary);">
+						{userDisplayName}
+					</div>
 				</div>
 
 				<div>
-					<h3 class="mb-2 text-2xl font-bold neo-gradient-text">Round Complete!</h3>
+					<h3 class="neo-gradient-text mb-2 text-2xl font-bold">Round Complete!</h3>
 					<div class="mb-2 text-4xl font-bold" style="color: var(--neo-cyan);">{score} points</div>
 					<div style="color: var(--neo-text-secondary);">
 						{Math.floor(score / 10)} out of {questions.length} correct answers
@@ -476,7 +511,9 @@
 
 				<div class="flex justify-center space-x-8">
 					<div class="text-center">
-						<div class="text-2xl font-bold" style="color: var(--neo-lime);">{Math.floor(score / 10)}</div>
+						<div class="text-2xl font-bold" style="color: var(--neo-lime);">
+							{Math.floor(score / 10)}
+						</div>
 						<div class="text-sm" style="color: var(--neo-text-secondary);">Correct</div>
 					</div>
 					<div class="text-center">
@@ -492,7 +529,7 @@
 				</div>
 
 				<button
-					class="flex items-center space-x-2 rounded-lg neo-button px-6 py-3 transition-colors duration-200"
+					class="neo-button flex items-center space-x-2 rounded-lg px-6 py-3 transition-colors duration-200"
 					style="border-color: var(--neo-cyan); color: var(--neo-cyan);"
 					onclick={resetGame}
 				>

@@ -200,15 +200,17 @@
 
 	function getCellClass(index: number) {
 		if (currentTheme === 'neo') {
-			const baseClass = 'w-20 h-20 rounded-xl flex items-center justify-center text-2xl font-bold transition-all duration-200 neo-glass border border-white/20';
-			
+			const baseClass =
+				'w-20 h-20 rounded-xl flex items-center justify-center text-2xl font-bold transition-all duration-200 neo-glass border border-white/20';
+
 			if (board[index]) {
 				return `${baseClass} ${board[index] === 'X' ? '' : ''}`;
 			}
-			
+
 			return `${baseClass} cursor-pointer neo-row-hover`;
 		} else {
-			const baseClass = 'w-20 h-20 bg-white border-2 border-gray-300 rounded-xl flex items-center justify-center text-2xl font-bold transition-all duration-200 hover:border-indigo-400 hover:shadow-md';
+			const baseClass =
+				'w-20 h-20 bg-white border-2 border-gray-300 rounded-xl flex items-center justify-center text-2xl font-bold transition-all duration-200 hover:border-indigo-400 hover:shadow-md';
 
 			if (board[index]) {
 				return `${baseClass} ${board[index] === 'X' ? 'text-indigo-600' : 'text-red-500'}`;
@@ -267,11 +269,13 @@
 		<!-- Header -->
 		<div class="flex items-center justify-between">
 			<div class="flex items-center space-x-3">
-				<div class="flex h-10 w-10 items-center justify-center rounded-xl neo-glass border border-white/20">
+				<div
+					class="neo-glass flex h-10 w-10 items-center justify-center rounded-xl border border-white/20"
+				>
 					<Trophy class="h-5 w-5" style="color: var(--neo-cyan);" />
 				</div>
 				<div>
-					<h3 class="text-lg font-semibold neo-gradient-text">Tic-Tac-Toe</h3>
+					<h3 class="neo-gradient-text text-lg font-semibold">Tic-Tac-Toe</h3>
 					<p class="text-sm" style="color: var(--neo-text-secondary);">Play against AI</p>
 				</div>
 			</div>
@@ -280,15 +284,25 @@
 			<div class="flex items-center space-x-2">
 				<button
 					onclick={() => (difficulty = 'easy')}
-					class="rounded-full px-3 py-1 text-xs transition-colors neo-glass border border-white/20 {difficulty === 'easy' ? 'neo-row-hover' : ''}"
-					style="{difficulty === 'easy' ? 'border-color: var(--neo-lime); color: var(--neo-lime);' : 'color: var(--neo-text-secondary);'}"
+					class="neo-glass rounded-full border border-white/20 px-3 py-1 text-xs transition-colors {difficulty ===
+					'easy'
+						? 'neo-row-hover'
+						: ''}"
+					style={difficulty === 'easy'
+						? 'border-color: var(--neo-lime); color: var(--neo-lime);'
+						: 'color: var(--neo-text-secondary);'}
 				>
 					Easy
 				</button>
 				<button
 					onclick={() => (difficulty = 'hard')}
-					class="rounded-full px-3 py-1 text-xs transition-colors neo-glass border border-white/20 {difficulty === 'hard' ? 'neo-row-hover' : ''}"
-					style="{difficulty === 'hard' ? 'border-color: var(--neo-magenta); color: var(--neo-magenta);' : 'color: var(--neo-text-secondary);'}"
+					class="neo-glass rounded-full border border-white/20 px-3 py-1 text-xs transition-colors {difficulty ===
+					'hard'
+						? 'neo-row-hover'
+						: ''}"
+					style={difficulty === 'hard'
+						? 'border-color: var(--neo-magenta); color: var(--neo-magenta);'
+						: 'color: var(--neo-text-secondary);'}
 				>
 					Hard
 				</button>
@@ -304,7 +318,8 @@
 				</div>
 				<div class="flex items-center space-x-2">
 					<Bot class="h-4 w-4" style="color: var(--neo-magenta);" />
-					<span class="text-sm" style="color: var(--neo-text-secondary);">AI: O ({difficulty})</span>
+					<span class="text-sm" style="color: var(--neo-text-secondary);">AI: O ({difficulty})</span
+					>
 				</div>
 			</div>
 
@@ -314,7 +329,10 @@
 				</div>
 			{:else if isThinking}
 				<div class="flex items-center space-x-2 text-sm" style="color: var(--neo-text-secondary);">
-					<div class="h-3 w-3 animate-spin rounded-full border-b-2" style="border-color: var(--neo-magenta);"></div>
+					<div
+						class="h-3 w-3 animate-spin rounded-full border-b-2"
+						style="border-color: var(--neo-magenta);"
+					></div>
 					<span>AI thinking...</span>
 				</div>
 			{:else if isPlayerTurn}
@@ -329,7 +347,11 @@
 					class={getCellClass(index)}
 					onclick={() => makePlayerMove(index)}
 					disabled={!isPlayerTurn || !!gameResult || isThinking}
-					style="{cell === 'X' ? 'color: var(--neo-cyan);' : cell === 'O' ? 'color: var(--neo-magenta);' : ''}"
+					style={cell === 'X'
+						? 'color: var(--neo-cyan);'
+						: cell === 'O'
+							? 'color: var(--neo-magenta);'
+							: ''}
 				>
 					{cell || ''}
 				</button>
@@ -339,7 +361,7 @@
 		<!-- Controls -->
 		<div class="flex justify-center">
 			<button
-				class="flex items-center space-x-2 rounded-lg neo-button px-4 py-2 transition-colors duration-200"
+				class="neo-button flex items-center space-x-2 rounded-lg px-4 py-2 transition-colors duration-200"
 				style="border-color: var(--neo-cyan); color: var(--neo-cyan);"
 				onclick={resetGame}
 			>

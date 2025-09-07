@@ -11,8 +11,8 @@
 	import { initializeWidgetContext, clearWidgetContext } from '$lib/widget-context';
 	import Nav from '$lib/Nav.svelte';
 	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
-	import { registerServiceWorker } from '$lib/offline';
-	// isOnline removed - unused import
+	import OfflineIndicator from '$lib/components/OfflineIndicator.svelte';
+	import { registerServiceWorker, clearAllCachesAndStorage } from '$lib/offline';
 
 	let { children } = $props();
 	let user: User | null = $state(null);
@@ -62,6 +62,8 @@
 				authError = null;
 				// Clear widget context on logout
 				clearWidgetContext();
+				// Clear all caches and storage for privacy
+				clearAllCachesAndStorage();
 				// Redirect to login if not on login page
 				if ($page.url.pathname !== '/login') {
 					goto('/login');
@@ -127,6 +129,9 @@
 	</div>
 {:else}
 	<ErrorBoundary>
+		<!-- Offline Indicator -->
+		<OfflineIndicator />
+
 		<div class="min-h-full">
 			{#if shouldShowNav}
 				<Nav {user} />

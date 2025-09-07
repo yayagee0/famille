@@ -182,7 +182,7 @@
 				<div class="animate-pulse space-y-3">
 					{#each Array(3) as _, loadingIndex (loadingIndex)}
 						<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-						<div class="rounded-lg border border-white/10 neo-glass p-4">
+						<div class="neo-glass rounded-lg border border-white/10 p-4">
 							<div class="flex items-start justify-between">
 								<div class="flex-1 space-y-2">
 									<div class="h-4 w-3/4 rounded bg-white/20"></div>
@@ -213,7 +213,7 @@
 				<div class="space-y-4">
 					{#each similarities as similarity, i (`${similarity.category}-${i}`)}
 						<div
-							class="rounded-lg border border-white/10 neo-glass neo-row-hover p-4"
+							class="neo-glass neo-row-hover rounded-lg border border-white/10 p-4"
 							style="animation-delay: {i * 150}ms"
 						>
 							<div class="flex items-start justify-between">
@@ -229,8 +229,8 @@
 									</p>
 									<div class="flex items-center justify-between">
 										<div class="flex items-center space-x-2">
-											<Users class="h-4 w-4 text-magenta-400" />
-											<span class="text-xs text-magenta-300">
+											<Users class="text-magenta-400 h-4 w-4" />
+											<span class="text-magenta-300 text-xs">
 												Also chosen by: {similarity.sharedWith.join(', ')}
 											</span>
 										</div>
@@ -248,7 +248,7 @@
 								</div>
 								<div class="ml-3">
 									<span
-										class="inline-flex items-center rounded-full bg-magenta-600/20 border border-magenta-400/30 px-2 py-1 text-xs font-medium text-magenta-300"
+										class="bg-magenta-600/20 border-magenta-400/30 text-magenta-300 inline-flex items-center rounded-full border px-2 py-1 text-xs font-medium"
 									>
 										{similarity.category}
 									</span>
