@@ -6,6 +6,8 @@
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { playSound } from '$lib/sound';
 	import { getAllGameIds, getGameConfig } from '$lib/gamesConfig';
+	import { themeStore } from '$lib/themes/neo';
+	import GlassCard from '$lib/themes/neo/components/GlassCard.svelte';
 
 	interface GameResult {
 		wins: number;
@@ -30,11 +32,25 @@
 	let leaderboard = $state<LeaderboardEntry[]>([]);
 	let loading = $state(true);
 	let expandedMembers = $state<Set<string>>(new Set());
+	let currentTheme = $state('default');
+	let unsubscribe: (() => void) | null = null;
 
 	onMount(async () => {
+		// Subscribe to theme changes
+		unsubscribe = themeStore.subscribe((theme) => {
+			currentTheme = theme;
+		});
+
 		await loadLeaderboard();
 		loading = false;
 		playSound('/sounds/chime.mp3');
+	});
+
+	// Cleanup on component destroy
+	$effect(() => {
+		return () => {
+			unsubscribe?.();
+		};
 	});
 
 	async function loadLeaderboard() {
@@ -183,142 +199,333 @@
 	}
 </script>
 
-<div class="rounded-2xl bg-white p-6 shadow-sm">
-	<!-- Header -->
-	<div class="mb-6 flex items-center justify-between">
-		<div class="flex items-center space-x-3">
-			<div
-				class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600"
-			>
-				<Trophy class="h-5 w-5 text-white" />
-			</div>
-			<div>
-				<h3 class="text-lg font-semibold text-gray-900">Family Leaderboard</h3>
-				<p class="text-sm text-gray-500">Combined scores across all games</p>
-			</div>
-		</div>
-
-		<div class="flex items-center space-x-2">
-			<TrendingUp class="h-4 w-4 text-indigo-600" />
-			<span class="text-sm font-medium text-indigo-600">Live Rankings</span>
-		</div>
-	</div>
-
-	{#if loading}
-		<!-- Loading State -->
-		<div class="flex items-center justify-center py-8">
-			<div class="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600"></div>
-		</div>
-	{:else if leaderboard.length === 0}
-		<!-- Empty State -->
-		<div class="py-8 text-center">
-			<Trophy class="mx-auto mb-4 h-12 w-12 text-gray-400" />
-			<h4 class="mb-2 text-lg font-medium text-gray-900">No games played yet</h4>
-			<p class="text-gray-500">Start playing games to see rankings!</p>
-		</div>
-	{:else}
-		<!-- Leaderboard -->
-		<div class="space-y-3">
-			{#each leaderboard as member, index (member.uid)}
-				<div class="overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
-					<!-- Main Entry -->
-					<button
-						class="w-full p-4 text-left transition-colors hover:bg-gray-100"
-						onclick={() => toggleExpanded(member.uid)}
-					>
-						<div class="flex items-center justify-between">
-							<div class="flex items-center space-x-3">
-								<!-- Rank -->
-								<div class="flex h-8 w-8 items-center justify-center">
-									{#if index < 3}
-										{@const rankInfo = getRankIcon(index)}
-										{@const RankIcon = rankInfo.icon}
-										<RankIcon class="h-5 w-5 {rankInfo.class}" />
-									{:else}
-										<span class="text-sm font-semibold text-gray-500">#{index + 1}</span>
-									{/if}
-								</div>
-
-								<!-- Avatar and Name -->
-								<div class="flex items-center space-x-3">
-									{#if member.avatarUrl}
-										<img
-											class="h-10 w-10 rounded-full object-cover"
-											src={member.avatarUrl}
-											alt={member.displayName}
-										/>
-									{:else}
-										<div
-											class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300"
-										>
-											<span class="text-sm font-medium text-gray-600">
-												{member.displayName.charAt(0).toUpperCase()}
-											</span>
-										</div>
-									{/if}
-									<div>
-										<div class="font-semibold text-gray-900">{member.displayName}</div>
-										<div class="text-sm text-gray-500">Tap to see game breakdown</div>
-									</div>
-								</div>
-							</div>
-
-							<!-- Total Score -->
-							<div class="text-right">
-								<div class="text-xl font-bold text-indigo-600">
-									🏆 {member.totalScore}
-								</div>
-								<div class="text-xs text-gray-500">Total Score</div>
-							</div>
-						</div>
-					</button>
-
-					<!-- Expanded Game Details -->
-					{#if expandedMembers.has(member.uid)}
-						<div class="border-t border-gray-200 bg-white p-4">
-							<div class="mb-3 text-sm font-medium text-gray-700">Game Breakdown:</div>
-							<div class="grid gap-3 sm:grid-cols-2">
-								{#each getAllGameIds() as gameId (gameId)}
-									{@const gameData = member.gameStats[gameId]}
-									{@const gameIcon = getGameIcon(gameId)}
-									{@const GameIcon = gameIcon.icon}
-									<div class="rounded-lg {gameIcon.bg} p-3">
-										<div class="mb-2 flex items-center space-x-2">
-											<GameIcon class="h-4 w-4 {gameIcon.class}" />
-											<span class="text-sm font-medium {gameIcon.class}">
-												{getGameDisplayName(gameId)}
-											</span>
-										</div>
-										<div class="text-xs text-gray-600">
-											{#if gameId === 'math'}
-												{gameData.score || 0} points
-											{:else}
-												{gameData.wins || 0}W / {gameData.losses || 0}L
-											{/if}
-											<span class="text-gray-400">
-												(+{(gameData.score || 0) + (gameData.wins || 0) * 10} total)
-											</span>
-										</div>
-									</div>
-								{/each}
-							</div>
-						</div>
-					{/if}
+{#if currentTheme === 'neo'}
+	<GlassCard header="🏆 Family Leaderboard" glow={true}>
+		<!-- Header -->
+		<div class="mb-6 flex items-center justify-between">
+			<div class="flex items-center space-x-3">
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-xl"
+					style="background: var(--neo-gradient-header);"
+				>
+					<Trophy class="h-5 w-5" style="color: var(--neo-bg);" />
 				</div>
-			{/each}
-		</div>
-
-		<!-- Scoring Info -->
-		<div class="mt-6 rounded-lg bg-indigo-50 p-4">
-			<div class="flex items-start space-x-2">
-				<TrendingUp class="mt-0.5 h-5 w-5 text-indigo-600" />
 				<div>
-					<h4 class="text-sm font-medium text-indigo-900">How Scoring Works</h4>
-					<p class="mt-1 text-xs text-indigo-700">
-						Total Score = Points Earned + (Wins × 10). Ties broken by most recent game activity.
+					<h3 class="text-lg font-semibold" style="color: var(--neo-text-primary);">
+						Family Leaderboard
+					</h3>
+					<p class="text-sm" style="color: var(--neo-text-secondary);">
+						Combined scores across all games
 					</p>
 				</div>
 			</div>
+
+			<div class="flex items-center space-x-2">
+				<TrendingUp class="h-4 w-4" style="color: var(--neo-cyan);" />
+				<span class="text-sm font-medium" style="color: var(--neo-cyan);">Live Rankings</span>
+			</div>
 		</div>
-	{/if}
-</div>
+
+		{#if loading}
+			<!-- Loading State -->
+			<div class="flex items-center justify-center py-8">
+				<div
+					class="h-8 w-8 animate-spin rounded-full border-b-2"
+					style="border-color: var(--neo-cyan);"
+				></div>
+			</div>
+		{:else if leaderboard.length === 0}
+			<!-- Empty State -->
+			<div class="py-8 text-center">
+				<Trophy class="mx-auto mb-4 h-12 w-12" style="color: var(--neo-text-muted);" />
+				<h4 class="mb-2 text-lg font-medium" style="color: var(--neo-text-primary);">
+					No games played yet
+				</h4>
+				<p style="color: var(--neo-text-secondary);">Start playing games to see rankings!</p>
+			</div>
+		{:else}
+			<!-- Leaderboard -->
+			<div class="space-y-3">
+				{#each leaderboard as member, index (member.uid)}
+					<div
+						class="overflow-hidden rounded-xl border"
+						style="border-color: var(--neo-border); background: var(--neo-glass);"
+					>
+						<!-- Main Entry -->
+						<button
+							class="w-full p-4 text-left transition-all hover:bg-white/10"
+							style="border-radius: inherit;"
+							onclick={() => toggleExpanded(member.uid)}
+						>
+							<div class="flex items-center justify-between">
+								<div class="flex items-center space-x-3">
+									<!-- Rank -->
+									<div class="flex h-8 w-8 items-center justify-center">
+										{#if index < 3}
+											{@const rankInfo = getRankIcon(index)}
+											{@const RankIcon = rankInfo.icon}
+											{#if index === 0}
+												<RankIcon class="h-5 w-5" style="color: var(--neo-lime);" />
+											{:else if index === 1}
+												<RankIcon class="h-5 w-5" style="color: var(--neo-text-secondary);" />
+											{:else}
+												<RankIcon class="h-5 w-5" style="color: var(--neo-magenta);" />
+											{/if}
+										{:else}
+											<span class="text-sm font-semibold" style="color: var(--neo-text-muted);"
+												>#{index + 1}</span
+											>
+										{/if}
+									</div>
+
+									<!-- Avatar and Name -->
+									<div class="flex items-center space-x-3">
+										{#if member.avatarUrl}
+											<img
+												class="h-10 w-10 rounded-full object-cover"
+												src={member.avatarUrl}
+												alt={member.displayName}
+											/>
+										{:else}
+											<div
+												class="flex h-10 w-10 items-center justify-center rounded-full"
+												style="background: var(--neo-glass-medium);"
+											>
+												<span class="text-sm font-medium" style="color: var(--neo-text-primary);">
+													{member.displayName.charAt(0).toUpperCase()}
+												</span>
+											</div>
+										{/if}
+										<div>
+											<div class="font-semibold" style="color: var(--neo-text-primary);">
+												{member.displayName}
+											</div>
+											<div class="text-sm" style="color: var(--neo-text-secondary);">
+												Tap to see game breakdown
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Total Score -->
+								<div class="text-right">
+									<div class="text-xl font-bold" style="color: var(--neo-cyan);">
+										🏆 {member.totalScore}
+									</div>
+									<div class="text-xs" style="color: var(--neo-text-muted);">Total Score</div>
+								</div>
+							</div>
+						</button>
+
+						<!-- Expanded Game Details -->
+						{#if expandedMembers.has(member.uid)}
+							<div
+								class="border-t p-4"
+								style="border-color: var(--neo-border); background: var(--neo-glass-light);"
+							>
+								<div class="mb-3 text-sm font-medium" style="color: var(--neo-text-secondary);">
+									Game Breakdown:
+								</div>
+								<div class="grid gap-3 sm:grid-cols-2">
+									{#each getAllGameIds() as gameId (gameId)}
+										{@const gameData = member.gameStats[gameId]}
+										{@const gameIcon = getGameIcon(gameId)}
+										{@const GameIcon = gameIcon.icon}
+										<div class="rounded-lg p-3" style="background: var(--neo-glass-medium);">
+											<div class="mb-2 flex items-center space-x-2">
+												{#if gameId === 'tictactoe'}
+													<GameIcon class="h-4 w-4" style="color: var(--neo-cyan);" />
+													<span class="text-sm font-medium" style="color: var(--neo-cyan);">
+														{getGameDisplayName(gameId)}
+													</span>
+												{:else if gameId === 'math'}
+													<GameIcon class="h-4 w-4" style="color: var(--neo-magenta);" />
+													<span class="text-sm font-medium" style="color: var(--neo-magenta);">
+														{getGameDisplayName(gameId)}
+													</span>
+												{:else}
+													<GameIcon class="h-4 w-4" style="color: var(--neo-text-secondary);" />
+													<span
+														class="text-sm font-medium"
+														style="color: var(--neo-text-secondary);"
+													>
+														{getGameDisplayName(gameId)}
+													</span>
+												{/if}
+											</div>
+											<div class="text-xs" style="color: var(--neo-text-secondary);">
+												{#if gameId === 'math'}
+													{gameData.score || 0} points
+												{:else}
+													{gameData.wins || 0}W / {gameData.losses || 0}L
+												{/if}
+												<span style="color: var(--neo-text-muted);">
+													(+{(gameData.score || 0) + (gameData.wins || 0) * 10} total)
+												</span>
+											</div>
+										</div>
+									{/each}
+								</div>
+							</div>
+						{/if}
+					</div>
+				{/each}
+			</div>
+
+			<!-- Scoring Info -->
+			<div class="mt-6 rounded-lg p-4" style="background: var(--neo-glass-light);">
+				<div class="flex items-start space-x-2">
+					<TrendingUp class="mt-0.5 h-5 w-5" style="color: var(--neo-cyan);" />
+					<div>
+						<h4 class="text-sm font-medium" style="color: var(--neo-text-primary);">
+							How Scoring Works
+						</h4>
+						<p class="mt-1 text-xs" style="color: var(--neo-text-secondary);">
+							Total Score = Points Earned + (Wins × 10). Ties broken by most recent game activity.
+						</p>
+					</div>
+				</div>
+			</div>
+		{/if}
+	</GlassCard>
+{:else}
+	<div class="rounded-2xl bg-white p-6 shadow-sm">
+		<!-- Header -->
+		<div class="mb-6 flex items-center justify-between">
+			<div class="flex items-center space-x-3">
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600"
+				>
+					<Trophy class="h-5 w-5 text-white" />
+				</div>
+				<div>
+					<h3 class="text-lg font-semibold text-gray-900">Family Leaderboard</h3>
+					<p class="text-sm text-gray-500">Combined scores across all games</p>
+				</div>
+			</div>
+
+			<div class="flex items-center space-x-2">
+				<TrendingUp class="h-4 w-4 text-indigo-600" />
+				<span class="text-sm font-medium text-indigo-600">Live Rankings</span>
+			</div>
+		</div>
+
+		{#if loading}
+			<!-- Loading State -->
+			<div class="flex items-center justify-center py-8">
+				<div class="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600"></div>
+			</div>
+		{:else if leaderboard.length === 0}
+			<!-- Empty State -->
+			<div class="py-8 text-center">
+				<Trophy class="mx-auto mb-4 h-12 w-12 text-gray-400" />
+				<h4 class="mb-2 text-lg font-medium text-gray-900">No games played yet</h4>
+				<p class="text-gray-500">Start playing games to see rankings!</p>
+			</div>
+		{:else}
+			<!-- Leaderboard -->
+			<div class="space-y-3">
+				{#each leaderboard as member, index (member.uid)}
+					<div class="overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+						<!-- Main Entry -->
+						<button
+							class="w-full p-4 text-left transition-colors hover:bg-gray-100"
+							onclick={() => toggleExpanded(member.uid)}
+						>
+							<div class="flex items-center justify-between">
+								<div class="flex items-center space-x-3">
+									<!-- Rank -->
+									<div class="flex h-8 w-8 items-center justify-center">
+										{#if index < 3}
+											{@const rankInfo = getRankIcon(index)}
+											{@const RankIcon = rankInfo.icon}
+											<RankIcon class="h-5 w-5 {rankInfo.class}" />
+										{:else}
+											<span class="text-sm font-semibold text-gray-500">#{index + 1}</span>
+										{/if}
+									</div>
+
+									<!-- Avatar and Name -->
+									<div class="flex items-center space-x-3">
+										{#if member.avatarUrl}
+											<img
+												class="h-10 w-10 rounded-full object-cover"
+												src={member.avatarUrl}
+												alt={member.displayName}
+											/>
+										{:else}
+											<div
+												class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300"
+											>
+												<span class="text-sm font-medium text-gray-600">
+													{member.displayName.charAt(0).toUpperCase()}
+												</span>
+											</div>
+										{/if}
+										<div>
+											<div class="font-semibold text-gray-900">{member.displayName}</div>
+											<div class="text-sm text-gray-500">Tap to see game breakdown</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Total Score -->
+								<div class="text-right">
+									<div class="text-xl font-bold text-indigo-600">
+										🏆 {member.totalScore}
+									</div>
+									<div class="text-xs text-gray-500">Total Score</div>
+								</div>
+							</div>
+						</button>
+
+						<!-- Expanded Game Details -->
+						{#if expandedMembers.has(member.uid)}
+							<div class="border-t border-gray-200 bg-white p-4">
+								<div class="mb-3 text-sm font-medium text-gray-700">Game Breakdown:</div>
+								<div class="grid gap-3 sm:grid-cols-2">
+									{#each getAllGameIds() as gameId (gameId)}
+										{@const gameData = member.gameStats[gameId]}
+										{@const gameIcon = getGameIcon(gameId)}
+										{@const GameIcon = gameIcon.icon}
+										<div class="rounded-lg {gameIcon.bg} p-3">
+											<div class="mb-2 flex items-center space-x-2">
+												<GameIcon class="h-4 w-4 {gameIcon.class}" />
+												<span class="text-sm font-medium {gameIcon.class}">
+													{getGameDisplayName(gameId)}
+												</span>
+											</div>
+											<div class="text-xs text-gray-600">
+												{#if gameId === 'math'}
+													{gameData.score || 0} points
+												{:else}
+													{gameData.wins || 0}W / {gameData.losses || 0}L
+												{/if}
+												<span class="text-gray-400">
+													(+{(gameData.score || 0) + (gameData.wins || 0) * 10} total)
+												</span>
+											</div>
+										</div>
+									{/each}
+								</div>
+							</div>
+						{/if}
+					</div>
+				{/each}
+			</div>
+
+			<!-- Scoring Info -->
+			<div class="mt-6 rounded-lg bg-indigo-50 p-4">
+				<div class="flex items-start space-x-2">
+					<TrendingUp class="mt-0.5 h-5 w-5 text-indigo-600" />
+					<div>
+						<h4 class="text-sm font-medium text-indigo-900">How Scoring Works</h4>
+						<p class="mt-1 text-xs text-indigo-700">
+							Total Score = Points Earned + (Wins × 10). Ties broken by most recent game activity.
+						</p>
+					</div>
+				</div>
+			</div>
+		{/if}
+	</div>
+{/if}
