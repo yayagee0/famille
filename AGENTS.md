@@ -475,7 +475,7 @@ Before any deployment or major change:
 - ✅ **Family Feedback Integration** (4.2/5 satisfaction tracked)
 - ✅ **Recovery & Resilience Assessment** with 1-hour rebuild capability
 
-**Audit Command**: `npm run audit` generates complete appstatus.md
+**Audit Command**: `npm run audit` generates complete APP_STATUS_REVIEW.md
 
 **Evidence Categories Tracked**:
 
