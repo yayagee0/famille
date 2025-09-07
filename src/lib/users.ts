@@ -22,13 +22,6 @@ export function isAllowed(email: string): boolean {
 }
 
 /**
- * Get default display name from email
- */
-export function defaultDisplayName(email: string): string {
-	return email.split('@')[0];
-}
-
-/**
  * Build member skeleton with basic info from environment
  */
 export function buildMemberSkeleton(email: string): {
