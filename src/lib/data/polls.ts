@@ -1,6 +1,6 @@
 /**
  * Daily Polls System Data
- * 
+ *
  * Auto-generates silly daily polls for family engagement
  * Polls close after 24h and results are posted to Fun Feed
  */
@@ -31,7 +31,7 @@ export const pollTemplates: PollTemplate[] = [
 	{
 		id: 'pizza_pineapple',
 		question: 'Pineapple on pizza?',
-		options: ['Love it! 🍍', 'Never! 🚫', 'Sometimes 🤔', 'What\'s pizza? 😅'],
+		options: ['Love it! 🍍', 'Never! 🚫', 'Sometimes 🤔', "What's pizza? 😅"],
 		category: 'silly',
 		weight: 10
 	},
@@ -45,14 +45,24 @@ export const pollTemplates: PollTemplate[] = [
 	{
 		id: 'animal_sound',
 		question: 'If you could only communicate like an animal, which would you choose?',
-		options: ['Meow like a cat 🐱', 'Roar like a lion 🦁', 'Chirp like a bird 🐦', 'Moo like a cow 🐄'],
+		options: [
+			'Meow like a cat 🐱',
+			'Roar like a lion 🦁',
+			'Chirp like a bird 🐦',
+			'Moo like a cow 🐄'
+		],
 		category: 'silly',
 		weight: 8
 	},
 	{
 		id: 'weird_food_combo',
 		question: 'Weirdest food combination that might be delicious?',
-		options: ['Ice cream + french fries 🍟', 'Cookies + cheese 🧀', 'Watermelon + salt 🧂', 'Chocolate + pickles 🥒'],
+		options: [
+			'Ice cream + french fries 🍟',
+			'Cookies + cheese 🧀',
+			'Watermelon + salt 🧂',
+			'Chocolate + pickles 🥒'
+		],
 		category: 'silly',
 		weight: 9
 	},
@@ -61,7 +71,12 @@ export const pollTemplates: PollTemplate[] = [
 	{
 		id: 'time_travel',
 		question: 'Would you rather...',
-		options: ['Travel to the past 🕰️', 'Travel to the future 🚀', 'Stay in the present 🌟', 'Time travel randomly ⚡'],
+		options: [
+			'Travel to the past 🕰️',
+			'Travel to the future 🚀',
+			'Stay in the present 🌟',
+			'Time travel randomly ⚡'
+		],
 		category: 'would_you_rather',
 		weight: 12
 	},
@@ -83,14 +98,14 @@ export const pollTemplates: PollTemplate[] = [
 	// Preferences
 	{
 		id: 'favorite_season',
-		question: 'What\'s your favorite season?',
+		question: "What's your favorite season?",
 		options: ['Spring 🌸', 'Summer ☀️', 'Fall 🍂', 'Winter ❄️'],
 		category: 'preferences',
 		weight: 15
 	},
 	{
 		id: 'favorite_time',
-		question: 'What\'s your favorite time of day?',
+		question: "What's your favorite time of day?",
 		options: ['Morning 🌅', 'Afternoon 🌞', 'Evening 🌆', 'Night 🌙'],
 		category: 'preferences',
 		weight: 12

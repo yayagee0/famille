@@ -1,6 +1,6 @@
 /**
  * Smart Engine Data Structures for AI-Powered Family Hub
- * 
+ *
  * This file contains the core data definitions for:
  * - Nudge templates with trait/ayah placeholders
  * - Character definitions (mascots)
@@ -71,7 +71,7 @@ export const characters: Character[] = [
 		greetings: [
 			'Greetings, young explorer! 🤖',
 			'Ready for an adventure in learning? 🚀',
-			'Beep boop! Let\'s discover something amazing! ⚡'
+			"Beep boop! Let's discover something amazing! ⚡"
 		],
 		catchphrases: [
 			'Knowledge is the greatest treasure! 📚',
@@ -129,7 +129,7 @@ export const identityTraits: IdentityTrait[] = [
 		description: 'Enjoys helping others and being useful',
 		examples: [
 			'Help someone today and remember: {{ayah}}',
-			'What\'s one way you can help your family today?',
+			"What's one way you can help your family today?",
 			'Being helpful is a beautiful way to worship Allah!'
 		]
 	},
@@ -152,7 +152,7 @@ export const identityTraits: IdentityTrait[] = [
 		examples: [
 			'Take a moment to really think about {{ayah}} today',
 			'What thoughtful thing can you do for someone you love?',
-			'Reflect on three things you\'re grateful for right now'
+			"Reflect on three things you're grateful for right now"
 		]
 	},
 
@@ -174,7 +174,7 @@ export const identityTraits: IdentityTrait[] = [
 		name: 'Loves Nature',
 		description: 'Fascinated by plants, animals, and outdoors',
 		examples: [
-			'Look for Allah\'s creation outside and think about {{ayah}}',
+			"Look for Allah's creation outside and think about {{ayah}}",
 			'Find something beautiful in nature and thank Allah for it',
 			'Water a plant or care for something living today'
 		]
@@ -222,7 +222,7 @@ export const identityTraits: IdentityTrait[] = [
 		examples: [
 			'Be brave like the believers in {{ayah}}!',
 			'Try something new that could help others today',
-			'Use your courage to stand up for what\'s right'
+			"Use your courage to stand up for what's right"
 		]
 	},
 
@@ -230,11 +230,11 @@ export const identityTraits: IdentityTrait[] = [
 	{
 		id: 'memorize_quran',
 		category: 'goals',
-		name: 'Memorize Qur\'an',
-		description: 'Working on memorizing Qur\'anic verses',
+		name: "Memorize Qur'an",
+		description: "Working on memorizing Qur'anic verses",
 		examples: [
 			'Practice {{ayah}} today and feel proud of your progress!',
-			'Recite what you\'ve memorized for someone special',
+			"Recite what you've memorized for someone special",
 			'Every verse you learn brings you closer to Allah!'
 		]
 	},
@@ -268,21 +268,24 @@ export const nudgeTemplates: NudgeTemplate[] = [
 	{
 		id: 'morning_gratitude',
 		type: 'positive',
-		template: '{{character}} Good morning, sunshine! Think of three things that make you smile today! 🌅✨',
+		template:
+			'{{character}} Good morning, sunshine! Think of three things that make you smile today! 🌅✨',
 		character: 'mimi',
 		weight: 10
 	},
 	{
 		id: 'family_appreciation',
 		type: 'bonding',
-		template: '{{character}} Tell someone in your family why you love them today! Family is a blessing from Allah 💕👨‍👩‍👧‍👦',
+		template:
+			'{{character}} Tell someone in your family why you love them today! Family is a blessing from Allah 💕👨‍👩‍👧‍👦',
 		character: 'noor',
 		weight: 12
 	},
 	{
 		id: 'trait_celebration',
 		type: 'personalized',
-		template: '{{character}} Your {{trait}} nature is such a gift! How can you use it to spread joy today? 🌟',
+		template:
+			'{{character}} Your {{trait}} nature is such a gift! How can you use it to spread joy today? 🌟',
 		character: 'botu',
 		requiredTraits: ['any'],
 		weight: 15
@@ -290,7 +293,8 @@ export const nudgeTemplates: NudgeTemplate[] = [
 	{
 		id: 'islamic_reflection',
 		type: 'islamic',
-		template: '{{character}} Take a moment to think about this beautiful verse: {{ayah}} How does it speak to your heart? 💙📿',
+		template:
+			'{{character}} Take a moment to think about this beautiful verse: {{ayah}} How does it speak to your heart? 💙📿',
 		character: 'noor',
 		islamicContext: true,
 		weight: 10
@@ -298,14 +302,16 @@ export const nudgeTemplates: NudgeTemplate[] = [
 	{
 		id: 'gratitude_practice',
 		type: 'positive',
-		template: '{{character}} Say "Alhamdulillah" for something special today and share why you\'re grateful! 🤲✨',
+		template:
+			'{{character}} Say "Alhamdulillah" for something special today and share why you\'re grateful! 🤲✨',
 		character: 'noor',
 		weight: 8
 	},
 	{
 		id: 'creative_expression',
 		type: 'personalized',
-		template: '{{character}} Your {{trait}} spirit is amazing! Create something beautiful today and share it with love! 🎨',
+		template:
+			'{{character}} Your {{trait}} spirit is amazing! Create something beautiful today and share it with love! 🎨',
 		character: 'mimi',
 		requiredTraits: ['creative'],
 		weight: 12
@@ -313,21 +319,24 @@ export const nudgeTemplates: NudgeTemplate[] = [
 	{
 		id: 'learning_celebration',
 		type: 'positive',
-		template: '{{character}} Every question you ask makes you smarter! What will you discover today? 🔍🧠',
+		template:
+			'{{character}} Every question you ask makes you smarter! What will you discover today? 🔍🧠',
 		character: 'botu',
 		weight: 9
 	},
 	{
 		id: 'kindness_reminder',
 		type: 'bonding',
-		template: '{{character}} Your kindness makes the world brighter! Do something sweet for someone today 💝',
+		template:
+			'{{character}} Your kindness makes the world brighter! Do something sweet for someone today 💝',
 		character: 'mimi',
 		weight: 11
 	},
 	{
 		id: 'islamic_trait_combo',
 		type: 'islamic',
-		template: '{{character}} Being {{trait}} is a way to follow {{ayah}}! Let your beautiful nature shine today! 🌟',
+		template:
+			'{{character}} Being {{trait}} is a way to follow {{ayah}}! Let your beautiful nature shine today! 🌟',
 		character: 'noor',
 		requiredTraits: ['any'],
 		islamicContext: true,
@@ -336,7 +345,8 @@ export const nudgeTemplates: NudgeTemplate[] = [
 	{
 		id: 'family_helper',
 		type: 'bonding',
-		template: '{{character}} Helping family is a form of worship! What loving thing can you do today? 🏠💕',
+		template:
+			'{{character}} Helping family is a form of worship! What loving thing can you do today? 🏠💕',
 		character: 'botu',
 		weight: 10
 	},
@@ -345,28 +355,32 @@ export const nudgeTemplates: NudgeTemplate[] = [
 	{
 		id: 'gentle_improvement',
 		type: 'constructive',
-		template: '{{character}} Every day is a chance to grow! What\'s one small thing you can do better today? 🌱',
+		template:
+			"{{character}} Every day is a chance to grow! What's one small thing you can do better today? 🌱",
 		character: 'noor',
 		weight: 3
 	},
 	{
 		id: 'patience_reminder',
 		type: 'constructive',
-		template: '{{character}} Remember, being patient makes us stronger! Take a deep breath when things feel hard 🧘‍♀️',
+		template:
+			'{{character}} Remember, being patient makes us stronger! Take a deep breath when things feel hard 🧘‍♀️',
 		character: 'mimi',
 		weight: 2
 	},
 	{
 		id: 'forgiveness_nudge',
 		type: 'constructive',
-		template: '{{character}} Forgiving others frees our hearts! Is there someone you can forgive today? 💙',
+		template:
+			'{{character}} Forgiving others frees our hearts! Is there someone you can forgive today? 💙',
 		character: 'noor',
 		weight: 2
 	},
 	{
 		id: 'effort_encouragement',
 		type: 'constructive',
-		template: '{{character}} Even when something is hard, trying your best is what matters! Keep going! 💪',
+		template:
+			'{{character}} Even when something is hard, trying your best is what matters! Keep going! 💪',
 		character: 'botu',
 		weight: 3
 	},
@@ -375,14 +389,16 @@ export const nudgeTemplates: NudgeTemplate[] = [
 	{
 		id: 'daily_reflection',
 		type: 'reflection',
-		template: '{{character}} Before bed tonight, think about the best part of your day and thank Allah for it 🌙',
+		template:
+			'{{character}} Before bed tonight, think about the best part of your day and thank Allah for it 🌙',
 		character: 'noor',
 		weight: 6
 	},
 	{
 		id: 'trait_reflection',
 		type: 'reflection',
-		template: '{{character}} How did your {{trait}} nature help you today? Reflect on the good you brought to others 🤔✨',
+		template:
+			'{{character}} How did your {{trait}} nature help you today? Reflect on the good you brought to others 🤔✨',
 		character: 'botu',
 		requiredTraits: ['any'],
 		weight: 7
@@ -390,7 +406,8 @@ export const nudgeTemplates: NudgeTemplate[] = [
 	{
 		id: 'growth_reflection',
 		type: 'reflection',
-		template: '{{character}} What new thing did you learn today? Every lesson is a gift from Allah! 📚',
+		template:
+			'{{character}} What new thing did you learn today? Every lesson is a gift from Allah! 📚',
 		character: 'mimi',
 		weight: 5
 	}
@@ -445,7 +462,7 @@ export const badgeTemplates: BadgeTemplate[] = [
 	},
 	{
 		id: 'quran_lover',
-		name: 'Qur\'an Lover 📖',
+		name: "Qur'an Lover 📖",
 		description: 'Answered 50 Islamic questions!',
 		lottieUrl: '/static/badges/quran-lover.json',
 		condition: 'answered_50_islamic_questions',

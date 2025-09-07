@@ -321,10 +321,10 @@ export async function createNotification(
 	};
 
 	const docRef = await addDoc(collection(db, 'notifications', userId, 'items'), notificationData);
-	
+
 	// Update the document with its own ID
 	await updateDoc(docRef, { id: docRef.id });
-	
+
 	return docRef.id;
 }
 
@@ -353,7 +353,10 @@ export function subscribeToNotifications(
 /**
  * Mark a notification as read
  */
-export async function markNotificationAsRead(userId: string, notificationId: string): Promise<void> {
+export async function markNotificationAsRead(
+	userId: string,
+	notificationId: string
+): Promise<void> {
 	await updateDoc(doc(db, 'notifications', userId, 'items', notificationId), {
 		read: true
 	});
@@ -367,7 +370,7 @@ export async function getUnreadNotificationCount(userId: string): Promise<number
 		collection(db, 'notifications', userId, 'items'),
 		where('read', '==', false)
 	);
-	
+
 	const snapshot = await getDocs(unreadQuery);
 	return snapshot.size;
 }
@@ -383,10 +386,10 @@ export async function notifyFamilyOfNewPost(
 ): Promise<void> {
 	// Get all family member emails from environment
 	const allowedEmails = import.meta.env.VITE_ALLOWED_EMAILS?.split(',') || [];
-	
+
 	// Get all user profiles to find UIDs
 	const userProfiles = await getAllUserProfiles(allowedEmails);
-	
+
 	// Create notifications for all family members except the author
 	const notificationPromises = Object.entries(userProfiles)
 		.filter(([email, profile]) => profile.uid !== authorUid)
@@ -418,13 +421,13 @@ export async function requestNotificationPermission(): Promise<string | null> {
 	try {
 		// Request notification permission
 		const permission = await Notification.requestPermission();
-		
+
 		if (permission === 'granted') {
 			// Get FCM token
 			const token = await getToken(messaging, {
 				vapidKey: import.meta.env.VITE_VAPID_KEY // We'll need to add this to env
 			});
-			
+
 			console.log('FCM token obtained:', token);
 			return token;
 		} else {
@@ -444,11 +447,11 @@ export async function storeFCMToken(userId: string, token: string): Promise<void
 	try {
 		const userRef = doc(db, 'users', userId);
 		const userDoc = await getDoc(userRef);
-		
+
 		if (userDoc.exists()) {
 			const userData = userDoc.data();
 			const existingTokens = userData.fcmTokens || [];
-			
+
 			// Add token if not already present
 			if (!existingTokens.includes(token)) {
 				await updateDoc(userRef, {
@@ -472,7 +475,7 @@ export function setupFCMListener(): void {
 
 	onMessage(messaging, (payload) => {
 		console.log('Foreground message received:', payload);
-		
+
 		// Show notification if the app is in foreground
 		if (payload.notification) {
 			new Notification(payload.notification.title || 'Family Hub', {
@@ -494,10 +497,10 @@ export async function createBirthdayNotification(
 	try {
 		// Get all family member emails from environment
 		const allowedEmails = import.meta.env.VITE_ALLOWED_EMAILS?.split(',') || [];
-		
+
 		// Get all user profiles to find UIDs
 		const userProfiles = await getAllUserProfiles(allowedEmails);
-		
+
 		// Create birthday notifications for all family members
 		const notificationPromises = Object.values(userProfiles).map((profile) =>
 			createNotification(profile.uid, {

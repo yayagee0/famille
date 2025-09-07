@@ -52,7 +52,6 @@
 			pendingFeedback.forEach((feedback) => {
 				answers[feedback.id!] = {};
 			});
-
 		} catch (error) {
 			console.error('[WeeklyFeedback] Failed to load feedback:', error);
 		} finally {
@@ -65,13 +64,13 @@
 		if (!user?.uid || !answers[feedbackId]) return;
 
 		const feedbackAnswers = answers[feedbackId];
-		const feedback = pendingFeedback.find(f => f.id === feedbackId);
-		
+		const feedback = pendingFeedback.find((f) => f.id === feedbackId);
+
 		if (!feedback) return;
 
 		// Check if all questions are answered
-		const allAnswered = feedback.questions.every(
-			(_, index) => feedbackAnswers[index.toString()]?.trim()
+		const allAnswered = feedback.questions.every((_, index) =>
+			feedbackAnswers[index.toString()]?.trim()
 		);
 
 		if (!allAnswered) {
@@ -90,7 +89,7 @@
 			});
 
 			// Remove from pending list
-			pendingFeedback = pendingFeedback.filter(f => f.id !== feedbackId);
+			pendingFeedback = pendingFeedback.filter((f) => f.id !== feedbackId);
 			delete answers[feedbackId];
 
 			console.log('[WeeklyFeedback] Submitted feedback:', feedbackId);
@@ -105,11 +104,11 @@
 	// Format week range
 	function formatWeekRange(weekStart: any) {
 		if (!weekStart?.toDate) return '';
-		
+
 		const start = weekStart.toDate();
 		const end = new Date(start);
 		end.setDate(start.getDate() + 6);
-		
+
 		return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
 	}
 
@@ -154,16 +153,17 @@
 								<h3 class="font-medium text-slate-200">
 									Week of {formatWeekRange(feedback.weekStart)}
 								</h3>
-								<p class="text-sm text-cyan-300">
-									Please share your thoughts from this week 💙
-								</p>
+								<p class="text-sm text-cyan-300">Please share your thoughts from this week 💙</p>
 							</div>
 
 							<!-- Questions -->
 							<div class="space-y-4">
 								{#each feedback.questions as question, index}
 									<div class="space-y-2">
-										<label for="question-{feedback.id}-{index}" class="flex items-start gap-2 text-sm font-medium text-slate-200">
+										<label
+											for="question-{feedback.id}-{index}"
+											class="flex items-start gap-2 text-sm font-medium text-slate-200"
+										>
 											<span class="text-lg">{getQuestionIcon(question.type)}</span>
 											<span>{question.text}</span>
 										</label>
@@ -171,7 +171,7 @@
 											id="question-{feedback.id}-{index}"
 											bind:value={answers[feedback.id!][index.toString()]}
 											placeholder="Share your thoughts..."
-											class="w-full rounded-lg border border-slate-600 bg-slate-800/50 p-3 text-slate-200 placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400"
+											class="w-full rounded-lg border border-slate-600 bg-slate-800/50 p-3 text-slate-200 placeholder-slate-500 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 focus:outline-none"
 											rows="3"
 										></textarea>
 									</div>
@@ -221,16 +221,17 @@
 								<h3 class="font-medium text-gray-800">
 									Week of {formatWeekRange(feedback.weekStart)}
 								</h3>
-								<p class="text-sm text-indigo-600">
-									Please share your thoughts from this week 💙
-								</p>
+								<p class="text-sm text-indigo-600">Please share your thoughts from this week 💙</p>
 							</div>
 
 							<!-- Questions -->
 							<div class="space-y-4">
 								{#each feedback.questions as question, index}
 									<div class="space-y-2">
-										<label for="question-{feedback.id}-{index}-default" class="flex items-start gap-2 text-sm font-medium text-gray-700">
+										<label
+											for="question-{feedback.id}-{index}-default"
+											class="flex items-start gap-2 text-sm font-medium text-gray-700"
+										>
 											<span class="text-lg">{getQuestionIcon(question.type)}</span>
 											<span>{question.text}</span>
 										</label>
@@ -238,7 +239,7 @@
 											id="question-{feedback.id}-{index}-default"
 											bind:value={answers[feedback.id!][index.toString()]}
 											placeholder="Share your thoughts..."
-											class="w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+											class="w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
 											rows="3"
 										></textarea>
 									</div>

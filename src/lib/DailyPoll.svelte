@@ -1,7 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { auth } from '$lib/firebase';
-	import { collection, query, where, orderBy, limit, getDocs, doc, updateDoc } from 'firebase/firestore';
+	import {
+		collection,
+		query,
+		where,
+		orderBy,
+		limit,
+		getDocs,
+		doc,
+		updateDoc
+	} from 'firebase/firestore';
 	import { db, getFamilyId } from '$lib/firebase';
 	import { SmartEngine, type DailyPoll } from '$lib/smartEngine';
 	import { themeStore } from '$lib/themes/neo';
@@ -41,7 +50,7 @@
 
 		try {
 			const familyId = await getFamilyId();
-			
+
 			// Get today's poll
 			const today = new Date();
 			today.setHours(0, 0, 0, 0);
@@ -59,11 +68,11 @@
 			);
 
 			const pollSnapshot = await getDocs(pollQuery);
-			
+
 			if (!pollSnapshot.empty) {
 				const pollDoc = pollSnapshot.docs[0];
 				currentPoll = { id: pollDoc.id, ...pollDoc.data() } as DailyPoll;
-				
+
 				// Check if user has already voted
 				hasVoted = currentPoll.votes && user.uid in currentPoll.votes;
 				if (hasVoted) {
@@ -78,7 +87,7 @@
 			}
 		} catch (err) {
 			console.error('[DailyPoll] Failed to load poll:', err);
-			error = 'Failed to load today\'s poll. Please try again later.';
+			error = "Failed to load today's poll. Please try again later.";
 		} finally {
 			loading = false;
 		}
@@ -90,7 +99,7 @@
 
 		try {
 			voting = true;
-			
+
 			// Update poll with vote
 			const updatedVotes = { ...currentPoll.votes };
 			updatedVotes[user.uid] = optionIndex.toString();
@@ -121,7 +130,7 @@
 		if (!currentPoll) return [];
 
 		const optionCounts = currentPoll.options.map(() => 0);
-		Object.values(currentPoll.votes || {}).forEach(optionIndex => {
+		Object.values(currentPoll.votes || {}).forEach((optionIndex) => {
 			const index = parseInt(optionIndex);
 			if (index >= 0 && index < optionCounts.length) {
 				optionCounts[index]++;
@@ -129,7 +138,7 @@
 		});
 
 		const totalVotes = optionCounts.reduce((sum, count) => sum + count, 0);
-		
+
 		return currentPoll.options.map((option, index) => ({
 			option,
 			count: optionCounts[index],
@@ -140,16 +149,20 @@
 	// Get time remaining
 	function getTimeRemaining() {
 		if (!currentPoll?.closesAt) return '';
-		
-		const closesAt = currentPoll.closesAt.toDate ? currentPoll.closesAt.toDate() : new Date(currentPoll.closesAt);
+
+		const closesAt = currentPoll.closesAt.toDate
+			? currentPoll.closesAt.toDate()
+			: new Date(currentPoll.closesAt);
 		return dayjs(closesAt).fromNow();
 	}
 
 	// Check if poll is closed
 	function isPollClosed() {
 		if (!currentPoll?.closesAt) return false;
-		
-		const closesAt = currentPoll.closesAt.toDate ? currentPoll.closesAt.toDate() : new Date(currentPoll.closesAt);
+
+		const closesAt = currentPoll.closesAt.toDate
+			? currentPoll.closesAt.toDate()
+			: new Date(currentPoll.closesAt);
 		return new Date() > closesAt;
 	}
 
@@ -184,7 +197,7 @@
 				{:else}
 					<!-- Question -->
 					<div class="rounded-lg border border-slate-600 bg-slate-800/50 p-4">
-						<h3 class="text-lg font-medium text-slate-200 mb-4">
+						<h3 class="mb-4 text-lg font-medium text-slate-200">
 							{currentPoll.question}
 						</h3>
 
@@ -194,15 +207,20 @@
 								{@const result = results[index]}
 								{@const isSelected = selectedOption === index.toString()}
 								{@const canVote = !hasVoted && !isClosed && !voting}
-								
+
 								<button
 									onclick={() => canVote && vote(index)}
 									disabled={!canVote}
-									class="w-full text-left transition-colors relative overflow-hidden rounded-lg border border-slate-600 p-3 hover:border-lime-400/50 disabled:cursor-not-allowed {isSelected ? 'border-lime-400' : ''} {isSelected && currentTheme === 'neo' ? 'bg-lime-500/10' : ''} {canVote && currentTheme === 'neo' ? 'hover:bg-slate-700/50' : ''}"
+									class="relative w-full overflow-hidden rounded-lg border border-slate-600 p-3 text-left transition-colors hover:border-lime-400/50 disabled:cursor-not-allowed {isSelected
+										? 'border-lime-400'
+										: ''} {isSelected && currentTheme === 'neo' ? 'bg-lime-500/10' : ''} {canVote &&
+									currentTheme === 'neo'
+										? 'hover:bg-slate-700/50'
+										: ''}"
 								>
 									<!-- Progress bar (if voted or closed) -->
 									{#if hasVoted || isClosed}
-										<div 
+										<div
 											class="absolute inset-0 bg-gradient-to-r from-lime-500/20 to-transparent transition-all duration-500"
 											style="width: {result.percentage}%"
 										></div>
@@ -210,16 +228,18 @@
 
 									<div class="relative flex items-center justify-between">
 										<span class="text-slate-200">{option}</span>
-										
+
 										{#if hasVoted || isClosed}
 											<div class="flex items-center gap-2 text-sm">
-												<span class="text-slate-400">{result.count} vote{result.count !== 1 ? 's' : ''}</span>
-												<span class="text-lime-400 font-medium">{result.percentage}%</span>
+												<span class="text-slate-400"
+													>{result.count} vote{result.count !== 1 ? 's' : ''}</span
+												>
+												<span class="font-medium text-lime-400">{result.percentage}%</span>
 											</div>
 										{/if}
 
 										{#if isSelected}
-											<div class="absolute -right-2 -top-2 rounded-full bg-lime-500 p-1">
+											<div class="absolute -top-2 -right-2 rounded-full bg-lime-500 p-1">
 												<Vote class="h-3 w-3 text-white" />
 											</div>
 										{/if}
@@ -236,7 +256,9 @@
 									<span>Submitting vote...</span>
 								</div>
 							{:else if hasVoted}
-								<p class="text-lime-400">✨ Thanks for voting! Results will be shared when the poll closes.</p>
+								<p class="text-lime-400">
+									✨ Thanks for voting! Results will be shared when the poll closes.
+								</p>
 							{:else if isClosed}
 								<p class="text-slate-400">📊 This poll has closed</p>
 							{:else}
@@ -259,8 +281,8 @@
 				</div>
 			{:else}
 				<!-- Question -->
-				<div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4">
-					<div class="flex items-center justify-between mb-3">
+				<div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+					<div class="mb-3 flex items-center justify-between">
 						<h3 class="text-lg font-medium text-gray-800">
 							{currentPoll.question}
 						</h3>
@@ -278,18 +300,18 @@
 							{@const result = results[index]}
 							{@const isSelected = selectedOption === index.toString()}
 							{@const canVote = !hasVoted && !isClosed && !voting}
-							
+
 							<button
 								onclick={() => canVote && vote(index)}
 								disabled={!canVote}
-								class="w-full text-left transition-colors relative overflow-hidden rounded-lg border border-gray-300 p-3 hover:border-indigo-400 disabled:cursor-not-allowed"
+								class="relative w-full overflow-hidden rounded-lg border border-gray-300 p-3 text-left transition-colors hover:border-indigo-400 disabled:cursor-not-allowed"
 								class:border-indigo-500={isSelected}
 								class:bg-indigo-50={isSelected}
 								class:hover:bg-gray-100={canVote}
 							>
 								<!-- Progress bar (if voted or closed) -->
 								{#if hasVoted || isClosed}
-									<div 
+									<div
 										class="absolute inset-0 bg-gradient-to-r from-indigo-200 to-transparent transition-all duration-500"
 										style="width: {result.percentage}%"
 									></div>
@@ -297,16 +319,18 @@
 
 								<div class="relative flex items-center justify-between">
 									<span class="text-gray-800">{option}</span>
-									
+
 									{#if hasVoted || isClosed}
 										<div class="flex items-center gap-2 text-sm">
-											<span class="text-gray-600">{result.count} vote{result.count !== 1 ? 's' : ''}</span>
-											<span class="text-indigo-600 font-medium">{result.percentage}%</span>
+											<span class="text-gray-600"
+												>{result.count} vote{result.count !== 1 ? 's' : ''}</span
+											>
+											<span class="font-medium text-indigo-600">{result.percentage}%</span>
 										</div>
 									{/if}
 
 									{#if isSelected}
-										<div class="absolute -right-2 -top-2 rounded-full bg-indigo-500 p-1">
+										<div class="absolute -top-2 -right-2 rounded-full bg-indigo-500 p-1">
 											<Vote class="h-3 w-3 text-white" />
 										</div>
 									{/if}
@@ -323,7 +347,9 @@
 								<span>Submitting vote...</span>
 							</div>
 						{:else if hasVoted}
-							<p class="text-indigo-600">✨ Thanks for voting! Results will be shared when the poll closes.</p>
+							<p class="text-indigo-600">
+								✨ Thanks for voting! Results will be shared when the poll closes.
+							</p>
 						{:else if isClosed}
 							<p class="text-gray-600">📊 This poll has closed</p>
 						{:else}

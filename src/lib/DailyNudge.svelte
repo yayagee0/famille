@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { auth } from '$lib/firebase';
-	import { SmartEngine, type UserNudge, type WeeklyFeedback, type UserBadge } from '$lib/smartEngine';
+	import {
+		SmartEngine,
+		type UserNudge,
+		type WeeklyFeedback,
+		type UserBadge
+	} from '$lib/smartEngine';
 	import { characters } from '$lib/data/smartEngine';
 	import { themeStore } from '$lib/themes/neo';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
@@ -34,7 +39,7 @@
 		try {
 			// Try to generate today's nudge (will return null if already exists)
 			const nudge = await SmartEngine.generateDailyNudge(user.uid);
-			
+
 			if (nudge) {
 				todaysNudge = nudge;
 			} else {
@@ -64,7 +69,7 @@
 
 	// Get character data
 	function getCharacterData(characterId: string) {
-		return characters.find(c => c.id === characterId) || characters[0];
+		return characters.find((c) => c.id === characterId) || characters[0];
 	}
 
 	// Get type-specific styling
@@ -136,7 +141,7 @@
 			{:else if todaysNudge}
 				{@const character = getCharacterData(todaysNudge.character)}
 				{@const TypeIcon = getTypeIcon(todaysNudge.type)}
-				
+
 				<div class="space-y-4 rounded-xl border p-4 {getTypeStyles(todaysNudge.type)}">
 					<!-- Character and Type -->
 					<div class="flex items-center justify-between">
@@ -146,7 +151,7 @@
 						</div>
 						<div class="flex items-center gap-1">
 							<TypeIcon class="h-4 w-4 text-slate-400" />
-							<span class="text-xs capitalize text-slate-400">{todaysNudge.type}</span>
+							<span class="text-xs text-slate-400 capitalize">{todaysNudge.type}</span>
 						</div>
 					</div>
 
@@ -159,7 +164,7 @@
 						<!-- Islamic Context -->
 						{#if todaysNudge.islamicContext}
 							<div class="rounded-lg border border-cyan-400/20 bg-cyan-500/5 p-3">
-								<p class="text-sm italic text-cyan-300">
+								<p class="text-sm text-cyan-300 italic">
 									"{todaysNudge.islamicContext.ayah}"
 								</p>
 								<p class="mt-1 text-xs text-cyan-400">
@@ -210,7 +215,7 @@
 		{:else if todaysNudge}
 			{@const character = getCharacterData(todaysNudge.character)}
 			{@const TypeIcon = getTypeIcon(todaysNudge.type)}
-			
+
 			<div class="space-y-4 rounded-xl border p-4 {getTypeStyles(todaysNudge.type)}">
 				<!-- Character and Type -->
 				<div class="flex items-center justify-between">
@@ -220,7 +225,7 @@
 					</div>
 					<div class="flex items-center gap-1">
 						<TypeIcon class="h-4 w-4 text-gray-500" />
-						<span class="text-xs capitalize text-gray-500">{todaysNudge.type}</span>
+						<span class="text-xs text-gray-500 capitalize">{todaysNudge.type}</span>
 					</div>
 				</div>
 
@@ -233,7 +238,7 @@
 					<!-- Islamic Context -->
 					{#if todaysNudge.islamicContext}
 						<div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
-							<p class="text-sm italic text-blue-700">
+							<p class="text-sm text-blue-700 italic">
 								"{todaysNudge.islamicContext.ayah}"
 							</p>
 							<p class="mt-1 text-xs text-blue-600">

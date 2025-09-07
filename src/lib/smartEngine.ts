@@ -1,6 +1,6 @@
 /**
  * Smart Engine Core Logic
- * 
+ *
  * Handles:
  * - Daily nudge generation (exactly one per child per day)
  * - Trait-based personalization with round-robin rotation
@@ -40,7 +40,11 @@ import {
 } from '$lib/data/smartEngine';
 import { seasonalNudgeTemplates } from '$lib/data/seasonal';
 import { pollTemplates, type DailyPoll, type PollTemplate } from '$lib/data/polls';
-import { getCurrentSeasonalConfig, getCurrentSeasonalBanners, type SeasonalBanner } from '$lib/data/seasonal';
+import {
+	getCurrentSeasonalConfig,
+	getCurrentSeasonalBanners,
+	type SeasonalBanner
+} from '$lib/data/seasonal';
 import { AnalyticsEngine, type DailyAnalytics, type UserDailyMetrics } from '$lib/data/analytics';
 
 // ============================================================================
@@ -269,14 +273,10 @@ export class SmartEngine {
 
 		if (random < 0.8) {
 			// 80% positive/bonding/reflection/islamic/personalized
-			candidateTemplates = nudgeTemplates.filter(
-				(t) => t.type !== 'constructive'
-			);
+			candidateTemplates = nudgeTemplates.filter((t) => t.type !== 'constructive');
 		} else {
 			// 20% constructive
-			candidateTemplates = nudgeTemplates.filter(
-				(t) => t.type === 'constructive'
-			);
+			candidateTemplates = nudgeTemplates.filter((t) => t.type === 'constructive');
 		}
 
 		// Filter by available traits
@@ -327,7 +327,8 @@ export class SmartEngine {
 			}
 
 			// Replace {{character}} placeholder
-			const characterGreeting = character.greetings[Math.floor(Math.random() * character.greetings.length)];
+			const characterGreeting =
+				character.greetings[Math.floor(Math.random() * character.greetings.length)];
 			generatedText = generatedText.replace(/\{\{character\}\}/g, characterGreeting);
 
 			// Replace {{trait}} placeholder
@@ -385,7 +386,9 @@ export class SmartEngine {
 		// Check if we need to rotate (weekly)
 		const now = new Date();
 		const lastRotation = userTraits.lastRotationDate.toDate();
-		const daysSinceRotation = Math.floor((now.getTime() - lastRotation.getTime()) / (1000 * 60 * 60 * 24));
+		const daysSinceRotation = Math.floor(
+			(now.getTime() - lastRotation.getTime()) / (1000 * 60 * 60 * 24)
+		);
 
 		if (daysSinceRotation >= 7) {
 			// Time to rotate - this will be handled by updateTraitRotation
@@ -402,7 +405,9 @@ export class SmartEngine {
 	static async updateTraitRotation(userId: string, currentTraits: UserTraits): Promise<void> {
 		const now = new Date();
 		const lastRotation = currentTraits.lastRotationDate.toDate();
-		const daysSinceRotation = Math.floor((now.getTime() - lastRotation.getTime()) / (1000 * 60 * 60 * 24));
+		const daysSinceRotation = Math.floor(
+			(now.getTime() - lastRotation.getTime()) / (1000 * 60 * 60 * 24)
+		);
 
 		if (daysSinceRotation >= 7 && currentTraits.traits.length > 1) {
 			const nextIndex = (currentTraits.currentRotationIndex + 1) % currentTraits.traits.length;
@@ -476,7 +481,11 @@ export class SmartEngine {
 			await setDoc(doc(db, 'islamic_identity', userId), progress);
 
 			// Check for badge earnings
-			await this.checkIslamicBadges(userId, progress.answeredQuestions.length, progress.totalCorrect);
+			await this.checkIslamicBadges(
+				userId,
+				progress.answeredQuestions.length,
+				progress.totalCorrect
+			);
 
 			console.log(`[SmartEngine] Updated Islamic progress for user ${userId}`);
 		} catch (error) {
@@ -487,9 +496,13 @@ export class SmartEngine {
 	/**
 	 * Check and award Islamic learning badges
 	 */
-	static async checkIslamicBadges(userId: string, totalAnswered: number, totalCorrect: number): Promise<void> {
+	static async checkIslamicBadges(
+		userId: string,
+		totalAnswered: number,
+		totalCorrect: number
+	): Promise<void> {
 		const milestones = [1, 5, 10, 25, 50];
-		
+
 		for (const milestone of milestones) {
 			if (totalCorrect >= milestone) {
 				const badgeId = `answered_${milestone}_islamic_question${milestone > 1 ? 's' : ''}`;
@@ -615,7 +628,8 @@ export class SmartEngine {
 
 				// Create weekly feedback if it's Sunday
 				const now = new Date();
-				if (now.getDay() === 0) { // Sunday
+				if (now.getDay() === 0) {
+					// Sunday
 					await this.createWeeklyFeedback(userId);
 				}
 
@@ -704,16 +718,17 @@ export class SmartEngine {
 
 		// Get seasonal configuration for boosted content
 		const seasonalConfig = getCurrentSeasonalConfig();
-		
+
 		// Apply seasonal weights
 		let templates = [...pollTemplates];
 		if (seasonalConfig) {
 			// During special seasons, prefer family and preference polls
-			templates = templates.map(template => ({
+			templates = templates.map((template) => ({
 				...template,
-				weight: template.category === 'family' || template.category === 'preferences' 
-					? template.weight * 1.5 
-					: template.weight
+				weight:
+					template.category === 'family' || template.category === 'preferences'
+						? template.weight * 1.5
+						: template.weight
 			}));
 		}
 
@@ -737,7 +752,7 @@ export class SmartEngine {
 	static async processExpiredPolls(familyId: string): Promise<void> {
 		try {
 			const now = new Date();
-			
+
 			// Find polls that should be closed
 			const expiredPollsQuery = query(
 				collection(db, 'daily_polls'),
@@ -750,7 +765,7 @@ export class SmartEngine {
 
 			for (const pollDoc of expiredPolls.docs) {
 				const poll = pollDoc.data() as DailyPoll;
-				
+
 				// Close the poll
 				await updateDoc(doc(db, 'daily_polls', pollDoc.id), {
 					isClosed: true
@@ -759,7 +774,7 @@ export class SmartEngine {
 				// Post results to Fun Feed if not already posted
 				if (!poll.resultsPosted) {
 					await this.postPollResultsToFeed(pollDoc.id, poll);
-					
+
 					await updateDoc(doc(db, 'daily_polls', pollDoc.id), {
 						resultsPosted: true
 					});
@@ -779,7 +794,7 @@ export class SmartEngine {
 		try {
 			// Calculate results
 			const optionCounts = poll.options.map(() => 0);
-			Object.values(poll.votes).forEach(optionIndex => {
+			Object.values(poll.votes).forEach((optionIndex) => {
 				const index = parseInt(optionIndex);
 				if (index >= 0 && index < optionCounts.length) {
 					optionCounts[index]++;
@@ -787,14 +802,14 @@ export class SmartEngine {
 			});
 
 			const totalVotes = optionCounts.reduce((sum, count) => sum + count, 0);
-			
+
 			// Find winning option(s)
 			const maxVotes = Math.max(...optionCounts);
 			const winners = poll.options.filter((_, index) => optionCounts[index] === maxVotes);
 
 			// Create result text
 			let resultText = `📊 Poll Results: "${poll.question}"\n\n`;
-			
+
 			if (totalVotes === 0) {
 				resultText += 'No votes received 😔';
 			} else {
@@ -842,7 +857,7 @@ export class SmartEngine {
 	static async initializeDailyAnalytics(dateString: string, familyId: string): Promise<void> {
 		try {
 			const analyticsDoc = await getDoc(doc(db, 'analytics', dateString));
-			
+
 			if (!analyticsDoc.exists()) {
 				const analytics = AnalyticsEngine.initializeDailyAnalytics(dateString, familyId);
 				await setDoc(doc(db, 'analytics', dateString), analytics);
@@ -864,7 +879,7 @@ export class SmartEngine {
 
 			if (analyticsDoc.exists()) {
 				const analytics = analyticsDoc.data() as DailyAnalytics;
-				
+
 				// Initialize user metrics if not exists
 				if (!analytics.userMetrics[userId]) {
 					analytics.userMetrics[userId] = AnalyticsEngine.initializeUserMetrics(userId);
@@ -914,24 +929,24 @@ export class SmartEngine {
 				analytics.updatedAt = new Date();
 
 				// Recalculate rates
-				analytics.metrics.nudgeEngagementRate = 
-					analytics.metrics.nudgesShown > 0 
-						? analytics.metrics.nudgesAnswered / analytics.metrics.nudgesShown 
+				analytics.metrics.nudgeEngagementRate =
+					analytics.metrics.nudgesShown > 0
+						? analytics.metrics.nudgesAnswered / analytics.metrics.nudgesShown
 						: 0;
 
-				analytics.metrics.feedbackCompletionRate = 
-					analytics.metrics.feedbackGenerated > 0 
-						? analytics.metrics.feedbackCompleted / analytics.metrics.feedbackGenerated 
+				analytics.metrics.feedbackCompletionRate =
+					analytics.metrics.feedbackGenerated > 0
+						? analytics.metrics.feedbackCompleted / analytics.metrics.feedbackGenerated
 						: 0;
 
-				analytics.metrics.pollParticipationRate = 
-					analytics.metrics.pollsGenerated > 0 
-						? analytics.metrics.pollVotes / analytics.metrics.pollsGenerated 
+				analytics.metrics.pollParticipationRate =
+					analytics.metrics.pollsGenerated > 0
+						? analytics.metrics.pollVotes / analytics.metrics.pollsGenerated
 						: 0;
 
-				analytics.metrics.islamicAccuracyRate = 
-					analytics.metrics.islamicQuestionsAnswered > 0 
-						? analytics.metrics.islamicQuestionsCorrect / analytics.metrics.islamicQuestionsAnswered 
+				analytics.metrics.islamicAccuracyRate =
+					analytics.metrics.islamicQuestionsAnswered > 0
+						? analytics.metrics.islamicQuestionsCorrect / analytics.metrics.islamicQuestionsAnswered
 						: 0;
 
 				// Update active users count
@@ -979,19 +994,19 @@ export class SmartEngine {
 	static selectNudgeTemplateEnhanced(userTraits: UserTraits, userId: string): NudgeTemplate | null {
 		// Get seasonal configuration
 		const seasonalConfig = getCurrentSeasonalConfig();
-		
+
 		// Combine regular and seasonal templates
 		let candidateTemplates = [...nudgeTemplates];
-		
+
 		if (seasonalConfig) {
 			// Add seasonal templates
-			const seasonalTemplates = seasonalNudgeTemplates.filter(t => 
-				t.season === seasonalConfig.season
+			const seasonalTemplates = seasonalNudgeTemplates.filter(
+				(t) => t.season === seasonalConfig.season
 			);
 			candidateTemplates.push(...seasonalTemplates);
 
 			// Boost seasonal nudge types
-			candidateTemplates = candidateTemplates.map(template => {
+			candidateTemplates = candidateTemplates.map((template) => {
 				if (seasonalConfig.nudgeBoosts.includes(template.id)) {
 					return { ...template, weight: template.weight * 1.5 };
 				}
@@ -1005,14 +1020,10 @@ export class SmartEngine {
 
 		if (random < 0.8) {
 			// 80% positive/bonding/reflection/islamic/personalized
-			filteredTemplates = candidateTemplates.filter(
-				(t) => t.type !== 'constructive'
-			);
+			filteredTemplates = candidateTemplates.filter((t) => t.type !== 'constructive');
 		} else {
 			// 20% constructive
-			filteredTemplates = candidateTemplates.filter(
-				(t) => t.type === 'constructive'
-			);
+			filteredTemplates = candidateTemplates.filter((t) => t.type === 'constructive');
 		}
 
 		// Filter by available traits

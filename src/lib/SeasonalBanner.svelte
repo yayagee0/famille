@@ -65,10 +65,15 @@
 	<div class="space-y-3">
 		{#each banners as banner (banner.id)}
 			{#if currentTheme === 'neo'}
-				<div class="relative overflow-hidden rounded-xl border p-4 {getPriorityStyle(banner.priority)}">
+				<div
+					class="relative overflow-hidden rounded-xl border p-4 {getPriorityStyle(banner.priority)}"
+				>
 					<!-- Background pattern -->
 					<div class="absolute inset-0 opacity-5">
-						<div class="h-full w-full" style="background-image: radial-gradient(circle, currentColor 1px, transparent 1px); background-size: 20px 20px;"></div>
+						<div
+							class="h-full w-full"
+							style="background-image: radial-gradient(circle, currentColor 1px, transparent 1px); background-size: 20px 20px;"
+						></div>
 					</div>
 
 					<div class="relative">
@@ -81,23 +86,23 @@
 							</div>
 
 							<!-- Banner Content -->
-							<div class="flex-1 min-w-0">
-								<div class="flex items-center gap-2 mb-2">
-									<h3 class="font-bold text-slate-200 text-lg">{banner.title}</h3>
-									<span class="text-slate-400 text-xs">
+							<div class="min-w-0 flex-1">
+								<div class="mb-2 flex items-center gap-2">
+									<h3 class="text-lg font-bold text-slate-200">{banner.title}</h3>
+									<span class="text-xs text-slate-400">
 										{getBannerIcon(banner.category)}
 									</span>
 								</div>
-								
-								<p class="text-slate-300 leading-relaxed">
+
+								<p class="leading-relaxed text-slate-300">
 									{banner.message}
 								</p>
 
 								<!-- Priority indicator for high priority banners -->
 								{#if banner.priority >= 10}
-									<div class="flex items-center gap-1 mt-3">
+									<div class="mt-3 flex items-center gap-1">
 										<Sparkles class="h-4 w-4 text-yellow-400" />
-										<span class="text-xs text-yellow-400 font-medium">Special Event</span>
+										<span class="text-xs font-medium text-yellow-400">Special Event</span>
 									</div>
 								{/if}
 							</div>
@@ -105,7 +110,9 @@
 					</div>
 				</div>
 			{:else}
-				<div class="relative overflow-hidden rounded-xl border p-4 {getPriorityStyle(banner.priority)}">
+				<div
+					class="relative overflow-hidden rounded-xl border p-4 {getPriorityStyle(banner.priority)}"
+				>
 					<div class="flex items-start gap-3">
 						<!-- Banner Icon -->
 						<div class="flex-shrink-0">
@@ -115,23 +122,23 @@
 						</div>
 
 						<!-- Banner Content -->
-						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2 mb-2">
-								<h3 class="font-bold text-gray-800 text-lg">{banner.title}</h3>
-								<span class="text-gray-500 text-xs">
+						<div class="min-w-0 flex-1">
+							<div class="mb-2 flex items-center gap-2">
+								<h3 class="text-lg font-bold text-gray-800">{banner.title}</h3>
+								<span class="text-xs text-gray-500">
 									{getBannerIcon(banner.category)}
 								</span>
 							</div>
-							
-							<p class="text-gray-700 leading-relaxed">
+
+							<p class="leading-relaxed text-gray-700">
 								{banner.message}
 							</p>
 
 							<!-- Priority indicator for high priority banners -->
 							{#if banner.priority >= 10}
-								<div class="flex items-center gap-1 mt-3">
+								<div class="mt-3 flex items-center gap-1">
 									<Sparkles class="h-4 w-4 text-yellow-600" />
-									<span class="text-xs text-yellow-600 font-medium">Special Event</span>
+									<span class="text-xs font-medium text-yellow-600">Special Event</span>
 								</div>
 							{/if}
 						</div>

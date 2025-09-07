@@ -1,6 +1,6 @@
 /**
  * Analytics System Data
- * 
+ *
  * Tracks daily engagement and self-optimizes nudge delivery
  * Writes logs to analytics/{date} for monitoring and optimization
  */
@@ -204,11 +204,14 @@ export class AnalyticsEngine {
 		const patterns: EngagementPattern[] = [];
 
 		// Group metrics by user
-		const userHistories = userMetrics.reduce((acc, metrics) => {
-			if (!acc[metrics.userId]) acc[metrics.userId] = [];
-			acc[metrics.userId].push(metrics);
-			return acc;
-		}, {} as Record<string, UserDailyMetrics[]>);
+		const userHistories = userMetrics.reduce(
+			(acc, metrics) => {
+				if (!acc[metrics.userId]) acc[metrics.userId] = [];
+				acc[metrics.userId].push(metrics);
+				return acc;
+			},
+			{} as Record<string, UserDailyMetrics[]>
+		);
 
 		// Analyze each user's pattern
 		Object.entries(userHistories).forEach(([userId, history]) => {
@@ -229,7 +232,7 @@ export class AnalyticsEngine {
 	): EngagementPattern {
 		// Calculate engagement rate over time
 		const recentEngagement = history.slice(-7); // Last 7 days
-		const engagementRates = recentEngagement.map(day => {
+		const engagementRates = recentEngagement.map((day) => {
 			let interactions = 0;
 			let opportunities = 0;
 
@@ -254,7 +257,7 @@ export class AnalyticsEngine {
 		// Calculate trend
 		const earlierRate = engagementRates.slice(0, 3).reduce((a, b) => a + b, 0) / 3;
 		const laterRate = engagementRates.slice(-3).reduce((a, b) => a + b, 0) / 3;
-		
+
 		let weeklyTrend: 'increasing' | 'decreasing' | 'stable' = 'stable';
 		if (laterRate > earlierRate + 0.1) weeklyTrend = 'increasing';
 		else if (laterRate < earlierRate - 0.1) weeklyTrend = 'decreasing';
@@ -296,17 +299,15 @@ export class AnalyticsEngine {
 		patterns: EngagementPattern[],
 		currentAnalytics: DailyAnalytics
 	): DailyAnalytics['optimization'] {
-		const lowEngagementUsers = patterns
-			.filter(p => p.riskLevel === 'high')
-			.map(p => p.userId);
+		const lowEngagementUsers = patterns.filter((p) => p.riskLevel === 'high').map((p) => p.userId);
 
 		const highEngagementUsers = patterns
-			.filter(p => p.riskLevel === 'low' && p.weeklyTrend === 'increasing')
-			.map(p => p.userId);
+			.filter((p) => p.riskLevel === 'low' && p.weeklyTrend === 'increasing')
+			.map((p) => p.userId);
 
 		// Determine recommended nudge types based on overall engagement
 		let recommendedNudgeTypes = ['positive', 'bonding'];
-		
+
 		const overallEngagement = currentAnalytics.metrics.nudgeEngagementRate;
 		if (overallEngagement < 0.4) {
 			recommendedNudgeTypes = ['positive', 'bonding', 'personalized'];
