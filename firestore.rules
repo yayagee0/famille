@@ -22,6 +22,12 @@ service cloud.firestore {
         resource.data.authorUid == request.auth.uid;
     }
 
+    // Notifications collection - users can only access their own notifications
+    match /notifications/{userId}/items/{notificationId} {
+      // Users can only read and update their own notifications
+      allow read, write: if isFamily() && userId == request.auth.uid;
+    }
+
     // Daily mood entries - users can only write/update their own entries
     match /daily-moods/{dateId}/entries/{uid} {
       // All family can read mood entries
