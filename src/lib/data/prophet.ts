@@ -1,5 +1,3 @@
-// src/lib/questions/prophet.ts
-
 export const prophetQuestions = [
   {
     id: "prophet-1",

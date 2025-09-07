@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { playSound } from '$lib/sound';
+	import { themeStore } from '$lib/themes/neo';
 
 	// Career data with backgrounds and progression facts
 	const dreams = [
@@ -76,6 +77,17 @@
 	let step = $state(0);
 	let isCompleted = $state(false);
 
+	// Theme state
+	let currentTheme = $state('default');
+
+	// Subscribe to theme changes
+	$effect(() => {
+		const unsubscribe = themeStore.subscribe((theme) => {
+			currentTheme = theme;
+		});
+		return unsubscribe;
+	});
+
 	// Reset state when selecting a new dream
 	function chooseDream(dream: (typeof dreams)[0]) {
 		selected = dream;
@@ -113,99 +125,193 @@
 		<!-- Career selection grid -->
 		<div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
 			{#each dreams as dream (dream.name)}
-				<button
-					class="flex flex-col items-center rounded-2xl bg-gradient-to-br {dream.background} animate-bounce-slow border-2 border-transparent p-4 transition-all duration-300 hover:scale-105 hover:border-white hover:shadow-lg"
-					onclick={() => chooseDream(dream)}
-					onmouseenter={handleDreamHover}
-				>
-					<span class="hover:animate-wiggle mb-2 text-3xl">{dream.icon}</span>
-					<div class="text-sm font-bold text-gray-800">{dream.name}</div>
-				</button>
+				{#if currentTheme === 'neo'}
+					<button
+						class="neo-glass neo-row-hover flex flex-col items-center rounded-2xl border p-4 transition-all duration-300"
+						style="border-color: var(--neo-border);"
+						onclick={() => chooseDream(dream)}
+						onmouseenter={handleDreamHover}
+					>
+						<span class="mb-2 text-3xl">{dream.icon}</span>
+						<div class="text-sm font-bold" style="color: var(--neo-text-primary);">{dream.name}</div>
+					</button>
+				{:else}
+					<button
+						class="flex flex-col items-center rounded-2xl bg-gradient-to-br {dream.background} animate-bounce-slow border-2 border-transparent p-4 transition-all duration-300 hover:scale-105 hover:border-white hover:shadow-lg"
+						onclick={() => chooseDream(dream)}
+						onmouseenter={handleDreamHover}
+					>
+						<span class="hover:animate-wiggle mb-2 text-3xl">{dream.icon}</span>
+						<div class="text-sm font-bold text-gray-800">{dream.name}</div>
+					</button>
+				{/if}
 			{/each}
 		</div>
 	{:else}
 		<div class="space-y-4">
 			<!-- Career header with background -->
-			<div
-				class="rounded-2xl bg-gradient-to-br {selected.background} border-2 border-white p-4 text-center"
-			>
-				<h3 class="flex items-center justify-center text-xl font-bold text-gray-800">
-					<span class="animate-wiggle mr-3 text-3xl">{selected.icon}</span>
-					{selected.name}
-				</h3>
-			</div>
+			{#if currentTheme === 'neo'}
+				<div class="neo-glass rounded-2xl border p-4 text-center" style="border-color: var(--neo-lime);">
+					<h3 class="flex items-center justify-center text-xl font-bold" style="color: var(--neo-lime);">
+						<span class="mr-3 text-3xl">{selected.icon}</span>
+						{selected.name}
+					</h3>
+				</div>
+			{:else}
+				<div
+					class="rounded-2xl bg-gradient-to-br {selected.background} border-2 border-white p-4 text-center"
+				>
+					<h3 class="flex items-center justify-center text-xl font-bold text-gray-800">
+						<span class="animate-wiggle mr-3 text-3xl">{selected.icon}</span>
+						{selected.name}
+					</h3>
+				</div>
+			{/if}
 
 			<!-- Progress indicators -->
 			<div class="mb-4 flex justify-center space-x-2">
 				{#each selected.facts as _, progressStep (progressStep)}
 					<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-					<div
-						class="h-3 w-3 rounded-full transition-all duration-300 {progressStep <= step
-							? 'scale-110 bg-gradient-to-r from-purple-500 to-pink-500'
-							: 'bg-gray-300'}"
-					></div>
+					{#if currentTheme === 'neo'}
+						<div
+							class="h-3 w-3 rounded-full transition-all duration-300 {progressStep <= step
+								? 'scale-110'
+								: ''}"
+							style="background: {progressStep <= step ? 'var(--neo-cyan)' : 'var(--neo-glass)'}; box-shadow: {progressStep <= step ? 'var(--neo-glow-cyan)' : 'none'};"
+						></div>
+					{:else}
+						<div
+							class="h-3 w-3 rounded-full transition-all duration-300 {progressStep <= step
+								? 'scale-110 bg-gradient-to-r from-purple-500 to-pink-500'
+								: 'bg-gray-300'}"
+						></div>
+					{/if}
 				{/each}
 			</div>
 
 			{#if !isCompleted}
 				<!-- Current step content -->
-				<div
-					class="rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-md"
-					in:fly={{ y: 20, duration: 300 }}
-				>
-					<div class="mb-3 text-center">
-						<div class="animate-bounce-slow mb-2 text-2xl">{selected.facts[step].emoji}</div>
-						<h4 class="text-lg font-bold text-purple-700">{selected.facts[step].role}</h4>
+				{#if currentTheme === 'neo'}
+					<div
+						class="neo-glass rounded-2xl border p-4"
+						style="border-color: var(--neo-border);"
+						in:fly={{ y: 20, duration: 300 }}
+					>
+						<div class="mb-3 text-center">
+							<div class="mb-2 text-2xl">{selected.facts[step].emoji}</div>
+							<h4 class="text-lg font-bold" style="color: var(--neo-magenta);">{selected.facts[step].role}</h4>
+						</div>
+						<p class="text-center" style="color: var(--neo-text-secondary);">{selected.facts[step].description}</p>
 					</div>
-					<p class="text-center text-gray-600">{selected.facts[step].description}</p>
-				</div>
+				{:else}
+					<div
+						class="rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-md"
+						in:fly={{ y: 20, duration: 300 }}
+					>
+						<div class="mb-3 text-center">
+							<div class="animate-bounce-slow mb-2 text-2xl">{selected.facts[step].emoji}</div>
+							<h4 class="text-lg font-bold text-purple-700">{selected.facts[step].role}</h4>
+						</div>
+						<p class="text-center text-gray-600">{selected.facts[step].description}</p>
+					</div>
+				{/if}
 
 				<!-- Next button -->
 				<div class="flex justify-center">
-					<button
-						class="rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 font-bold text-white transition-all duration-200 hover:scale-105 hover:from-purple-600 hover:to-pink-600"
-						onclick={nextStep}
-					>
-						{step < selected.facts.length - 1 ? 'Next Step' : 'Complete Journey'} ✨
-					</button>
+					{#if currentTheme === 'neo'}
+						<button
+							class="neo-button rounded-xl px-6 py-3 font-bold transition-all duration-300"
+							style="border-color: var(--neo-lime); background: var(--neo-glass-medium); color: var(--neo-lime);"
+							onclick={nextStep}
+						>
+							{step < selected.facts.length - 1 ? 'Next Step' : 'Complete Journey'} ✨
+						</button>
+					{:else}
+						<button
+							class="rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 font-bold text-white transition-all duration-200 hover:scale-105 hover:from-purple-600 hover:to-pink-600"
+							onclick={nextStep}
+						>
+							{step < selected.facts.length - 1 ? 'Next Step' : 'Complete Journey'} ✨
+						</button>
+					{/if}
 				</div>
 			{:else}
 				<!-- Completion celebration -->
-				<div
-					class="animate-confetti rounded-2xl border-2 border-green-200 bg-green-50 p-6 text-center"
-					in:fly={{ y: -20, duration: 500 }}
-				>
-					<h4 class="mb-3 text-xl font-bold text-green-700">Dream Journey Complete!</h4>
-					<p class="mb-4 text-green-600">
-						You explored all the amazing roles of a {selected.name}!
-					</p>
+				{#if currentTheme === 'neo'}
+					<div
+						class="neo-glass rounded-2xl border p-6 text-center"
+						style="border-color: var(--neo-lime); background: var(--neo-glass-medium);"
+						in:fly={{ y: -20, duration: 500 }}
+					>
+						<h4 class="mb-3 text-xl font-bold" style="color: var(--neo-lime);">Dream Journey Complete!</h4>
+						<p class="mb-4" style="color: var(--neo-text-secondary);">
+							You explored all the amazing roles of a {selected.name}!
+						</p>
 
-					<!-- Floating celebration emojis -->
-					<div class="relative mb-4 h-16 overflow-hidden">
-						{#each ['⭐', '🌟', '✨', '🎊', '🎈'] as emoji, i (emoji)}
-							<div
-								class="animate-confetti absolute animate-pulse text-2xl"
-								style="left: {20 + i * 15}%; animation-delay: {i * 0.2}s;"
-							>
-								{emoji}
-							</div>
-						{/each}
+						<!-- Floating celebration emojis -->
+						<div class="relative mb-4 h-16 overflow-hidden">
+							{#each ['⭐', '🌟', '✨', '🎊', '🎈'] as emoji, i (emoji)}
+								<div
+									class="absolute animate-pulse text-2xl"
+									style="left: {20 + i * 15}%; animation-delay: {i * 0.2}s; color: var(--neo-cyan);"
+								>
+									{emoji}
+								</div>
+							{/each}
+						</div>
+
+						<p class="text-sm italic" style="color: var(--neo-text-muted);">
+							Every career has different roles - from learning and growing to making a difference in
+							the world!
+						</p>
 					</div>
+				{:else}
+					<div
+						class="animate-confetti rounded-2xl border-2 border-green-200 bg-green-50 p-6 text-center"
+						in:fly={{ y: -20, duration: 500 }}
+					>
+						<h4 class="mb-3 text-xl font-bold text-green-700">Dream Journey Complete!</h4>
+						<p class="mb-4 text-green-600">
+							You explored all the amazing roles of a {selected.name}!
+						</p>
 
-					<p class="text-sm text-gray-700 italic">
-						Every career has different roles - from learning and growing to making a difference in
-						the world!
-					</p>
-				</div>
+						<!-- Floating celebration emojis -->
+						<div class="relative mb-4 h-16 overflow-hidden">
+							{#each ['⭐', '🌟', '✨', '🎊', '🎈'] as emoji, i (emoji)}
+								<div
+									class="animate-confetti absolute animate-pulse text-2xl"
+									style="left: {20 + i * 15}%; animation-delay: {i * 0.2}s;"
+								>
+									{emoji}
+								</div>
+							{/each}
+						</div>
+
+						<p class="text-sm text-gray-700 italic">
+							Every career has different roles - from learning and growing to making a difference in
+							the world!
+						</p>
+					</div>
+				{/if}
 			{/if}
 
 			<div class="flex justify-center">
-				<button
-					class="rounded-xl bg-gray-200 px-4 py-2 transition-all duration-200 hover:scale-105 hover:bg-gray-300"
-					onclick={restart}
-				>
-					🔄 Explore Another Dream
-				</button>
+				{#if currentTheme === 'neo'}
+					<button
+						class="neo-glass rounded-xl px-4 py-2 transition-all duration-300 hover:bg-white/15"
+						style="border-color: var(--neo-border); color: var(--neo-text-secondary);"
+						onclick={restart}
+					>
+						🔄 Explore Another Dream
+					</button>
+				{:else}
+					<button
+						class="rounded-xl bg-gray-200 px-4 py-2 transition-all duration-200 hover:scale-105 hover:bg-gray-300"
+						onclick={restart}
+					>
+						🔄 Explore Another Dream
+					</button>
+				{/if}
 			</div>
 		</div>
 	{/if}

@@ -145,7 +145,7 @@ npm run test:ui
 ### Test Structure
 
 - **Unit tests**: Located in `src/tests/` using Vitest with jsdom environment
-- **Test configuration**: `vitest.config.ts` for unit tests  
+- **Test configuration**: `vitest.config.ts` for unit tests
 - **Current Status**: 38/38 tests passing ✅
 - **Coverage**: Core utilities, components, schemas, widget-context, islamicqa
 - **Test Files**: 6 test suites covering LoadingSpinner, ErrorMessage, schemas, feed upload, Islamic Q&A, and widget context
@@ -153,7 +153,7 @@ npm run test:ui
 ### Test Categories
 
 - **Component Tests**: LoadingSpinner, ErrorMessage components
-- **Schema Tests**: Zod validation for posts, users, files  
+- **Schema Tests**: Zod validation for posts, users, files
 - **Integration Tests**: Feed upload functionality, widget context system
 - **Feature Tests**: Islamic Q&A system with questions database
 
@@ -205,8 +205,9 @@ npm run backup:firestore
 ```
 
 The audit system generates comprehensive `appstatus.md` reports with:
+
 - ✅ **A-AE sections** complete audit methodology
-- ✅ **25+ evidence items** proving system functionality  
+- ✅ **25+ evidence items** proving system functionality
 - ✅ **Islamic module detection** (9 modules found)
 - ✅ **Cost optimization** recommendations
 - ✅ **Family feedback** tracking (4.2/5 ⭐⭐⭐⭐☆)
@@ -218,6 +219,7 @@ The audit system generates comprehensive `appstatus.md` reports with:
 ### 1-Hour Recovery Capability
 
 **Complete System Recovery** (laptop failure scenario):
+
 1. `git clone https://github.com/yayagee0/famille.git` (2 min)
 2. `npm install` (3 min)
 3. Copy `.env` from backup (1 min)
@@ -225,6 +227,7 @@ The audit system generates comprehensive `appstatus.md` reports with:
 5. **Total**: ~6 minutes + environment setup
 
 **Data Recovery** (requires manual setup):
+
 - Firestore backup/restore via `npm run backup:firestore`
 - Firebase project configuration documented in AGENTS.md
 - Email allowlist stored in environment variables
@@ -232,18 +235,22 @@ The audit system generates comprehensive `appstatus.md` reports with:
 ### System Monitoring
 
 **Weekly Tasks**:
+
 - Run `npm run audit` to track system health
 - Review critical issues and optimization opportunities
 - Verify test coverage remains at 38/38 ✅
 
-**Monthly Tasks**:  
+**Monthly Tasks**:
+
 - Create Firestore backups with `npm run backup:firestore`
 - Review family feedback and feature requests
 - Monitor Firebase usage and costs
 
 # Output: APP_STATUS_REVIEW.md with 20+ evidence items
+
 # Covers: build metrics, security, costs, family satisfaction
-```
+
+````
 
 ### Backup Strategy
 
@@ -253,11 +260,12 @@ npm run backup:firestore
 
 # Output: backups/firestore-backup-YYYY-MM-DD.json
 # Includes: posts, users, user answers collections
-```
+````
 
 ### Recovery Procedures
 
 #### Quick Recovery (1 Hour)
+
 1. **Clone**: `git clone https://github.com/yayagee0/famille.git`
 2. **Install**: `npm install` (installs 526 packages)
 3. **Configure**: Copy environment variables from secure storage
@@ -265,23 +273,27 @@ npm run backup:firestore
 5. **Deploy**: Platform-specific deployment (Vercel/Firebase)
 
 #### Firestore Recovery
+
 1. **Restore from backup**: Use `firestore-backup-YYYY-MM-DD.json`
 2. **Import collections**: posts, users, questions, userAnswers
 3. **Verify data integrity**: Run audit to confirm restoration
 
 #### Environment Recovery
+
 - **Firebase Config**: Project ID, API keys, storage bucket
 - **Allowlist**: Family member emails (4 members)
 - **Birthdays**: JSON map for birthday tracking
 - **Nicknames**: Display name preferences
 
 ### Backup Status
+
 - **Code**: ✅ Git repository with protected main branch
-- **Firestore**: ✅ Automated backup system configured  
+- **Firestore**: ✅ Automated backup system configured
 - **Storage**: ✅ Firebase handles redundancy
 - **Config**: ✅ Documented in AGENTS.md
 
 ### Risk Mitigation
+
 - **Single Points of Failure**: Firebase project, domain registration
 - **Recovery Time**: 1-4 hours depending on failure type
 - **Data Loss Risk**: Low (with regular backups)
@@ -483,18 +495,21 @@ Before any deployment or major change:
 ### Maintenance Schedule
 
 #### Weekly Tasks
+
 - Run comprehensive audit (`npm run audit`)
 - Review and address critical issues
 - Check bundle size and performance metrics
 - Verify test coverage and passing status
 
 #### Monthly Tasks
+
 - Create Firestore backups (`npm run backup:firestore`)
 - Review dependency security updates
 - Analyze cost optimization opportunities
 - Update family feedback in audit reports
 
 #### Quarterly Tasks
+
 - Major audit rule updates
 - Security rule review (Firestore and Storage)
 - Performance optimization assessment
@@ -531,21 +546,25 @@ npm run format && npm run lint
 ### Common Issues
 
 #### Authentication Issues
-- Ensure Google OAuth is properly configured in Firebase Console  
+
+- Ensure Google OAuth is properly configured in Firebase Console
 - Verify the allowed emails are correct in environment variables
 - Check Firebase configuration in `.env` file
 
-#### Upload Issues  
+#### Upload Issues
+
 - Verify Firebase Storage rules are deployed
 - Ensure CORS is configured for the storage bucket (`gsutil cors set cors.json gs://your_bucket`)
 - Check file size limits (5MB for images, 100MB for videos)
 
 #### Build Issues
-- Ensure dependencies installed: `npm install` 
+
+- Ensure dependencies installed: `npm install`
 - Clear build cache: `rm -rf .svelte-kit && npm run build`
 - Check TypeScript errors: `npm run check`
 
 #### Performance Issues
+
 - **Bundle Size**: 634.90KB (needs code splitting optimization)
 - **Load Time**: Consider dynamic imports for Firebase SDK
 - **Storage**: Monitor Firebase usage to stay within free tier
