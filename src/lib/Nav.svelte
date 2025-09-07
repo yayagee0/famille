@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/firebase';
 	import { signOut } from 'firebase/auth';
-	import { Home, User, Rss, LogOut, Menu, X, Gamepad2, Moon } from 'lucide-svelte';
+	import { Home, User, Rss, LogOut, Menu, X, Gamepad2, Moon, Settings } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import NotificationBell from '$lib/NotificationBell.svelte';
@@ -27,6 +27,7 @@
 		{ name: 'Feed', href: '/feed', icon: 'rss' },
 		{ name: 'Islam – Our Identity', href: '/playground/islamic', icon: 'moon' },
 		{ name: 'Play Area', href: '/playground', icon: 'gamepad' },
+		{ name: 'Settings', href: '/settings', icon: 'settings' },
 		{ name: 'Profile', href: '/profile', icon: 'user' }
 	];
 
@@ -98,6 +99,10 @@
 											/>
 										{:else if item.icon === 'gamepad'}
 											<Gamepad2
+												class="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
+											/>
+										{:else if item.icon === 'settings'}
+											<Settings
 												class="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
 											/>
 										{:else if item.icon === 'user'}

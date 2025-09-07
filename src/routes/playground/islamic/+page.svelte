@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { islamicQuestions } from '$lib/data/islamicQuestions';
+	import { SmartEngine } from '$lib/smartEngine';
 	import QuestionCard from '$lib/components/QuestionCard.svelte';
 	import KnowledgeTree from '$lib/components/KnowledgeTree.svelte';
 	import GlassCard from '$lib/themes/neo/components/GlassCard.svelte';
@@ -111,17 +112,12 @@
 	}
 
 	// Save progress when a question is answered
-	async function saveQuestionProgress(question: Question) {
+	async function saveQuestionProgress(question: Question, isCorrect: boolean = true) {
 		if (!user?.uid) return;
 
 		try {
-			const progressDoc = {
-				id: question.id,
-				category: question.category,
-				answeredAt: serverTimestamp()
-			};
-
-			await addDoc(collection(db, 'users', user.uid, 'islamicProgress'), progressDoc);
+			// Update progress using Smart Engine
+			await SmartEngine.updateIslamicProgress(user.uid, question.id, isCorrect);
 
 			// Update local state
 			answeredIds.add(question.id);
@@ -130,6 +126,13 @@
 
 			// Set justAddedId for animation
 			justAddedId = question.id;
+			setTimeout(() => {
+				justAddedId = null;
+			}, 2000);
+		} catch (error) {
+			console.error('Failed to save question progress:', error);
+		}
+	}
 		} catch (error) {
 			console.error('Failed to save progress:', error);
 		}

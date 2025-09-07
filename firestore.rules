@@ -22,6 +22,23 @@ service cloud.firestore {
         resource.data.authorUid == request.auth.uid;
     }
 
+    // Smart Engine Collections
+    
+    // Identity traits - users can only access their own
+    match /identity_traits/{userId} {
+      allow read, write: if isFamily() && userId == request.auth.uid;
+    }
+
+    // Islamic identity - users can only access their own
+    match /islamic_identity/{userId} {
+      allow read, write: if isFamily() && userId == request.auth.uid;
+    }
+
+    // User-specific nudges, badges, feedback
+    match /users/{userId}/{collection}/{docId} {
+      allow read, write: if isFamily() && userId == request.auth.uid;
+    }
+
     // Notifications collection - users can only access their own notifications
     match /notifications/{userId}/items/{notificationId} {
       // Users can only read and update their own notifications
@@ -38,6 +55,14 @@ service cloud.firestore {
         uid == request.auth.uid &&
         request.resource.data.uid == request.auth.uid &&
         request.resource.data.email == request.auth.token.email;
+    }
+
+    // Daily polls - all family can read and vote
+    match /daily_polls/{pollId} {
+      allow read: if isFamily();
+      allow create: if isFamily();
+      allow update: if isFamily() && 
+        request.resource.data.keys().hasOnly(['votes', 'isClosed', 'resultsPosted']);
     }
 
     // Everything else (users, families, etc.)

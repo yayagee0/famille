@@ -16,6 +16,9 @@
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import DailyAyah from '$lib/DailyAyah.svelte';
+	import DailyNudge from '$lib/DailyNudge.svelte';
+	import WeeklyFeedback from '$lib/WeeklyFeedback.svelte';
+	import BadgeDisplay from '$lib/BadgeDisplay.svelte';
 	import SimilarityHighlights from '$lib/components/SimilarityHighlights.svelte';
 	import BirthdayPreview from '$lib/BirthdayPreview.svelte';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
@@ -160,6 +163,26 @@
 		</button>
 	</div>
 
+	<!-- Daily Nudge Section -->
+	<section>
+		<WeeklyFeedback />
+	</section>
+
+	<!-- AI-Powered Section -->
+	<section>
+		<div class="mb-4 flex items-center gap-2">
+			<span class="text-2xl">🤖</span>
+			<h2
+				class="{currentTheme === 'neo'
+					? 'neo-gradient-text'
+					: ''} text-xl font-semibold {currentTheme === 'neo' ? '' : 'text-gray-800'}"
+			>
+				AI-Powered
+			</h2>
+		</div>
+		<DailyNudge />
+	</section>
+
 	<!-- Spiritual Section -->
 	<section>
 		<div class="mb-4 flex items-center gap-2">
@@ -173,6 +196,21 @@
 			</h2>
 		</div>
 		<DailyAyah />
+	</section>
+
+	<!-- Achievements Section -->
+	<section>
+		<div class="mb-4 flex items-center gap-2">
+			<span class="text-2xl">🏆</span>
+			<h2
+				class="{currentTheme === 'neo'
+					? 'neo-gradient-text'
+					: ''} text-xl font-semibold {currentTheme === 'neo' ? '' : 'text-gray-800'}"
+			>
+				Achievements
+			</h2>
+		</div>
+		<BadgeDisplay showRecent={true} maxDisplay={6} />
 	</section>
 
 	<!-- Family Section -->
