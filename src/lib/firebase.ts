@@ -484,6 +484,36 @@ export function setupFCMListener(): void {
 }
 
 /**
+ * Create birthday notification for all family members
+ */
+export async function createBirthdayNotification(
+	birthdayPersonName: string,
+	age: number
+): Promise<void> {
+	try {
+		// Get all family member emails from environment
+		const allowedEmails = import.meta.env.VITE_ALLOWED_EMAILS?.split(',') || [];
+		
+		// Get all user profiles to find UIDs
+		const userProfiles = await getAllUserProfiles(allowedEmails);
+		
+		// Create birthday notifications for all family members
+		const notificationPromises = Object.values(userProfiles).map((profile) =>
+			createNotification(profile.uid, {
+				type: 'birthday',
+				title: '🎂 Birthday Reminder',
+				body: `${birthdayPersonName} turns ${age} today! Don't forget to wish them well!`,
+				link: '/dashboard'
+			})
+		);
+
+		await Promise.all(notificationPromises);
+	} catch (error) {
+		console.error('Error creating birthday notifications:', error);
+	}
+}
+
+/**
  * Initialize FCM for a user (request permission and store token)
  */
 export async function initializeFCMForUser(userId: string): Promise<void> {
