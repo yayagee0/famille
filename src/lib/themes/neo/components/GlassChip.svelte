@@ -6,13 +6,15 @@
 		onclick,
 		href,
 		size = 'medium',
-		variant = 'default'
+		variant = 'default',
+		disabled = false
 	}: {
 		children?: Snippet;
 		onclick?: () => void;
 		href?: string;
 		size?: 'small' | 'medium' | 'large';
 		variant?: 'default' | 'accent';
+		disabled?: boolean;
 	} = $props();
 
 	const sizeClasses = {
@@ -29,17 +31,23 @@
 	const baseClasses = `
 		inline-flex items-center gap-2 rounded-full border border-white/10 
 		backdrop-filter backdrop-blur-md transition-all duration-300 
-		hover:scale-105 hover:shadow-lg cursor-pointer
+		${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 hover:shadow-lg cursor-pointer'}
 		${sizeClasses[size]} ${variantClasses[variant]}
 	`;
+
+	const handleClick = () => {
+		if (!disabled && onclick) {
+			onclick();
+		}
+	};
 </script>
 
-{#if href}
+{#if href && !disabled}
 	<a {href} class={baseClasses}>
 		{@render children?.()}
 	</a>
 {:else if onclick}
-	<button {onclick} class={baseClasses}>
+	<button onclick={handleClick} {disabled} class={baseClasses}>
 		{@render children?.()}
 	</button>
 {:else}

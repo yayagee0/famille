@@ -199,14 +199,23 @@
 	}
 
 	function getCellClass(index: number) {
-		const baseClass =
-			'w-20 h-20 bg-white border-2 border-gray-300 rounded-xl flex items-center justify-center text-2xl font-bold transition-all duration-200 hover:border-indigo-400 hover:shadow-md';
+		if (currentTheme === 'neo') {
+			const baseClass = 'w-20 h-20 rounded-xl flex items-center justify-center text-2xl font-bold transition-all duration-200 neo-glass border border-white/20';
+			
+			if (board[index]) {
+				return `${baseClass} ${board[index] === 'X' ? '' : ''}`;
+			}
+			
+			return `${baseClass} cursor-pointer neo-row-hover`;
+		} else {
+			const baseClass = 'w-20 h-20 bg-white border-2 border-gray-300 rounded-xl flex items-center justify-center text-2xl font-bold transition-all duration-200 hover:border-indigo-400 hover:shadow-md';
 
-		if (board[index]) {
-			return `${baseClass} ${board[index] === 'X' ? 'text-indigo-600' : 'text-red-500'}`;
+			if (board[index]) {
+				return `${baseClass} ${board[index] === 'X' ? 'text-indigo-600' : 'text-red-500'}`;
+			}
+
+			return `${baseClass} cursor-pointer hover:bg-gray-50`;
 		}
-
-		return `${baseClass} cursor-pointer hover:bg-gray-50`;
 	}
 
 	function getResultMessage() {
@@ -223,15 +232,28 @@
 	}
 
 	function getResultColor() {
-		switch (gameResult) {
-			case 'win':
-				return 'text-green-600';
-			case 'lose':
-				return 'text-red-600';
-			case 'draw':
-				return 'text-yellow-600';
-			default:
-				return '';
+		if (currentTheme === 'neo') {
+			switch (gameResult) {
+				case 'win':
+					return '';
+				case 'lose':
+					return '';
+				case 'draw':
+					return '';
+				default:
+					return '';
+			}
+		} else {
+			switch (gameResult) {
+				case 'win':
+					return 'text-green-600';
+				case 'lose':
+					return 'text-red-600';
+				case 'draw':
+					return 'text-yellow-600';
+				default:
+					return '';
+			}
 		}
 	}
 
@@ -240,90 +262,178 @@
 	}
 </script>
 
-<div class="rounded-2xl bg-white p-6 shadow-sm {getWinnerClass()}">
-	<!-- Header -->
-	<div class="mb-6 flex items-center justify-between">
-		<div class="flex items-center space-x-3">
-			<div
-				class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600"
-			>
-				<Trophy class="h-5 w-5 text-white" />
+{#if currentTheme === 'neo'}
+	<div class="space-y-6">
+		<!-- Header -->
+		<div class="flex items-center justify-between">
+			<div class="flex items-center space-x-3">
+				<div class="flex h-10 w-10 items-center justify-center rounded-xl neo-glass border border-white/20">
+					<Trophy class="h-5 w-5" style="color: var(--neo-cyan);" />
+				</div>
+				<div>
+					<h3 class="text-lg font-semibold neo-gradient-text">Tic-Tac-Toe</h3>
+					<p class="text-sm" style="color: var(--neo-text-secondary);">Play against AI</p>
+				</div>
 			</div>
-			<div>
-				<h3 class="text-lg font-semibold text-gray-900">Tic-Tac-Toe</h3>
-				<p class="text-sm text-gray-500">Play against AI</p>
-			</div>
-		</div>
 
-		<!-- Difficulty Toggle -->
-		<div class="flex items-center space-x-2">
-			<button
-				onclick={() => (difficulty = 'easy')}
-				class="rounded-full px-3 py-1 text-xs transition-colors {difficulty === 'easy'
-					? 'bg-green-100 text-green-700'
-					: 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
-			>
-				Easy
-			</button>
-			<button
-				onclick={() => (difficulty = 'hard')}
-				class="rounded-full px-3 py-1 text-xs transition-colors {difficulty === 'hard'
-					? 'bg-red-100 text-red-700'
-					: 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
-			>
-				Hard
-			</button>
-		</div>
-	</div>
-
-	<!-- Game Status -->
-	<div class="mb-4 flex items-center justify-between">
-		<div class="flex items-center space-x-4">
+			<!-- Difficulty Toggle -->
 			<div class="flex items-center space-x-2">
-				<User class="h-4 w-4 text-indigo-600" />
-				<span class="text-sm text-gray-600">You: X</span>
-			</div>
-			<div class="flex items-center space-x-2">
-				<Bot class="h-4 w-4 text-red-500" />
-				<span class="text-sm text-gray-600">AI: O ({difficulty})</span>
+				<button
+					onclick={() => (difficulty = 'easy')}
+					class="rounded-full px-3 py-1 text-xs transition-colors neo-glass border border-white/20 {difficulty === 'easy' ? 'neo-row-hover' : ''}"
+					style="{difficulty === 'easy' ? 'border-color: var(--neo-lime); color: var(--neo-lime);' : 'color: var(--neo-text-secondary);'}"
+				>
+					Easy
+				</button>
+				<button
+					onclick={() => (difficulty = 'hard')}
+					class="rounded-full px-3 py-1 text-xs transition-colors neo-glass border border-white/20 {difficulty === 'hard' ? 'neo-row-hover' : ''}"
+					style="{difficulty === 'hard' ? 'border-color: var(--neo-magenta); color: var(--neo-magenta);' : 'color: var(--neo-text-secondary);'}"
+				>
+					Hard
+				</button>
 			</div>
 		</div>
 
-		{#if gameResult}
-			<div class="text-sm font-medium {getResultColor()}">
-				{getResultMessage()}
+		<!-- Game Status -->
+		<div class="flex items-center justify-between">
+			<div class="flex items-center space-x-4">
+				<div class="flex items-center space-x-2">
+					<User class="h-4 w-4" style="color: var(--neo-cyan);" />
+					<span class="text-sm" style="color: var(--neo-text-secondary);">You: X</span>
+				</div>
+				<div class="flex items-center space-x-2">
+					<Bot class="h-4 w-4" style="color: var(--neo-magenta);" />
+					<span class="text-sm" style="color: var(--neo-text-secondary);">AI: O ({difficulty})</span>
+				</div>
 			</div>
-		{:else if isThinking}
-			<div class="flex items-center space-x-2 text-sm text-gray-500">
-				<div class="h-3 w-3 animate-spin rounded-full border-b-2 border-red-500"></div>
-				<span>AI thinking...</span>
-			</div>
-		{:else if isPlayerTurn}
-			<div class="text-sm font-medium text-indigo-600">Your turn</div>
-		{/if}
-	</div>
 
-	<!-- Game Board -->
-	<div class="mx-auto mb-6 grid max-w-xs grid-cols-3 gap-2">
-		{#each board as cell, index (index)}
+			{#if gameResult}
+				<div class="text-sm font-medium" style="color: var(--neo-lime);">
+					{getResultMessage()}
+				</div>
+			{:else if isThinking}
+				<div class="flex items-center space-x-2 text-sm" style="color: var(--neo-text-secondary);">
+					<div class="h-3 w-3 animate-spin rounded-full border-b-2" style="border-color: var(--neo-magenta);"></div>
+					<span>AI thinking...</span>
+				</div>
+			{:else if isPlayerTurn}
+				<div class="text-sm font-medium" style="color: var(--neo-cyan);">Your turn</div>
+			{/if}
+		</div>
+
+		<!-- Game Board -->
+		<div class="mx-auto grid max-w-xs grid-cols-3 gap-2">
+			{#each board as cell, index (index)}
+				<button
+					class={getCellClass(index)}
+					onclick={() => makePlayerMove(index)}
+					disabled={!isPlayerTurn || !!gameResult || isThinking}
+					style="{cell === 'X' ? 'color: var(--neo-cyan);' : cell === 'O' ? 'color: var(--neo-magenta);' : ''}"
+				>
+					{cell || ''}
+				</button>
+			{/each}
+		</div>
+
+		<!-- Controls -->
+		<div class="flex justify-center">
 			<button
-				class={getCellClass(index)}
-				onclick={() => makePlayerMove(index)}
-				disabled={!isPlayerTurn || !!gameResult || isThinking}
+				class="flex items-center space-x-2 rounded-lg neo-button px-4 py-2 transition-colors duration-200"
+				style="border-color: var(--neo-cyan); color: var(--neo-cyan);"
+				onclick={resetGame}
 			>
-				{cell || ''}
+				<RotateCcw class="h-4 w-4" />
+				<span>New Game</span>
 			</button>
-		{/each}
+		</div>
 	</div>
+{:else}
+	<div class="rounded-2xl bg-white p-6 shadow-sm {getWinnerClass()}">
+		<!-- Header -->
+		<div class="mb-6 flex items-center justify-between">
+			<div class="flex items-center space-x-3">
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600"
+				>
+					<Trophy class="h-5 w-5 text-white" />
+				</div>
+				<div>
+					<h3 class="text-lg font-semibold text-gray-900">Tic-Tac-Toe</h3>
+					<p class="text-sm text-gray-500">Play against AI</p>
+				</div>
+			</div>
 
-	<!-- Controls -->
-	<div class="flex justify-center">
-		<button
-			class="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2 text-white transition-colors duration-200 hover:bg-primary-dark"
-			onclick={resetGame}
-		>
-			<RotateCcw class="h-4 w-4" />
-			<span>New Game</span>
-		</button>
+			<!-- Difficulty Toggle -->
+			<div class="flex items-center space-x-2">
+				<button
+					onclick={() => (difficulty = 'easy')}
+					class="rounded-full px-3 py-1 text-xs transition-colors {difficulty === 'easy'
+						? 'bg-green-100 text-green-700'
+						: 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
+				>
+					Easy
+				</button>
+				<button
+					onclick={() => (difficulty = 'hard')}
+					class="rounded-full px-3 py-1 text-xs transition-colors {difficulty === 'hard'
+						? 'bg-red-100 text-red-700'
+						: 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
+				>
+					Hard
+				</button>
+			</div>
+		</div>
+
+		<!-- Game Status -->
+		<div class="mb-4 flex items-center justify-between">
+			<div class="flex items-center space-x-4">
+				<div class="flex items-center space-x-2">
+					<User class="h-4 w-4 text-indigo-600" />
+					<span class="text-sm text-gray-600">You: X</span>
+				</div>
+				<div class="flex items-center space-x-2">
+					<Bot class="h-4 w-4 text-red-500" />
+					<span class="text-sm text-gray-600">AI: O ({difficulty})</span>
+				</div>
+			</div>
+
+			{#if gameResult}
+				<div class="text-sm font-medium {getResultColor()}">
+					{getResultMessage()}
+				</div>
+			{:else if isThinking}
+				<div class="flex items-center space-x-2 text-sm text-gray-500">
+					<div class="h-3 w-3 animate-spin rounded-full border-b-2 border-red-500"></div>
+					<span>AI thinking...</span>
+				</div>
+			{:else if isPlayerTurn}
+				<div class="text-sm font-medium text-indigo-600">Your turn</div>
+			{/if}
+		</div>
+
+		<!-- Game Board -->
+		<div class="mx-auto mb-6 grid max-w-xs grid-cols-3 gap-2">
+			{#each board as cell, index (index)}
+				<button
+					class={getCellClass(index)}
+					onclick={() => makePlayerMove(index)}
+					disabled={!isPlayerTurn || !!gameResult || isThinking}
+				>
+					{cell || ''}
+				</button>
+			{/each}
+		</div>
+
+		<!-- Controls -->
+		<div class="flex justify-center">
+			<button
+				class="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2 text-white transition-colors duration-200 hover:bg-primary-dark"
+				onclick={resetGame}
+			>
+				<RotateCcw class="h-4 w-4" />
+				<span>New Game</span>
+			</button>
+		</div>
 	</div>
-</div>
+{/if}

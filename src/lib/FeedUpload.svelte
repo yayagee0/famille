@@ -7,6 +7,9 @@
 	import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 	import { FAMILY_ID } from '$lib/config';
 	import { getDisplayName } from '$lib/getDisplayName';
+	import GlassCard from '$lib/themes/neo/components/GlassCard.svelte';
+	import GlassChip from '$lib/themes/neo/components/GlassChip.svelte';
+	import { themeStore } from '$lib/themes/neo';
 
 	const dispatch = createEventDispatcher();
 
@@ -22,6 +25,15 @@
 	let isUploading = $state(false);
 	let previewUrls: string[] = $state([]);
 	let uploadProgress = $state('');
+	let currentTheme = $state('default');
+
+	// Subscribe to theme changes
+	$effect(() => {
+		const unsubscribe = themeStore.subscribe((theme) => {
+			currentTheme = theme;
+		});
+		return unsubscribe;
+	});
 
 	function setPostType(type: typeof postType) {
 		postType = type;
@@ -209,192 +221,376 @@
 	}
 </script>
 
-<div class="rounded-lg bg-white p-6 shadow">
-	<div class="mb-4 flex items-center space-x-3">
-		{#if user.photoURL}
-			<img
-				src={user.photoURL}
-				alt={getDisplayName(user?.email, { nickname: user?.nickname })}
-				class="h-10 w-10 rounded-full"
-			/>
-		{:else}
-			<div class="h-10 w-10 rounded-full bg-gray-300"></div>
-		{/if}
-		<div>
-			<p class="font-medium text-gray-900">
-				{getDisplayName(user?.email, { nickname: user?.nickname })}
-			</p>
-		</div>
-	</div>
-
-	<!-- Post type selector -->
-	<div class="mb-4 flex flex-wrap gap-2">
-		<button
-			onclick={() => setPostType('text')}
-			class="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium {postType ===
-			'text'
-				? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-				: 'bg-white text-gray-700 hover:bg-gray-50'}"
-		>
-			Text
-		</button>
-		<button
-			onclick={() => setPostType('photo')}
-			class="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium {postType ===
-			'photo'
-				? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-				: 'bg-white text-gray-700 hover:bg-gray-50'}"
-		>
-			<Image class="mr-1 h-4 w-4" />
-			Photo
-		</button>
-		<button
-			onclick={() => setPostType('video')}
-			class="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium {postType ===
-			'video'
-				? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-				: 'bg-white text-gray-700 hover:bg-gray-50'}"
-		>
-			<Video class="mr-1 h-4 w-4" />
-			Video
-		</button>
-		<button
-			onclick={() => setPostType('youtube')}
-			class="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium {postType ===
-			'youtube'
-				? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-				: 'bg-white text-gray-700 hover:bg-gray-50'}"
-		>
-			<Youtube class="mr-1 h-4 w-4" />
-			YouTube
-		</button>
-		<button
-			onclick={() => setPostType('poll')}
-			class="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium {postType ===
-			'poll'
-				? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-				: 'bg-white text-gray-700 hover:bg-gray-50'}"
-		>
-			<BarChart3 class="mr-1 h-4 w-4" />
-			Poll
-		</button>
-	</div>
-
-	<!-- Content textarea -->
-	{#if postType !== 'poll'}
-		<div class="mb-4">
-			<textarea
-				bind:value={textContent}
-				placeholder="What's on your mind?"
-				class="w-full resize-none rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
-				rows="3"
-			></textarea>
-		</div>
-	{/if}
-
-	<!-- File upload for photos/videos -->
-	{#if postType === 'photo' || postType === 'video'}
-		<div class="mb-4">
-			<input
-				type="file"
-				multiple={postType === 'photo'}
-				onchange={handleFileSelect}
-				class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
-			/>
-			{#if uploadProgress}
-				<p class="mt-2 text-xs text-blue-600">{uploadProgress}</p>
-			{/if}
-		</div>
-
-		<!-- Image and video previews -->
-		{#if previewUrls.length > 0}
-			<div class="mb-4 grid grid-cols-2 gap-4 md:grid-cols-3">
-				{#each previewUrls as url, index (url)}
-					<div class="relative">
-						{#if selectedFiles && selectedFiles[index]?.type.startsWith('image/')}
-							<img src={url} alt="" class="h-24 w-full rounded-xl bg-gray-100 object-contain" />
-						{:else if selectedFiles && selectedFiles[index]?.type.startsWith('video/')}
-							<video src={url} class="h-24 w-full rounded-lg object-cover" muted></video>
-						{/if}
-						<button
-							onclick={() => removePreview(index)}
-							class="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
-						>
-							<X class="h-4 w-4" />
-						</button>
-					</div>
-				{/each}
+{#if currentTheme === 'neo'}
+	<GlassCard header="✍️ Share a moment" glow={true}>
+		<div class="space-y-4">
+			<div class="flex items-center space-x-3">
+				{#if user.photoURL}
+					<img
+						src={user.photoURL}
+						alt={getDisplayName(user?.email, { nickname: user?.nickname })}
+						class="h-10 w-10 rounded-full border border-white/20"
+					/>
+				{:else}
+					<div class="h-10 w-10 rounded-full neo-glass border border-white/20"></div>
+				{/if}
+				<div>
+					<p class="font-medium" style="color: var(--neo-text-primary);">
+						{getDisplayName(user?.email, { nickname: user?.nickname })}
+					</p>
+				</div>
 			</div>
-		{/if}
-	{/if}
 
-	<!-- YouTube URL input -->
-	{#if postType === 'youtube'}
-		<div class="mb-4">
-			<input
-				type="url"
-				bind:value={youtubeUrl}
-				placeholder="Enter YouTube URL"
-				class="w-full rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
-			/>
-		</div>
-	{/if}
+			<!-- Post type selector -->
+			<div class="flex flex-wrap gap-2">
+				<GlassChip
+					onclick={() => setPostType('text')}
+					variant={postType === 'text' ? 'accent' : 'default'}
+					size="small"
+				>
+					Text
+				</GlassChip>
+				<GlassChip
+					onclick={() => setPostType('photo')}
+					variant={postType === 'photo' ? 'accent' : 'default'}
+					size="small"
+				>
+					<Image class="mr-1 h-4 w-4" />
+					Photo
+				</GlassChip>
+				<GlassChip
+					onclick={() => setPostType('video')}
+					variant={postType === 'video' ? 'accent' : 'default'}
+					size="small"
+				>
+					<Video class="mr-1 h-4 w-4" />
+					Video
+				</GlassChip>
+				<GlassChip
+					onclick={() => setPostType('youtube')}
+					variant={postType === 'youtube' ? 'accent' : 'default'}
+					size="small"
+				>
+					<Youtube class="mr-1 h-4 w-4" />
+					YouTube
+				</GlassChip>
+				<GlassChip
+					onclick={() => setPostType('poll')}
+					variant={postType === 'poll' ? 'accent' : 'default'}
+					size="small"
+				>
+					<BarChart3 class="mr-1 h-4 w-4" />
+					Poll
+				</GlassChip>
+			</div>
 
-	<!-- Poll creator -->
-	{#if postType === 'poll'}
-		<div class="mb-4 space-y-3">
-			<input
-				type="text"
-				bind:value={pollTitle}
-				placeholder="What's your poll question?"
-				class="w-full rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
-			/>
+			<!-- Content textarea -->
+			{#if postType !== 'poll'}
+				<div>
+					<textarea
+						bind:value={textContent}
+						placeholder="What's on your mind?"
+						class="w-full resize-none rounded-lg border px-3 py-3 neo-input"
+						style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
+						rows="3"
+					></textarea>
+				</div>
+			{/if}
 
-			{#each pollOptions as _, optionIndex (optionIndex)}
-				<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-				<div class="flex items-center space-x-2">
+			<!-- File upload for photos/videos -->
+			{#if postType === 'photo' || postType === 'video'}
+				<div>
+					<input
+						type="file"
+						multiple={postType === 'photo'}
+						accept={postType === 'photo' ? 'image/*' : 'video/*'}
+						onchange={handleFileSelect}
+						class="w-full rounded-lg border px-3 py-2 text-sm neo-input"
+						style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
+					/>
+				</div>
+			{/if}
+
+			<!-- Preview uploaded files -->
+			{#if previewUrls.length > 0}
+				<div class="flex flex-wrap gap-2">
+					{#each previewUrls as url, index (url)}
+						<div class="relative">
+							{#if postType === 'photo'}
+								<img src={url} alt="Preview" class="h-20 w-20 rounded-lg object-cover neo-image-glow" />
+							{:else if postType === 'video'}
+								<video src={url} class="h-20 w-20 rounded-lg object-cover neo-image-glow" muted></video>
+							{/if}
+							<button
+								onclick={() => removePreview(index)}
+								class="absolute -right-1 -top-1 rounded-full neo-glass border border-white/20 p-1"
+								style="color: var(--neo-magenta);"
+							>
+								<X class="h-3 w-3" />
+							</button>
+						</div>
+					{/each}
+				</div>
+			{/if}
+
+			<!-- YouTube URL input -->
+			{#if postType === 'youtube'}
+				<div>
+					<input
+						type="url"
+						bind:value={youtubeUrl}
+						placeholder="Enter YouTube URL"
+						class="w-full rounded-lg border px-3 py-2 neo-input"
+						style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
+					/>
+				</div>
+			{/if}
+
+			<!-- Poll creation -->
+			{#if postType === 'poll'}
+				<div class="space-y-3">
 					<input
 						type="text"
-						bind:value={pollOptions[optionIndex]}
-						placeholder={`Option ${optionIndex + 1}`}
-						class="flex-1 rounded-lg border border-gray-300 p-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+						bind:value={pollTitle}
+						placeholder="Poll question"
+						class="w-full rounded-lg border px-3 py-2 neo-input"
+						style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
 					/>
-					{#if pollOptions.length > 2}
-						<button
-							onclick={() => removePollOption(optionIndex)}
-							class="p-2 text-red-500 hover:text-red-700"
-						>
-							<X class="h-4 w-4" />
-						</button>
-					{/if}
+					{#each pollOptions as option, index (index)}
+						<div class="flex space-x-2">
+							<input
+								type="text"
+								bind:value={pollOptions[index]}
+								placeholder="Option {index + 1}"
+								class="flex-1 rounded-lg border px-3 py-2 neo-input"
+								style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
+							/>
+							{#if pollOptions.length > 2}
+								<GlassChip onclick={() => removePollOption(index)} size="small">
+									<X class="h-4 w-4" style="color: var(--neo-magenta);" />
+								</GlassChip>
+							{/if}
+						</div>
+					{/each}
+					<GlassChip onclick={addPollOption} size="small" variant="accent">
+						Add Option
+					</GlassChip>
 				</div>
-			{/each}
+			{/if}
 
-			{#if pollOptions.length < 6}
-				<button
-					onclick={addPollOption}
-					class="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+			<!-- Upload progress -->
+			{#if uploadProgress}
+				<div class="rounded-lg neo-glass border border-white/20 p-3">
+					<p class="text-sm" style="color: var(--neo-text-secondary);">{uploadProgress}</p>
+				</div>
+			{/if}
+
+			<!-- Submit button -->
+			<div class="flex justify-end">
+				<GlassChip
+					onclick={handleSubmit}
+					variant="accent"
+					disabled={isUploading}
 				>
-					+ Add option
-				</button>
-			{/if}
+					{#if isUploading}
+						<div class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
+					{:else}
+						<Send class="mr-2 h-4 w-4" />
+					{/if}
+					{isUploading ? 'Posting...' : 'Post'}
+				</GlassChip>
+			</div>
 		</div>
-	{/if}
-
-	<!-- Submit button -->
-	<div class="flex justify-end">
-		<button
-			onclick={handleSubmit}
-			disabled={isUploading}
-			class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-		>
-			{#if isUploading}
-				<div class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
-				{uploadProgress || 'Posting...'}
+	</GlassCard>
+{:else}
+	<div class="rounded-lg bg-white p-6 shadow">
+		<div class="mb-4 flex items-center space-x-3">
+			{#if user.photoURL}
+				<img
+					src={user.photoURL}
+					alt={getDisplayName(user?.email, { nickname: user?.nickname })}
+					class="h-10 w-10 rounded-full"
+				/>
 			{:else}
-				<Send class="mr-2 h-4 w-4" />
-				Post
+				<div class="h-10 w-10 rounded-full bg-gray-300"></div>
 			{/if}
-		</button>
+			<div>
+				<p class="font-medium text-gray-900">
+					{getDisplayName(user?.email, { nickname: user?.nickname })}
+				</p>
+			</div>
+		</div>
+
+		<!-- Post type selector -->
+		<div class="mb-4 flex flex-wrap gap-2">
+			<button
+				onclick={() => setPostType('text')}
+				class="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium {postType ===
+				'text'
+					? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+					: 'bg-white text-gray-700 hover:bg-gray-50'}"
+			>
+				Text
+			</button>
+			<button
+				onclick={() => setPostType('photo')}
+				class="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium {postType ===
+				'photo'
+					? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+					: 'bg-white text-gray-700 hover:bg-gray-50'}"
+			>
+				<Image class="mr-1 h-4 w-4" />
+				Photo
+			</button>
+			<button
+				onclick={() => setPostType('video')}
+				class="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium {postType ===
+				'video'
+					? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+					: 'bg-white text-gray-700 hover:bg-gray-50'}"
+			>
+				<Video class="mr-1 h-4 w-4" />
+				Video
+			</button>
+			<button
+				onclick={() => setPostType('youtube')}
+				class="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium {postType ===
+				'youtube'
+					? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+					: 'bg-white text-gray-700 hover:bg-gray-50'}"
+			>
+				<Youtube class="mr-1 h-4 w-4" />
+				YouTube
+			</button>
+			<button
+				onclick={() => setPostType('poll')}
+				class="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium {postType ===
+				'poll'
+					? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+					: 'bg-white text-gray-700 hover:bg-gray-50'}"
+			>
+				<BarChart3 class="mr-1 h-4 w-4" />
+				Poll
+			</button>
+		</div>
+
+		<!-- Content textarea -->
+		{#if postType !== 'poll'}
+			<div class="mb-4">
+				<textarea
+					bind:value={textContent}
+					placeholder="What's on your mind?"
+					class="w-full resize-none rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+					rows="3"
+				></textarea>
+			</div>
+		{/if}
+
+		<!-- File upload for photos/videos -->
+		{#if postType === 'photo' || postType === 'video'}
+			<div class="mb-4">
+				<input
+					type="file"
+					multiple={postType === 'photo'}
+					accept={postType === 'photo' ? 'image/*' : 'video/*'}
+					onchange={handleFileSelect}
+					class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
+				/>
+				{#if uploadProgress}
+					<p class="mt-2 text-xs text-blue-600">{uploadProgress}</p>
+				{/if}
+			</div>
+
+			<!-- Image and video previews -->
+			{#if previewUrls.length > 0}
+				<div class="mb-4 grid grid-cols-2 gap-4 md:grid-cols-3">
+					{#each previewUrls as url, index (url)}
+						<div class="relative">
+							{#if selectedFiles && selectedFiles[index]?.type.startsWith('image/')}
+								<img src={url} alt="" class="h-24 w-full rounded-xl bg-gray-100 object-contain" />
+							{:else if selectedFiles && selectedFiles[index]?.type.startsWith('video/')}
+								<video src={url} class="h-24 w-full rounded-lg object-cover" muted></video>
+							{/if}
+							<button
+								onclick={() => removePreview(index)}
+								class="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+							>
+								<X class="h-4 w-4" />
+							</button>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		{/if}
+
+		<!-- YouTube URL input -->
+		{#if postType === 'youtube'}
+			<div class="mb-4">
+				<input
+					type="url"
+					bind:value={youtubeUrl}
+					placeholder="Enter YouTube URL"
+					class="w-full rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+				/>
+			</div>
+		{/if}
+
+		<!-- Poll creator -->
+		{#if postType === 'poll'}
+			<div class="mb-4 space-y-3">
+				<input
+					type="text"
+					bind:value={pollTitle}
+					placeholder="What's your poll question?"
+					class="w-full rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+				/>
+
+				{#each pollOptions as _, optionIndex (optionIndex)}
+					<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+					<div class="flex items-center space-x-2">
+						<input
+							type="text"
+							bind:value={pollOptions[optionIndex]}
+							placeholder={`Option ${optionIndex + 1}`}
+							class="flex-1 rounded-lg border border-gray-300 p-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+						/>
+						{#if pollOptions.length > 2}
+							<button
+								onclick={() => removePollOption(optionIndex)}
+								class="p-2 text-red-500 hover:text-red-700"
+							>
+								<X class="h-4 w-4" />
+							</button>
+						{/if}
+					</div>
+				{/each}
+
+				{#if pollOptions.length < 6}
+					<button
+						onclick={addPollOption}
+						class="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+					>
+						+ Add option
+					</button>
+				{/if}
+			</div>
+		{/if}
+
+		<!-- Submit button -->
+		<div class="flex justify-end">
+			<button
+				onclick={handleSubmit}
+				disabled={isUploading}
+				class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+			>
+				{#if isUploading}
+					<div class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+					{uploadProgress || 'Posting...'}
+				{:else}
+					<Send class="mr-2 h-4 w-4" />
+					Post
+				{/if}
+			</button>
+		</div>
 	</div>
-</div>
+{/if}
