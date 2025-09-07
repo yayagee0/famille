@@ -23,7 +23,7 @@
 	import { pollTemplates } from '$lib/data/polls';
 	import { getCurrentSeasonalBanners, getCurrentSeasonalConfig } from '$lib/data/seasonal';
 	import { type DailyAnalytics } from '$lib/data/analytics';
-	import { queryAnalytics, getRecentAnalytics, type AnalyticsResult } from './+page';
+	import { queryAnalytics, getRecentAnalytics, type AnalyticsResult } from '$lib/analytics';
 	import { themeStore } from '$lib/themes/neo';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import PlayCard from '$lib/components/PlayCard.svelte';
