@@ -4,6 +4,7 @@
 		collection,
 		query,
 		orderBy,
+		limit,
 		getDoc,
 		doc,
 		updateDoc,
@@ -113,7 +114,7 @@
 
 		// If online, subscribe to real-time updates
 		if ($isOnline) {
-			const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+			const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(10));
 
 			if (!cachedPosts) loading = true;
 
