@@ -21,7 +21,7 @@
 	import BadgeDisplay from '$lib/BadgeDisplay.svelte';
 	import DailyPoll from '$lib/DailyPoll.svelte';
 	import SeasonalBanner from '$lib/SeasonalBanner.svelte';
-	import SimilarityHighlights from '$lib/components/SimilarityHighlights.svelte';
+
 	import BirthdayPreview from '$lib/BirthdayPreview.svelte';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import PlayCard from '$lib/components/PlayCard.svelte';
@@ -229,9 +229,6 @@
 		</div>
 
 		<div class="space-y-6">
-			<!-- Family Similarities -->
-			<SimilarityHighlights />
-
 			<!-- Birthday Preview -->
 			<BirthdayPreview />
 
