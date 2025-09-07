@@ -5,7 +5,10 @@
 	import { toggleSound, soundEnabled } from '$lib/sound';
 	import { Volume2, VolumeX } from 'lucide-svelte';
 	import { themeStore } from '$lib/themes/neo';
-	import { triggerParticleBurst, triggerAchievementParticles } from '$lib/themes/neo/utils/particles';
+	import {
+		triggerParticleBurst,
+		triggerAchievementParticles
+	} from '$lib/themes/neo/utils/particles';
 	import AgePlayground from './AgePlayground.svelte';
 	import BuildADream from './BuildADream.svelte';
 	import TicTacToe from './TicTacToe.svelte';
@@ -43,8 +46,11 @@
 			>
 				🎮 Play Area
 			</h1>
-			<p class="mt-1 text-sm {currentTheme === 'neo' ? '' : 'text-gray-500'}" style="{currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}">>
-				Fun simulations and activities for everyone in the family
+			<p
+				class="mt-1 text-sm {currentTheme === 'neo' ? '' : 'text-gray-500'}"
+				style={currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}
+			>
+				> Fun simulations and activities for everyone in the family
 			</p>
 		</div>
 
@@ -57,7 +63,11 @@
 					? 'neo-button'
 					: 'neo-glass hover:bg-white/10'
 				: 'bg-gray-100 hover:bg-gray-200'}"
-			style="{currentTheme === 'neo' && $soundEnabled ? 'border-color: var(--neo-cyan); background: var(--neo-glass-medium); color: var(--neo-cyan);' : currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}"
+			style={currentTheme === 'neo' && $soundEnabled
+				? 'border-color: var(--neo-cyan); background: var(--neo-glass-medium); color: var(--neo-cyan);'
+				: currentTheme === 'neo'
+					? 'color: var(--neo-text-secondary);'
+					: ''}
 			title={$soundEnabled ? 'Turn off sound' : 'Turn on sound'}
 		>
 			{#if $soundEnabled}

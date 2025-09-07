@@ -131,7 +131,7 @@
 	<ErrorBoundary>
 		<!-- Offline Indicator -->
 		<OfflineIndicator />
-		
+
 		<div class="min-h-full">
 			{#if shouldShowNav}
 				<Nav {user} />

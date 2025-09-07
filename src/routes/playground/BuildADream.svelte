@@ -133,7 +133,9 @@
 						onmouseenter={handleDreamHover}
 					>
 						<span class="mb-2 text-3xl">{dream.icon}</span>
-						<div class="text-sm font-bold" style="color: var(--neo-text-primary);">{dream.name}</div>
+						<div class="text-sm font-bold" style="color: var(--neo-text-primary);">
+							{dream.name}
+						</div>
 					</button>
 				{:else}
 					<button
@@ -151,8 +153,14 @@
 		<div class="space-y-4">
 			<!-- Career header with background -->
 			{#if currentTheme === 'neo'}
-				<div class="neo-glass rounded-2xl border p-4 text-center" style="border-color: var(--neo-lime);">
-					<h3 class="flex items-center justify-center text-xl font-bold" style="color: var(--neo-lime);">
+				<div
+					class="neo-glass rounded-2xl border p-4 text-center"
+					style="border-color: var(--neo-lime);"
+				>
+					<h3
+						class="flex items-center justify-center text-xl font-bold"
+						style="color: var(--neo-lime);"
+					>
 						<span class="mr-3 text-3xl">{selected.icon}</span>
 						{selected.name}
 					</h3>
@@ -177,7 +185,11 @@
 							class="h-3 w-3 rounded-full transition-all duration-300 {progressStep <= step
 								? 'scale-110'
 								: ''}"
-							style="background: {progressStep <= step ? 'var(--neo-cyan)' : 'var(--neo-glass)'}; box-shadow: {progressStep <= step ? 'var(--neo-glow-cyan)' : 'none'};"
+							style="background: {progressStep <= step
+								? 'var(--neo-cyan)'
+								: 'var(--neo-glass)'}; box-shadow: {progressStep <= step
+								? 'var(--neo-glow-cyan)'
+								: 'none'};"
 						></div>
 					{:else}
 						<div
@@ -199,9 +211,13 @@
 					>
 						<div class="mb-3 text-center">
 							<div class="mb-2 text-2xl">{selected.facts[step].emoji}</div>
-							<h4 class="text-lg font-bold" style="color: var(--neo-magenta);">{selected.facts[step].role}</h4>
+							<h4 class="text-lg font-bold" style="color: var(--neo-magenta);">
+								{selected.facts[step].role}
+							</h4>
 						</div>
-						<p class="text-center" style="color: var(--neo-text-secondary);">{selected.facts[step].description}</p>
+						<p class="text-center" style="color: var(--neo-text-secondary);">
+							{selected.facts[step].description}
+						</p>
 					</div>
 				{:else}
 					<div
@@ -243,7 +259,9 @@
 						style="border-color: var(--neo-lime); background: var(--neo-glass-medium);"
 						in:fly={{ y: -20, duration: 500 }}
 					>
-						<h4 class="mb-3 text-xl font-bold" style="color: var(--neo-lime);">Dream Journey Complete!</h4>
+						<h4 class="mb-3 text-xl font-bold" style="color: var(--neo-lime);">
+							Dream Journey Complete!
+						</h4>
 						<p class="mb-4" style="color: var(--neo-text-secondary);">
 							You explored all the amazing roles of a {selected.name}!
 						</p>

@@ -179,9 +179,9 @@
 	// ❤️ Likes
 	async function toggleLike(postId: string, isLiked: boolean) {
 		if (!user?.uid) return;
-		
+
 		// Optimistic UI update
-		const postIndex = posts.findIndex(p => p.id === postId);
+		const postIndex = posts.findIndex((p) => p.id === postId);
 		if (postIndex !== -1) {
 			if (isLiked) {
 				posts[postIndex].likes = posts[postIndex].likes.filter((uid: string) => uid !== user.uid);
@@ -189,7 +189,7 @@
 				posts[postIndex].likes = [...posts[postIndex].likes, user.uid];
 			}
 		}
-		
+
 		try {
 			if ($isOnline) {
 				// Online: Update Firestore directly
@@ -331,7 +331,7 @@
 		};
 
 		// Optimistic UI update
-		const postIndex = posts.findIndex(p => p.id === postId);
+		const postIndex = posts.findIndex((p) => p.id === postId);
 		if (postIndex !== -1) {
 			posts[postIndex].comments = [...(posts[postIndex].comments || []), newComment];
 		}
@@ -359,7 +359,7 @@
 			console.error('Add comment failed:', err);
 			// Revert optimistic update on error
 			if (postIndex !== -1) {
-				posts[postIndex].comments = posts[postIndex].comments.filter(c => c !== newComment);
+				posts[postIndex].comments = posts[postIndex].comments.filter((c) => c !== newComment);
 			}
 		}
 	}
@@ -375,17 +375,38 @@
 
 <div class="mx-auto max-w-2xl space-y-6">
 	<div>
-		<h1 class="{currentTheme === 'neo' ? 'neo-gradient-text' : ''} text-2xl font-bold {currentTheme === 'neo' ? '' : 'text-gray-900'}">Family Feed</h1>
-		<p class="mt-1 text-sm {currentTheme === 'neo' ? '' : 'text-gray-500'}" style="{currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}">Share moments and stay connected</p>
+		<h1
+			class="{currentTheme === 'neo'
+				? 'neo-gradient-text'
+				: ''} text-2xl font-bold {currentTheme === 'neo' ? '' : 'text-gray-900'}"
+		>
+			Family Feed
+		</h1>
+		<p
+			class="mt-1 text-sm {currentTheme === 'neo' ? '' : 'text-gray-500'}"
+			style={currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}
+		>
+			Share moments and stay connected
+		</p>
 	</div>
 
 	<!-- Offline Indicator -->
 	{#if !$isOnline}
-		<div class="{currentTheme === 'neo' ? 'neo-glass border border-orange-400/30' : 'border border-orange-200 bg-orange-50'} rounded-lg p-4">
+		<div
+			class="{currentTheme === 'neo'
+				? 'neo-glass border border-orange-400/30'
+				: 'border border-orange-200 bg-orange-50'} rounded-lg p-4"
+		>
 			<div class="flex items-center">
 				<WifiOff class="h-5 w-5 {currentTheme === 'neo' ? 'text-orange-400' : 'text-orange-600'}" />
 				<div class="ml-3">
-					<h3 class="text-sm font-medium {currentTheme === 'neo' ? 'text-orange-300' : 'text-orange-800'}">You're offline</h3>
+					<h3
+						class="text-sm font-medium {currentTheme === 'neo'
+							? 'text-orange-300'
+							: 'text-orange-800'}"
+					>
+						You're offline
+					</h3>
 					<p class="mt-1 text-sm {currentTheme === 'neo' ? 'text-orange-400' : 'text-orange-700'}">
 						Showing cached content. New posts will sync when you're back online.
 					</p>
@@ -400,23 +421,40 @@
 		{#if loading}
 			<LoadingSpinner size="large" message="Loading family feed..." />
 		{:else if posts.length === 0}
-			<div class="{currentTheme === 'neo' ? 'neo-glass border border-white/10' : 'bg-white shadow'} rounded py-8 text-center">
-				<p class="{currentTheme === 'neo' ? '' : 'text-gray-600'}" style="{currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}">No posts yet — be the first!</p>
+			<div
+				class="{currentTheme === 'neo'
+					? 'neo-glass border border-white/10'
+					: 'bg-white shadow'} rounded py-8 text-center"
+			>
+				<p
+					class={currentTheme === 'neo' ? '' : 'text-gray-600'}
+					style={currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}
+				>
+					No posts yet — be the first!
+				</p>
 			</div>
 		{:else}
 			<div class="space-y-6">
 				{#each posts as post (post.id)}
 					{#if currentTheme === 'neo'}
-						<article class="rounded-lg overflow-hidden neo-glass neo-row-hover border border-white/10">
+						<article
+							class="neo-glass neo-row-hover overflow-hidden rounded-lg border border-white/10"
+						>
 							<div class="p-6 pb-4">
 								<div class="mb-4 flex items-center space-x-3">
 									{#if post.author?.avatarUrl}
-										<img src={post.author.avatarUrl} alt="" class="h-10 w-10 rounded-full border border-white/20" />
+										<img
+											src={post.author.avatarUrl}
+											alt=""
+											class="h-10 w-10 rounded-full border border-white/20"
+										/>
 									{:else}
-										<div class="h-10 w-10 rounded-full neo-glass border border-white/20"></div>
+										<div class="neo-glass h-10 w-10 rounded-full border border-white/20"></div>
 									{/if}
 									<div>
-										<p class="text-sm font-medium" style="color: var(--neo-text-primary);">{post.author?.displayName}</p>
+										<p class="text-sm font-medium" style="color: var(--neo-text-primary);">
+											{post.author?.displayName}
+										</p>
 										<p class="text-xs" style="color: var(--neo-text-secondary);">
 											{#if post.createdAt}
 												{dayjs(
@@ -440,16 +478,21 @@
 										>
 											{#each post.imagePaths.slice(0, 6) as imagePath, index (imagePath)}
 												<div class="relative">
-									<img
-										src={imagePath}
-										alt=""
-										class="max-h-[600px] w-full rounded-xl object-contain neo-image-glow {index === 5 && post.imagePaths.length > 6 ? 'opacity-75' : ''}"
-									/>
+													<img
+														src={imagePath}
+														alt=""
+														class="neo-image-glow max-h-[600px] w-full rounded-xl object-contain {index ===
+															5 && post.imagePaths.length > 6
+															? 'opacity-75'
+															: ''}"
+													/>
 													{#if index === 5 && post.imagePaths.length > 6}
 														<div
 															class="bg-opacity-50 absolute inset-0 flex items-center justify-center rounded-lg bg-black"
 														>
-															<span class="text-lg font-bold" style="color: var(--neo-text-primary);"
+															<span
+																class="text-lg font-bold"
+																style="color: var(--neo-text-primary);"
 																>+{post.imagePaths.length - 6}</span
 															>
 														</div>
@@ -461,7 +504,7 @@
 										<img
 											src={post.imagePath}
 											alt=""
-											class="mb-4 max-h-[600px] w-full rounded-xl object-contain neo-image-glow"
+											class="neo-image-glow mb-4 max-h-[600px] w-full rounded-xl object-contain"
 										/>
 									{/if}
 								{/if}
@@ -492,19 +535,25 @@
 
 								<!-- Poll -->
 								{#if post.poll?.options}
-									<div class="mb-4 rounded-lg neo-glass border border-white/20 p-4">
-										<h3 class="mb-4 text-lg font-medium neo-gradient-text">{post.poll.title}</h3>
+									<div class="neo-glass mb-4 rounded-lg border border-white/20 p-4">
+										<h3 class="neo-gradient-text mb-4 text-lg font-medium">{post.poll.title}</h3>
 										{#each post.poll.options as opt, index (index)}
 											{@const isUserVoted = opt.votes?.includes(user?.uid)}
 											{@const voterNamesPromise = getVoterNames(opt.votes || [])}
 											<button
 												onclick={() => voteInPoll(post, index)}
 												disabled={!user}
-												class="mb-3 w-full rounded-lg border p-3 text-left transition-colors neo-row-hover disabled:cursor-not-allowed disabled:opacity-50 {isUserVoted ? 'neo-glass' : ''}"
-												style="{isUserVoted ? 'border-color: var(--neo-cyan); background: var(--neo-glass-medium);' : 'border-color: var(--neo-border);'}"
+												class="neo-row-hover mb-3 w-full rounded-lg border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 {isUserVoted
+													? 'neo-glass'
+													: ''}"
+												style={isUserVoted
+													? 'border-color: var(--neo-cyan); background: var(--neo-glass-medium);'
+													: 'border-color: var(--neo-border);'}
 											>
 												<div class="flex items-center justify-between">
-													<span class="font-medium" style="color: var(--neo-text-primary);">{opt.text}</span>
+													<span class="font-medium" style="color: var(--neo-text-primary);"
+														>{opt.text}</span
+													>
 													<div class="text-sm" style="color: var(--neo-text-secondary);">
 														{#await voterNamesPromise}
 															<span style="color: var(--neo-text-muted);">Loading...</span>
@@ -539,27 +588,32 @@
 							<div class="border-t border-white/20 px-6 py-3">
 								<div class="flex items-center justify-between">
 									<div class="flex items-center space-x-6">
-										<GlassChip 
+										<GlassChip
 											onclick={() => toggleLike(post.id, isUserLiked(post))}
 											size="small"
 											variant={isUserLiked(post) ? 'accent' : 'default'}
 										>
-											<Heart class="h-4 w-4" style={isUserLiked(post) ? 'fill: var(--neo-magenta); color: var(--neo-magenta);' : 'color: var(--neo-text-secondary);'} />
-											<span class="text-xs">{post.likes?.length || 0} {(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span>
+											<Heart
+												class="h-4 w-4"
+												style={isUserLiked(post)
+													? 'fill: var(--neo-magenta); color: var(--neo-magenta);'
+													: 'color: var(--neo-text-secondary);'}
+											/>
+											<span class="text-xs"
+												>{post.likes?.length || 0}
+												{(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span
+											>
 										</GlassChip>
-										<GlassChip 
-											onclick={() => toggleComments(post.id)}
-											size="small"
-										>
+										<GlassChip onclick={() => toggleComments(post.id)} size="small">
 											<MessageCircle class="h-4 w-4" style="color: var(--neo-text-secondary);" />
-											<span class="text-xs">{post.comments?.length || 0} {(post.comments?.length || 0) === 1 ? 'comment' : 'comments'}</span>
+											<span class="text-xs"
+												>{post.comments?.length || 0}
+												{(post.comments?.length || 0) === 1 ? 'comment' : 'comments'}</span
+											>
 										</GlassChip>
 									</div>
 									{#if user}
-										<GlassChip 
-											onclick={() => deletePost(post.id)}
-											size="small"
-										>
+										<GlassChip onclick={() => deletePost(post.id)} size="small">
 											<Trash2 class="h-4 w-4 text-red-400" />
 										</GlassChip>
 									{/if}
@@ -573,8 +627,12 @@
 											<div class="mb-4 space-y-3">
 												{#each post.comments as comment (comment)}
 													<div class="text-sm">
-														<span class="font-medium" style="color: var(--neo-text-primary);">{comment.author}</span>
-														<span class="ml-2" style="color: var(--neo-text-secondary);">{comment.text}</span>
+														<span class="font-medium" style="color: var(--neo-text-primary);"
+															>{comment.author}</span
+														>
+														<span class="ml-2" style="color: var(--neo-text-secondary);"
+															>{comment.text}</span
+														>
 														<div class="mt-1 text-xs" style="color: var(--neo-text-muted);">
 															{dayjs(
 																comment.createdAt?.toDate
@@ -605,9 +663,9 @@
 															addComment(post.id);
 														}
 													}}
-													class="flex-1 rounded-lg border px-3 py-2 text-sm neo-input"
+													class="neo-input flex-1 rounded-lg border px-3 py-2 text-sm"
 												/>
-												<GlassChip 
+												<GlassChip
 													onclick={() => addComment(post.id)}
 													size="small"
 													variant="accent"
@@ -621,7 +679,7 @@
 							</div>
 						</article>
 					{:else}
-						<article class="rounded-lg overflow-hidden bg-white shadow">
+						<article class="overflow-hidden rounded-lg bg-white shadow">
 							<div class="p-6 pb-4">
 								<div class="mb-4 flex items-center space-x-3">
 									{#if post.author?.avatarUrl}
@@ -657,7 +715,10 @@
 													<img
 														src={imagePath}
 														alt=""
-														class="max-h-[600px] w-full rounded-xl object-contain transition-all duration-300 hover:scale-105 bg-gray-100 {index === 5 && post.imagePaths.length > 6 ? 'opacity-75' : ''}"
+														class="max-h-[600px] w-full rounded-xl bg-gray-100 object-contain transition-all duration-300 hover:scale-105 {index ===
+															5 && post.imagePaths.length > 6
+															? 'opacity-75'
+															: ''}"
 													/>
 													{#if index === 5 && post.imagePaths.length > 6}
 														<div
@@ -675,7 +736,7 @@
 										<img
 											src={post.imagePath}
 											alt=""
-											class="mb-4 max-h-[600px] w-full rounded-xl object-contain transition-all duration-300 hover:scale-105 bg-gray-100"
+											class="mb-4 max-h-[600px] w-full rounded-xl bg-gray-100 object-contain transition-all duration-300 hover:scale-105"
 										/>
 									{/if}
 								{/if}
@@ -756,9 +817,11 @@
 									<div class="flex items-center space-x-6">
 										<button
 											onclick={() => toggleLike(post.id, isUserLiked(post))}
-											class="flex items-center space-x-2 text-sm transition-all duration-200 hover:scale-105 text-gray-500 hover:text-red-600"
+											class="flex items-center space-x-2 text-sm text-gray-500 transition-all duration-200 hover:scale-105 hover:text-red-600"
 										>
-											<Heart class="h-5 w-5 {isUserLiked(post) ? 'fill-red-500 text-red-500' : ''}" />
+											<Heart
+												class="h-5 w-5 {isUserLiked(post) ? 'fill-red-500 text-red-500' : ''}"
+											/>
 											<span
 												>{post.likes?.length || 0}
 												{(post.likes?.length || 0) === 1 ? 'like' : 'likes'}</span
@@ -766,7 +829,7 @@
 										</button>
 										<button
 											onclick={() => toggleComments(post.id)}
-											class="flex items-center space-x-2 text-sm transition-all duration-200 hover:scale-105 text-gray-500 hover:text-blue-600"
+											class="flex items-center space-x-2 text-sm text-gray-500 transition-all duration-200 hover:scale-105 hover:text-blue-600"
 										>
 											<MessageCircle class="h-5 w-5" />
 											<span
@@ -778,7 +841,7 @@
 									{#if user}
 										<button
 											onclick={() => deletePost(post.id)}
-											class="flex items-center space-x-1 text-sm transition-all duration-200 hover:scale-105 text-gray-400 hover:text-red-600"
+											class="flex items-center space-x-1 text-sm text-gray-400 transition-all duration-200 hover:scale-105 hover:text-red-600"
 											title="Delete post"
 										>
 											<Trash2 class="h-4 w-4" />

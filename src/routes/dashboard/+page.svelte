@@ -24,7 +24,10 @@
 	import { getDisplayName } from '$lib/getDisplayName';
 	import { soundEnabled, toggleSound } from '$lib/sound';
 	import { themeStore, isNeoTheme } from '$lib/themes/neo';
-	import { triggerParticleBurst, triggerAchievementParticles } from '$lib/themes/neo/utils/particles';
+	import {
+		triggerParticleBurst,
+		triggerAchievementParticles
+	} from '$lib/themes/neo/utils/particles';
 
 	dayjs.extend(relativeTime);
 

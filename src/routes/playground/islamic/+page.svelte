@@ -161,11 +161,8 @@
 			allQuestions = [...(islamicQuestions as Question[])];
 			updateQuestionLists();
 
-			
 			// Log for debugging
-			console.log("Progress reset");
-			
-
+			console.log('Progress reset');
 		} catch (error) {
 			console.error('Failed to reset progress:', error);
 		}
@@ -240,16 +237,27 @@
 		<!-- Header -->
 		<div class="text-center">
 			<div
-				class="mb-4 inline-flex items-center gap-3 rounded-2xl px-6 py-4 text-white shadow-sm {currentTheme === 'neo' 
-					? 'neo-glass border border-white/20' 
+				class="mb-4 inline-flex items-center gap-3 rounded-2xl px-6 py-4 text-white shadow-sm {currentTheme ===
+				'neo'
+					? 'neo-glass border border-white/20'
 					: 'bg-gradient-to-r from-green-600 to-teal-500'}"
 			>
 				<span class="text-3xl">🕌</span>
-				<h1 class="text-2xl font-bold {currentTheme === 'neo' ? 'neo-gradient-text' : ''}">Islam – Our Identity</h1>
+				<h1 class="text-2xl font-bold {currentTheme === 'neo' ? 'neo-gradient-text' : ''}">
+					Islam – Our Identity
+				</h1>
 			</div>
-			<p class="{currentTheme === 'neo' ? '' : 'text-gray-600'}" style="{currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}">Learn about our beautiful faith through questions and reflections</p>
+			<p
+				class={currentTheme === 'neo' ? '' : 'text-gray-600'}
+				style={currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}
+			>
+				Learn about our beautiful faith through questions and reflections
+			</p>
 			{#if userNickname}
-				<p class="mt-2 text-sm font-medium {currentTheme === 'neo' ? '' : 'text-green-700'}" style="{currentTheme === 'neo' ? 'color: var(--neo-lime);' : ''}">
+				<p
+					class="mt-2 text-sm font-medium {currentTheme === 'neo' ? '' : 'text-green-700'}"
+					style={currentTheme === 'neo' ? 'color: var(--neo-lime);' : ''}
+				>
 					Welcome back, {userNickname}! 🌟
 				</p>
 			{/if}
@@ -258,10 +266,19 @@
 		<!-- Active Questions Section -->
 		{#if activeQuestions.length > 0}
 			<div class="space-y-6">
-				<h2 class="text-xl font-semibold {currentTheme === 'neo' ? 'neo-gradient-text' : 'text-gray-800'}">Active Questions</h2>
+				<h2
+					class="text-xl font-semibold {currentTheme === 'neo'
+						? 'neo-gradient-text'
+						: 'text-gray-800'}"
+				>
+					Active Questions
+				</h2>
 				{#each activeQuestions as question (question.id)}
 					{#if currentTheme === 'neo'}
-						<GlassCard header={`${categoryIcons[question.category] || '📚'} ${question.category}`} glow={true}>
+						<GlassCard
+							header={`${categoryIcons[question.category] || '📚'} ${question.category}`}
+							glow={true}
+						>
 							<QuestionCard {question} onAnswered={() => handleQuestionAnswered(question)} />
 						</GlassCard>
 					{:else}
@@ -276,10 +293,12 @@
 			<div class="text-center">
 				<button
 					onclick={showMoreQuestions}
-					class="rounded-2xl px-6 py-3 font-medium shadow-sm transition-all {currentTheme === 'neo' 
-						? 'neo-button' 
-						: 'bg-gradient-to-r from-green-600 to-teal-500 hover:from-green-700 hover:to-teal-600 hover:shadow-md text-white'}"
-					style="{currentTheme === 'neo' ? 'border-color: var(--neo-lime); background: var(--neo-glass-medium); color: var(--neo-lime);' : ''}"
+					class="rounded-2xl px-6 py-3 font-medium shadow-sm transition-all {currentTheme === 'neo'
+						? 'neo-button'
+						: 'bg-gradient-to-r from-green-600 to-teal-500 text-white hover:from-green-700 hover:to-teal-600 hover:shadow-md'}"
+					style={currentTheme === 'neo'
+						? 'border-color: var(--neo-lime); background: var(--neo-glass-medium); color: var(--neo-lime);'
+						: ''}
 				>
 					Show More Questions
 				</button>
@@ -290,19 +309,21 @@
 		{#if answeredQuestions().length > 0}
 			<div class="space-y-4">
 				<div class="flex items-center justify-between">
-					<h2 class="text-xl font-semibold {currentTheme === 'neo' ? 'neo-gradient-text' : 'text-gray-800'}">What I Know Now</h2>
+					<h2
+						class="text-xl font-semibold {currentTheme === 'neo'
+							? 'neo-gradient-text'
+							: 'text-gray-800'}"
+					>
+						What I Know Now
+					</h2>
 					{#if currentTheme === 'neo'}
-						<GlassChip
-							onclick={resetProgress}
-							size="medium"
-							variant="accent"
-						>
+						<GlassChip onclick={resetProgress} size="medium" variant="accent">
 							<span style="color: var(--neo-magenta);">Reset Progress</span>
 						</GlassChip>
 					{:else}
 						<button
 							onclick={resetProgress}
-							class="rounded-lg px-3 py-1 text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+							class="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-700 transition-colors hover:bg-red-200"
 						>
 							Reset Progress
 						</button>
@@ -311,7 +332,7 @@
 
 				<!-- Category summary with GlassChip badges -->
 				{#if currentTheme === 'neo' && Object.keys(groupedAnsweredQuestions()).length > 0}
-					<div class="flex flex-wrap gap-2 mb-4">
+					<div class="mb-4 flex flex-wrap gap-2">
 						{#each Object.entries(groupedAnsweredQuestions()) as [category, questions]}
 							<GlassChip size="small" variant="accent">
 								<span>{categoryIcons[category] || '📚'}</span>
@@ -348,15 +369,26 @@
 
 		<!-- Empty state when no questions are active -->
 		{#if activeQuestions.length === 0 && !hasMoreQuestions()}
-			<div class="rounded-2xl p-8 text-center {currentTheme === 'neo' 
-				? 'neo-glass' 
-				: 'bg-gradient-to-r from-green-50 to-teal-50'}"
-				style="{currentTheme === 'neo' ? 'border-color: var(--neo-lime);' : ''}">
+			<div
+				class="rounded-2xl p-8 text-center {currentTheme === 'neo'
+					? 'neo-glass'
+					: 'bg-gradient-to-r from-green-50 to-teal-50'}"
+				style={currentTheme === 'neo' ? 'border-color: var(--neo-lime);' : ''}
+			>
 				<div class="mb-4 text-4xl">🎉</div>
-				<h3 class="mb-2 text-xl font-semibold {currentTheme === 'neo' ? 'neo-gradient-text' : 'text-gray-800'}">
+				<h3
+					class="mb-2 text-xl font-semibold {currentTheme === 'neo'
+						? 'neo-gradient-text'
+						: 'text-gray-800'}"
+				>
 					Mashaallah! You've completed all questions!
 				</h3>
-				<p class="{currentTheme === 'neo' ? '' : 'text-gray-600'}" style="{currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}">Check your knowledge tree below to review what you've learned.</p>
+				<p
+					class={currentTheme === 'neo' ? '' : 'text-gray-600'}
+					style={currentTheme === 'neo' ? 'color: var(--neo-text-secondary);' : ''}
+				>
+					Check your knowledge tree below to review what you've learned.
+				</p>
 			</div>
 		{/if}
 	{/if}

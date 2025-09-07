@@ -52,11 +52,11 @@ self.addEventListener('install', (event) => {
 async function manageImageCacheSize() {
 	const cache = await caches.open(IMAGE_CACHE);
 	const keys = await cache.keys();
-	
+
 	// Calculate total cache size
 	let totalSize = 0;
 	const cacheEntries = [];
-	
+
 	for (const request of keys) {
 		const response = await cache.match(request);
 		if (response) {
@@ -69,19 +69,19 @@ async function manageImageCacheSize() {
 			totalSize += size;
 		}
 	}
-	
+
 	// If over limit, remove oldest entries (LRU)
 	if (totalSize > MAX_IMAGE_CACHE_SIZE) {
 		console.log(`[Service Worker] Image cache size (${totalSize}) exceeds limit, cleaning up...`);
-		
+
 		// Sort by last modified (oldest first)
 		cacheEntries.sort((a, b) => a.lastModified.getTime() - b.lastModified.getTime());
-		
+
 		// Remove oldest entries until under limit
 		let removedSize = 0;
 		for (const entry of cacheEntries) {
 			if (totalSize - removedSize <= MAX_IMAGE_CACHE_SIZE * 0.8) break; // Keep 20% buffer
-			
+
 			await cache.delete(entry.request);
 			removedSize += entry.size;
 			console.log(`[Service Worker] Removed cached image: ${entry.request.url}`);
@@ -98,7 +98,9 @@ self.addEventListener('activate', (event) => {
 			// Delete old caches
 			const cacheNames = await caches.keys();
 			await Promise.all(
-				cacheNames.filter((name) => name !== CACHE && name !== IMAGE_CACHE).map((name) => caches.delete(name))
+				cacheNames
+					.filter((name) => name !== CACHE && name !== IMAGE_CACHE)
+					.map((name) => caches.delete(name))
 			);
 
 			console.log('[Service Worker] Old caches cleaned up');
@@ -111,10 +113,12 @@ self.addEventListener('activate', (event) => {
 
 // Helper function to check if URL is an image
 function isImageRequest(url) {
-	return /\.(jpg|jpeg|png|gif|webp|svg|ico)$/i.test(url) || 
-		   url.includes('firebasestorage.googleapis.com') ||
-		   url.includes('avatar') ||
-		   url.includes('photo');
+	return (
+		/\.(jpg|jpeg|png|gif|webp|svg|ico)$/i.test(url) ||
+		url.includes('firebasestorage.googleapis.com') ||
+		url.includes('avatar') ||
+		url.includes('photo')
+	);
 }
 
 // Fetch event - implement cache strategies
@@ -149,10 +153,10 @@ self.addEventListener('fetch', (event) => {
 			if (isImageRequest(event.request.url)) {
 				// Try cache first for images
 				const cachedResponse = await imageCache.match(event.request);
-				
+
 				if (cachedResponse) {
 					console.log(`[Service Worker] Serving image from cache: ${event.request.url}`);
-					
+
 					// Return cached response immediately, but update in background
 					event.waitUntil(
 						(async () => {
@@ -164,14 +168,16 @@ self.addEventListener('fetch', (event) => {
 									await manageImageCacheSize();
 								}
 							} catch {
-								console.log(`[Service Worker] Background image update failed: ${event.request.url}`);
+								console.log(
+									`[Service Worker] Background image update failed: ${event.request.url}`
+								);
 							}
 						})()
 					);
-					
+
 					return cachedResponse;
 				}
-				
+
 				// If not in cache, fetch from network and cache
 				try {
 					const networkResponse = await fetch(event.request);

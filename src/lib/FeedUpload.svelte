@@ -262,7 +262,7 @@
 						class="h-10 w-10 rounded-full border border-white/20"
 					/>
 				{:else}
-					<div class="h-10 w-10 rounded-full neo-glass border border-white/20"></div>
+					<div class="neo-glass h-10 w-10 rounded-full border border-white/20"></div>
 				{/if}
 				<div>
 					<p class="font-medium" style="color: var(--neo-text-primary);">
@@ -285,7 +285,7 @@
 					variant={postType === 'photo' ? 'accent' : 'default'}
 					size="small"
 					disabled={!$isOnline}
-					class={!$isOnline ? 'opacity-50 cursor-not-allowed' : ''}
+					class={!$isOnline ? 'cursor-not-allowed opacity-50' : ''}
 				>
 					{#if !$isOnline}
 						<WifiOff class="mr-1 h-4 w-4" />
@@ -299,7 +299,7 @@
 					variant={postType === 'video' ? 'accent' : 'default'}
 					size="small"
 					disabled={!$isOnline}
-					class={!$isOnline ? 'opacity-50 cursor-not-allowed' : ''}
+					class={!$isOnline ? 'cursor-not-allowed opacity-50' : ''}
 				>
 					{#if !$isOnline}
 						<WifiOff class="mr-1 h-4 w-4" />
@@ -336,7 +336,8 @@
 						<div class="ml-3">
 							<h3 class="text-sm font-medium text-amber-800">Internet needed for media uploads</h3>
 							<p class="mt-1 text-sm text-amber-700">
-								📡 Photo and video uploads require an internet connection. Try again once you're back online.
+								📡 Photo and video uploads require an internet connection. Try again once you're
+								back online.
 							</p>
 						</div>
 					</div>
@@ -349,7 +350,7 @@
 					<textarea
 						bind:value={textContent}
 						placeholder="What's on your mind?"
-						class="w-full resize-none rounded-lg border px-3 py-3 neo-input"
+						class="neo-input w-full resize-none rounded-lg border px-3 py-3"
 						style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
 						rows="3"
 					></textarea>
@@ -364,7 +365,7 @@
 						multiple={postType === 'photo'}
 						accept={postType === 'photo' ? 'image/*' : 'video/*'}
 						onchange={handleFileSelect}
-						class="w-full rounded-lg border px-3 py-2 text-sm neo-input"
+						class="neo-input w-full rounded-lg border px-3 py-2 text-sm"
 						style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
 					/>
 				</div>
@@ -376,13 +377,18 @@
 					{#each previewUrls as url, index (url)}
 						<div class="relative">
 							{#if postType === 'photo'}
-								<img src={url} alt="Preview" class="h-20 w-20 rounded-lg object-cover neo-image-glow" />
+								<img
+									src={url}
+									alt="Preview"
+									class="neo-image-glow h-20 w-20 rounded-lg object-cover"
+								/>
 							{:else if postType === 'video'}
-								<video src={url} class="h-20 w-20 rounded-lg object-cover neo-image-glow" muted></video>
+								<video src={url} class="neo-image-glow h-20 w-20 rounded-lg object-cover" muted
+								></video>
 							{/if}
 							<button
 								onclick={() => removePreview(index)}
-								class="absolute -right-1 -top-1 rounded-full neo-glass border border-white/20 p-1"
+								class="neo-glass absolute -top-1 -right-1 rounded-full border border-white/20 p-1"
 								style="color: var(--neo-magenta);"
 							>
 								<X class="h-3 w-3" />
@@ -399,7 +405,7 @@
 						type="url"
 						bind:value={youtubeUrl}
 						placeholder="Enter YouTube URL"
-						class="w-full rounded-lg border px-3 py-2 neo-input"
+						class="neo-input w-full rounded-lg border px-3 py-2"
 						style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
 					/>
 				</div>
@@ -412,7 +418,7 @@
 						type="text"
 						bind:value={pollTitle}
 						placeholder="Poll question"
-						class="w-full rounded-lg border px-3 py-2 neo-input"
+						class="neo-input w-full rounded-lg border px-3 py-2"
 						style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
 					/>
 					{#each pollOptions as option, index (index)}
@@ -421,7 +427,7 @@
 								type="text"
 								bind:value={pollOptions[index]}
 								placeholder="Option {index + 1}"
-								class="flex-1 rounded-lg border px-3 py-2 neo-input"
+								class="neo-input flex-1 rounded-lg border px-3 py-2"
 								style="background: var(--neo-glass); border-color: var(--neo-border); color: var(--neo-text-primary);"
 							/>
 							{#if pollOptions.length > 2}
@@ -431,26 +437,20 @@
 							{/if}
 						</div>
 					{/each}
-					<GlassChip onclick={addPollOption} size="small" variant="accent">
-						Add Option
-					</GlassChip>
+					<GlassChip onclick={addPollOption} size="small" variant="accent">Add Option</GlassChip>
 				</div>
 			{/if}
 
 			<!-- Upload progress -->
 			{#if uploadProgress}
-				<div class="rounded-lg neo-glass border border-white/20 p-3">
+				<div class="neo-glass rounded-lg border border-white/20 p-3">
 					<p class="text-sm" style="color: var(--neo-text-secondary);">{uploadProgress}</p>
 				</div>
 			{/if}
 
 			<!-- Submit button -->
 			<div class="flex justify-end">
-				<GlassChip
-					onclick={handleSubmit}
-					variant="accent"
-					disabled={isUploading}
-				>
+				<GlassChip onclick={handleSubmit} variant="accent" disabled={isUploading}>
 					{#if isUploading}
 						<div class="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
 					{:else}

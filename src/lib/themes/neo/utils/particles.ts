@@ -226,7 +226,7 @@ export function triggerAchievementParticles(x: number, y: number, duration = 300
 	// Clean up all particles after duration to prevent memory leaks
 	setTimeout(() => {
 		const elementsToRemove = container.querySelectorAll('.neo-particle');
-		elementsToRemove.forEach(element => {
+		elementsToRemove.forEach((element) => {
 			if (element.parentNode) {
 				element.parentNode.removeChild(element);
 			}

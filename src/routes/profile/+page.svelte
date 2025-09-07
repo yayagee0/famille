@@ -537,15 +537,21 @@
 				<div class="flex items-center space-x-6">
 					<div class="flex-shrink-0">
 						{#if previewUrl}
-							<img class="h-20 w-20 rounded-full object-cover border-2 border-cyan-400/50" src={previewUrl} alt="Preview" />
+							<img
+								class="h-20 w-20 rounded-full border-2 border-cyan-400/50 object-cover"
+								src={previewUrl}
+								alt="Preview"
+							/>
 						{:else if user.photoURL}
 							<img
-								class="h-20 w-20 rounded-full object-cover border-2 border-cyan-400/50"
+								class="h-20 w-20 rounded-full border-2 border-cyan-400/50 object-cover"
 								src={user.photoURL}
 								alt={getDisplayName(user?.email, { nickname: undefined })}
 							/>
 						{:else}
-							<div class="flex h-20 w-20 items-center justify-center rounded-full neo-glass border border-white/30">
+							<div
+								class="neo-glass flex h-20 w-20 items-center justify-center rounded-full border border-white/30"
+							>
 								<User class="h-8 w-8 text-slate-400" />
 							</div>
 						{/if}
@@ -563,7 +569,7 @@
 								accept="image/*"
 								onchange={handleAvatarUpload}
 								disabled={isUploading}
-								class="block w-full text-sm text-slate-400 file:mr-4 file:rounded-lg file:border-0 file:neo-glass file:px-4 file:py-2 file:text-sm file:font-medium file:text-cyan-400 hover:file:bg-white/15 disabled:opacity-50"
+								class="file:neo-glass block w-full text-sm text-slate-400 file:mr-4 file:rounded-lg file:border-0 file:px-4 file:py-2 file:text-sm file:font-medium file:text-cyan-400 hover:file:bg-white/15 disabled:opacity-50"
 							/>
 							{#if isUploading}
 								<div class="mt-2 flex items-center">
@@ -586,7 +592,7 @@
 								bind:value={displayName}
 								placeholder="Enter your display name"
 								disabled={isSaving}
-								class="mb-2 w-full rounded-lg border neo-glass border-white/20 px-3 py-2 text-sm text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 disabled:opacity-50"
+								class="neo-glass mb-2 w-full rounded-lg border border-white/20 px-3 py-2 text-sm text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 disabled:opacity-50"
 							/>
 						</div>
 
@@ -602,14 +608,13 @@
 									bind:value={nickname}
 									placeholder="Enter your nickname (optional)"
 									disabled={isSaving}
-									class="flex-1 rounded-lg border neo-glass border-white/20 px-3 py-2 text-sm text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 disabled:opacity-50"
+									class="neo-glass flex-1 rounded-lg border border-white/20 px-3 py-2 text-sm text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 disabled:opacity-50"
 								/>
-								<GlassChip 
-									onclick={handleSaveProfile}
-									variant="accent"
-								>
+								<GlassChip onclick={handleSaveProfile} variant="accent">
 									{#if isSaving}
-										<div class="mr-1 h-4 w-4 animate-spin rounded-full border-b-2 border-cyan-400"></div>
+										<div
+											class="mr-1 h-4 w-4 animate-spin rounded-full border-b-2 border-cyan-400"
+										></div>
 										Saving...
 									{:else}
 										<Save class="h-4 w-4" />
@@ -627,7 +632,7 @@
 				</div>
 			</GlassCard>
 		{:else}
-			<div class="bg-white shadow-sm rounded-2xl">
+			<div class="rounded-2xl bg-white shadow-sm">
 				<div class="px-6 py-5">
 					<h3 class="mb-4 text-lg font-semibold text-gray-900">Identity</h3>
 
@@ -734,10 +739,12 @@
 			<GlassCard header="✨ My Identity Traits" glow={true}>
 				<div class="mb-4 flex items-center justify-between">
 					<div>
-						<p class="text-sm text-slate-400">Build your character profile by answering questions</p>
+						<p class="text-sm text-slate-400">
+							Build your character profile by answering questions
+						</p>
 					</div>
 					<div class="text-right">
-						<div class="text-2xl font-bold neo-gradient-text">
+						<div class="neo-gradient-text text-2xl font-bold">
 							{userAnswers.length}/{totalQuestions}
 						</div>
 						<div class="text-xs text-slate-500">Answered</div>
@@ -750,9 +757,9 @@
 						<span>Profile Completion</span>
 						<span>{progressPercentage}%</span>
 					</div>
-					<div class="h-2 w-full rounded-full neo-glass">
+					<div class="neo-glass h-2 w-full rounded-full">
 						<div
-							class="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-magenta-500 transition-all duration-300"
+							class="to-magenta-500 h-2 rounded-full bg-gradient-to-r from-cyan-500 transition-all duration-300"
 							style="width: {progressPercentage}%"
 						></div>
 					</div>
@@ -763,11 +770,9 @@
 					<div class="mb-6 space-y-3">
 						{#each userAnswers as answer (answer.questionId)}
 							{#await renderTrait(answer)}
-								<div class="h-12 animate-pulse rounded-lg neo-glass"></div>
+								<div class="neo-glass h-12 animate-pulse rounded-lg"></div>
 							{:then traitText}
-								<div
-									class="rounded-lg neo-glass border border-white/20 p-4 neo-row-hover"
-								>
+								<div class="neo-glass neo-row-hover rounded-lg border border-white/20 p-4">
 									<div class="flex items-start justify-between">
 										<p class="flex-1 pr-3 text-sm text-slate-200">{traitText}</p>
 										<div class="flex flex-col items-end space-y-1">
@@ -790,7 +795,7 @@
 				{:else}
 					<div class="mb-6 py-8 text-center">
 						<Trophy class="mx-auto mb-3 h-12 w-12 text-slate-400" />
-						<h4 class="mb-2 text-lg font-medium neo-gradient-text">Start Building Your Identity</h4>
+						<h4 class="neo-gradient-text mb-2 text-lg font-medium">Start Building Your Identity</h4>
 						<p class="text-sm text-slate-400">
 							Answer questions to discover and share your unique traits!
 						</p>
@@ -800,11 +805,11 @@
 				<!-- Current Questions Section -->
 				{#if showQuestions && currentQuestions.length > 0}
 					<div class="border-t border-white/20 pt-6">
-						<h4 class="text-md mb-4 font-medium neo-gradient-text">Answer These Questions</h4>
+						<h4 class="text-md neo-gradient-text mb-4 font-medium">Answer These Questions</h4>
 
 						<div class="space-y-6">
 							{#each currentQuestions as question (question.id)}
-								<div class="rounded-lg border neo-glass border-white/20 p-4">
+								<div class="neo-glass rounded-lg border border-white/20 p-4">
 									<h5 class="mb-3 font-medium text-slate-200">{question.text}</h5>
 
 									{#if question.type === 'multiple-choice'}
@@ -812,7 +817,7 @@
 											{#each question.options || [] as option (option)}
 												<button
 													onclick={() => handleAnswerSelection(question.id, option)}
-													class="w-full rounded-lg border p-3 text-left transition-colors neo-row-hover {selectedAnswers[
+													class="neo-row-hover w-full rounded-lg border p-3 text-left transition-colors {selectedAnswers[
 														question.id
 													] === option
 														? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
@@ -825,7 +830,7 @@
 											{#if question.allowOther}
 												<button
 													onclick={() => handleAnswerSelection(question.id, 'Other', true)}
-													class="w-full rounded-lg border p-3 text-left transition-colors neo-row-hover {selectedAnswers[
+													class="neo-row-hover w-full rounded-lg border p-3 text-left transition-colors {selectedAnswers[
 														question.id
 													] === 'Other' || showOtherInput[question.id]
 														? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
@@ -841,7 +846,7 @@
 														bind:value={customAnswers[question.id]}
 														onchange={() =>
 															handleCustomAnswer(question.id, customAnswers[question.id])}
-														class="mt-2 w-full rounded-lg border neo-glass border-white/20 p-2 text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+														class="neo-glass mt-2 w-full rounded-lg border border-white/20 p-2 text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
 													/>
 												{/if}
 											{/if}
@@ -851,7 +856,7 @@
 										<textarea
 											placeholder="Share your thoughts..."
 											bind:value={selectedAnswers[question.id]}
-											class="w-full resize-none rounded-lg border neo-glass border-white/20 p-3 text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+											class="neo-glass w-full resize-none rounded-lg border border-white/20 p-3 text-slate-200 placeholder-slate-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
 											rows="3"
 										></textarea>
 									{/if}
@@ -866,12 +871,11 @@
 						</div>
 
 						<div class="mt-6 flex items-center space-x-3">
-							<GlassChip 
-								onclick={saveAnswers}
-								variant="accent"
-							>
+							<GlassChip onclick={saveAnswers} variant="accent">
 								{#if isAnswering}
-									<div class="mr-1 h-4 w-4 animate-spin rounded-full border-b-2 border-lime-400"></div>
+									<div
+										class="mr-1 h-4 w-4 animate-spin rounded-full border-b-2 border-lime-400"
+									></div>
 									Saving...
 								{:else}
 									<Heart class="h-4 w-4" />
@@ -879,7 +883,7 @@
 								{/if}
 							</GlassChip>
 
-							<GlassChip 
+							<GlassChip
 								onclick={() => {
 									showQuestions = false;
 									currentQuestions = [];
@@ -892,13 +896,11 @@
 				{:else}
 					<!-- Answer More Button -->
 					<div class="flex justify-center">
-						<GlassChip 
-							onclick={loadNextQuestions}
-							variant="accent"
-							size="large"
-						>
+						<GlassChip onclick={loadNextQuestions} variant="accent" size="large">
 							{#if isLoadingQuestions}
-								<div class="mr-1 h-4 w-4 animate-spin rounded-full border-b-2 border-lime-400"></div>
+								<div
+									class="mr-1 h-4 w-4 animate-spin rounded-full border-b-2 border-lime-400"
+								></div>
 								Loading Questions...
 							{:else if userAnswers.length >= totalQuestions}
 								<Trophy class="h-4 w-4" />
@@ -917,7 +919,9 @@
 					<div class="mb-4 flex items-center justify-between">
 						<div>
 							<h3 class="text-lg font-semibold text-gray-900">My Identity Traits</h3>
-							<p class="text-sm text-gray-600">Build your character profile by answering questions</p>
+							<p class="text-sm text-gray-600">
+								Build your character profile by answering questions
+							</p>
 						</div>
 						<div class="text-right">
 							<div class="text-2xl font-bold text-indigo-600">

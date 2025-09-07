@@ -163,7 +163,7 @@
 				<!-- Sound Button -->
 				<button
 					onclick={playAyahSound}
-					class="rounded-lg p-2 transition-all duration-200 neo-glass hover:bg-white/15 text-cyan-400 hover:text-cyan-300"
+					class="neo-glass rounded-lg p-2 text-cyan-400 transition-all duration-200 hover:bg-white/15 hover:text-cyan-300"
 					aria-label="Play Ayah sound"
 					title="Play peaceful sound"
 				>
@@ -175,7 +175,7 @@
 					<!-- Theme Toggle -->
 					<button
 						onclick={toggleTheme}
-						class="rounded-lg p-2 transition-all duration-200 neo-glass hover:bg-white/15 text-slate-300 hover:text-white"
+						class="neo-glass rounded-lg p-2 text-slate-300 transition-all duration-200 hover:bg-white/15 hover:text-white"
 						aria-label={isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme'}
 					>
 						{#if isDarkTheme}
@@ -189,8 +189,8 @@
 					<div class="flex items-center space-x-1">
 						<button
 							onclick={() => adjustFontSize('small')}
-							class="rounded px-2 py-1 text-xs transition-colors neo-row-hover {fontSize === 'small'
-								? 'bg-cyan-600/30 text-cyan-300 border border-cyan-400/30'
+							class="neo-row-hover rounded px-2 py-1 text-xs transition-colors {fontSize === 'small'
+								? 'border border-cyan-400/30 bg-cyan-600/30 text-cyan-300'
 								: 'text-slate-400 hover:text-cyan-400'}"
 							aria-label="Small font size"
 						>
@@ -198,8 +198,9 @@
 						</button>
 						<button
 							onclick={() => adjustFontSize('medium')}
-							class="rounded px-2 py-1 text-sm transition-colors neo-row-hover {fontSize === 'medium'
-								? 'bg-cyan-600/30 text-cyan-300 border border-cyan-400/30'
+							class="neo-row-hover rounded px-2 py-1 text-sm transition-colors {fontSize ===
+							'medium'
+								? 'border border-cyan-400/30 bg-cyan-600/30 text-cyan-300'
 								: 'text-slate-400 hover:text-cyan-400'}"
 							aria-label="Medium font size"
 						>
@@ -207,8 +208,9 @@
 						</button>
 						<button
 							onclick={() => adjustFontSize('large')}
-							class="rounded px-2 py-1 text-base transition-colors neo-row-hover {fontSize === 'large'
-								? 'bg-cyan-600/30 text-cyan-300 border border-cyan-400/30'
+							class="neo-row-hover rounded px-2 py-1 text-base transition-colors {fontSize ===
+							'large'
+								? 'border border-cyan-400/30 bg-cyan-600/30 text-cyan-300'
 								: 'text-slate-400 hover:text-cyan-400'}"
 							aria-label="Large font size"
 						>
@@ -218,7 +220,7 @@
 				</div>
 			</div>
 
-			<p class="font-arabic mb-3 text-2xl leading-relaxed md:text-3xl text-slate-100 arabic-text">
+			<p class="font-arabic arabic-text mb-3 text-2xl leading-relaxed text-slate-100 md:text-3xl">
 				{todayAyah.arabic}
 			</p>
 			<p class="mb-2 text-slate-300 italic">

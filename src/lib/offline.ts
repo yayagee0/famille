@@ -1,6 +1,14 @@
 import { browser } from '$app/environment';
 import { writable } from 'svelte/store';
-import { collection, addDoc, serverTimestamp, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import {
+	collection,
+	addDoc,
+	serverTimestamp,
+	doc,
+	updateDoc,
+	arrayUnion,
+	arrayRemove
+} from 'firebase/firestore';
 import { db } from './firebase';
 import { FAMILY_ID } from './config';
 
@@ -238,9 +246,9 @@ async function processOfflineQueue(): Promise<void> {
 	if (queue.length === 0) return;
 
 	console.log(`[Offline Manager] Processing ${queue.length} offline actions...`);
-	
+
 	const successfulActions: string[] = [];
-	
+
 	for (const action of queue) {
 		try {
 			await processOfflineAction(action);
@@ -248,21 +256,23 @@ async function processOfflineQueue(): Promise<void> {
 			console.log(`[Offline Manager] Successfully processed action: ${action.id}`);
 		} catch (error) {
 			console.error(`[Offline Manager] Failed to process action ${action.id}:`, error);
-			
+
 			// Increment retry count
 			action.retries += 1;
-			
+
 			// Remove action if too many retries (avoid infinite loops)
 			if (action.retries >= 3) {
-				console.warn(`[Offline Manager] Removing action ${action.id} after ${action.retries} retries`);
+				console.warn(
+					`[Offline Manager] Removing action ${action.id} after ${action.retries} retries`
+				);
 				successfulActions.push(action.id);
 			}
 		}
 	}
-	
+
 	// Remove successfully processed actions from queue
 	if (successfulActions.length > 0) {
-		const remainingQueue = queue.filter(action => !successfulActions.includes(action.id));
+		const remainingQueue = queue.filter((action) => !successfulActions.includes(action.id));
 		localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(remainingQueue));
 		hasOfflineData.set(remainingQueue.length > 0);
 	}
@@ -280,7 +290,7 @@ async function processOfflineAction(action: OfflineAction): Promise<void> {
 				familyId: FAMILY_ID
 			});
 			break;
-			
+
 		case 'like':
 			const likeRef = doc(db, 'posts', action.data.postId);
 			if (action.data.isLiked) {
@@ -289,12 +299,12 @@ async function processOfflineAction(action: OfflineAction): Promise<void> {
 				await updateDoc(likeRef, { likes: arrayUnion(action.data.userId) });
 			}
 			break;
-			
+
 		case 'comment':
 			const commentRef = doc(db, 'posts', action.data.postId);
 			await updateDoc(commentRef, { comments: arrayUnion(action.data.comment) });
 			break;
-			
+
 		default:
 			throw new Error(`Unknown action type: ${action.type}`);
 	}
@@ -332,29 +342,28 @@ export function getCacheStats(): { size: number; items: number; keys: string[] }
  */
 async function syncOfflineData(): Promise<void> {
 	if (!browser) return;
-	
+
 	syncStatus.set('syncing');
 	console.log('[Offline Manager] Starting offline data sync...');
 
 	try {
 		// Process queued offline actions first
 		await processOfflineQueue();
-		
+
 		// Clear cached data to force fresh fetch from server (network-first strategy)
 		clearAllCache();
-		
+
 		syncStatus.set('synced');
 		console.log('[Offline Manager] Offline data sync completed successfully');
-		
+
 		// Reset sync status after a delay
 		setTimeout(() => {
 			syncStatus.set('idle');
 		}, 3000);
-		
 	} catch (error) {
 		console.error('[Offline Manager] Offline data sync failed:', error);
 		syncStatus.set('error');
-		
+
 		// Reset sync status after a delay
 		setTimeout(() => {
 			syncStatus.set('idle');
@@ -370,10 +379,10 @@ export function clearAllCachesAndStorage(): void {
 
 	// Clear localStorage caches
 	clearAllCache();
-	
+
 	// Clear offline queue
 	clearOfflineQueue();
-	
+
 	// Clear IndexedDB (Firestore persistence)
 	if ('indexedDB' in window) {
 		try {
@@ -384,12 +393,12 @@ export function clearAllCachesAndStorage(): void {
 			console.warn('[Offline Manager] Failed to clear IndexedDB:', error);
 		}
 	}
-	
+
 	// Message service worker to clear caches
 	if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
 		navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHES' });
 	}
-	
+
 	console.log('[Offline Manager] Cleared all caches and storage');
 }
 
