@@ -160,6 +160,12 @@
 			// Reload fresh data from islamicQuestions
 			allQuestions = [...(islamicQuestions as Question[])];
 			updateQuestionLists();
+
+			
+			// Log for debugging
+			console.log("Progress reset");
+			
+
 		} catch (error) {
 			console.error('Failed to reset progress:', error);
 		}
