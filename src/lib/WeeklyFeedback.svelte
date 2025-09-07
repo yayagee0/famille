@@ -163,11 +163,12 @@
 							<div class="space-y-4">
 								{#each feedback.questions as question, index}
 									<div class="space-y-2">
-										<label class="flex items-start gap-2 text-sm font-medium text-slate-200">
+										<label for="question-{feedback.id}-{index}" class="flex items-start gap-2 text-sm font-medium text-slate-200">
 											<span class="text-lg">{getQuestionIcon(question.type)}</span>
 											<span>{question.text}</span>
 										</label>
 										<textarea
+											id="question-{feedback.id}-{index}"
 											bind:value={answers[feedback.id!][index.toString()]}
 											placeholder="Share your thoughts..."
 											class="w-full rounded-lg border border-slate-600 bg-slate-800/50 p-3 text-slate-200 placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400"
@@ -229,11 +230,12 @@
 							<div class="space-y-4">
 								{#each feedback.questions as question, index}
 									<div class="space-y-2">
-										<label class="flex items-start gap-2 text-sm font-medium text-gray-700">
+										<label for="question-{feedback.id}-{index}-default" class="flex items-start gap-2 text-sm font-medium text-gray-700">
 											<span class="text-lg">{getQuestionIcon(question.type)}</span>
 											<span>{question.text}</span>
 										</label>
 										<textarea
+											id="question-{feedback.id}-{index}-default"
 											bind:value={answers[feedback.id!][index.toString()]}
 											placeholder="Share your thoughts..."
 											class="w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"

@@ -39,6 +39,25 @@ service cloud.firestore {
       allow read, write: if isFamily() && userId == request.auth.uid;
     }
 
+    // Daily polls - all family can read and vote
+    match /daily_polls/{pollId} {
+      allow read: if isFamily();
+      allow create: if isFamily();
+      allow update: if isFamily() && 
+        request.resource.data.keys().hasOnly(['votes', 'isClosed', 'resultsPosted']);
+    }
+
+    // Analytics - system-generated, family can read
+    match /analytics/{date} {
+      allow read: if isFamily();
+      allow write: if isFamily(); // For system operations
+    }
+
+    // Seasonal banners - read-only for family
+    match /seasonal/{docId} {
+      allow read: if isFamily();
+    }
+
     // Notifications collection - users can only access their own notifications
     match /notifications/{userId}/items/{notificationId} {
       // Users can only read and update their own notifications

@@ -43,7 +43,102 @@ query(
 );
 ```
 
-## Index Creation
+### 3. Daily Polls Collection
+
+**Collection**: `daily_polls`
+**Fields**:
+
+- `familyId` (Ascending)
+- `createdAt` (Ascending)
+- `isClosed` (Ascending)
+
+**Query Path**: Used for finding today's active polls
+
+```javascript
+query(
+	collection(db, 'daily_polls'),
+	where('familyId', '==', familyId),
+	where('createdAt', '>=', today),
+	where('createdAt', '<', tomorrow),
+	where('isClosed', '==', false)
+);
+```
+
+### 4. Analytics Collection
+
+**Collection**: `analytics`
+**Fields**:
+
+- `familyId` (Ascending)
+- `date` (Descending)
+
+**Query Path**: Used for retrieving analytics by date range
+
+```javascript
+query(
+	collection(db, 'analytics'),
+	where('familyId', '==', familyId),
+	orderBy('date', 'desc'),
+	limit(30)
+);
+```
+
+### 5. User Nudges Collection
+
+**Collection**: `users/{uid}/nudges`
+**Fields**:
+
+- `createdAt` (Descending)
+- `readAt` (Ascending)
+
+**Query Path**: Used for finding today's nudges and unread nudges
+
+```javascript
+query(
+	collection(db, 'users', userId, 'nudges'),
+	where('createdAt', '>=', today),
+	where('createdAt', '<', tomorrow),
+	orderBy('createdAt', 'desc')
+);
+```
+
+### 6. User Feedback Collection
+
+**Collection**: `users/{uid}/feedback`
+**Fields**:
+
+- `isPersistent` (Ascending)
+- `answeredAt` (Ascending)
+- `createdAt` (Descending)
+
+**Query Path**: Used for finding pending feedback
+
+```javascript
+query(
+	collection(db, 'users', userId, 'feedback'),
+	where('isPersistent', '==', true),
+	where('answeredAt', '==', null),
+	orderBy('createdAt', 'desc')
+);
+```
+
+### 7. User Badges Collection
+
+**Collection**: `users/{uid}/badges`
+**Fields**:
+
+- `earnedAt` (Descending)
+- `notificationSent` (Ascending)
+
+**Query Path**: Used for recent badge display and notifications
+
+```javascript
+query(
+	collection(db, 'users', userId, 'badges'),
+	orderBy('earnedAt', 'desc'),
+	limit(10)
+);
+```
 
 These indexes will be automatically suggested in the Firebase Console when the queries are first executed. You can also create them manually:
 

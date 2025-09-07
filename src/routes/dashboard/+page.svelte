@@ -19,6 +19,8 @@
 	import DailyNudge from '$lib/DailyNudge.svelte';
 	import WeeklyFeedback from '$lib/WeeklyFeedback.svelte';
 	import BadgeDisplay from '$lib/BadgeDisplay.svelte';
+	import DailyPoll from '$lib/DailyPoll.svelte';
+	import SeasonalBanner from '$lib/SeasonalBanner.svelte';
 	import SimilarityHighlights from '$lib/components/SimilarityHighlights.svelte';
 	import BirthdayPreview from '$lib/BirthdayPreview.svelte';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';

@@ -26,6 +26,7 @@ import {
 	Timestamp
 } from 'firebase/firestore';
 import { db } from '$lib/firebase';
+import { getFamilyId } from '$lib/firebase';
 import { islamicQuestions } from '$lib/data/islamicQuestions';
 import {
 	nudgeTemplates,
@@ -37,6 +38,10 @@ import {
 	type IdentityTrait,
 	type BadgeTemplate
 } from '$lib/data/smartEngine';
+import { seasonalNudgeTemplates } from '$lib/data/seasonal';
+import { pollTemplates, type DailyPoll, type PollTemplate } from '$lib/data/polls';
+import { getCurrentSeasonalConfig, getCurrentSeasonalBanners, type SeasonalBanner } from '$lib/data/seasonal';
+import { AnalyticsEngine, type DailyAnalytics, type UserDailyMetrics } from '$lib/data/analytics';
 
 // ============================================================================
 // INTERFACES
@@ -108,6 +113,7 @@ export interface DailyPoll {
 	closesAt: Timestamp;
 	isClosed: boolean;
 	resultsPosted: boolean;
+	familyId: string;
 }
 
 // ============================================================================
@@ -146,7 +152,7 @@ export class SmartEngine {
 			]);
 
 			// Select appropriate nudge template
-			const selectedTemplate = this.selectNudgeTemplate(userTraits);
+			const selectedTemplate = this.selectNudgeTemplateEnhanced(userTraits, userId);
 			if (!selectedTemplate) {
 				console.error('[SmartEngine] No suitable template found');
 				return null;
@@ -593,6 +599,12 @@ export class SmartEngine {
 	static async generateDailyContentForAllUsers(allowedEmails: string[]): Promise<void> {
 		console.log('[SmartEngine] Generating daily content for all users...');
 
+		const familyId = await getFamilyId();
+		const dateString = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+		// Initialize daily analytics
+		await this.initializeDailyAnalytics(dateString, familyId);
+
 		const promises = allowedEmails.map(async (email) => {
 			// Use email as userId for now (should match your auth system)
 			const userId = email;
@@ -606,12 +618,428 @@ export class SmartEngine {
 				if (now.getDay() === 0) { // Sunday
 					await this.createWeeklyFeedback(userId);
 				}
+
+				// Track analytics
+				await this.trackUserAnalytics(userId, 'nudge_generated');
 			} catch (error) {
 				console.error(`[SmartEngine] Failed to generate content for ${userId}:`, error);
 			}
 		});
 
+		// Generate daily poll (once per family)
+		await this.generateDailyPoll(familyId);
+
+		// Close expired polls and post results
+		await this.processExpiredPolls(familyId);
+
 		await Promise.all(promises);
 		console.log('[SmartEngine] Daily content generation complete');
+	}
+
+	/**
+	 * Generate daily poll for the family
+	 */
+	static async generateDailyPoll(familyId: string): Promise<DailyPoll | null> {
+		try {
+			// Check if poll already exists for today
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			const tomorrow = new Date(today);
+			tomorrow.setDate(tomorrow.getDate() + 1);
+
+			const existingPollQuery = query(
+				collection(db, 'daily_polls'),
+				where('familyId', '==', familyId),
+				where('createdAt', '>=', Timestamp.fromDate(today)),
+				where('createdAt', '<', Timestamp.fromDate(tomorrow)),
+				limit(1)
+			);
+
+			const existingPolls = await getDocs(existingPollQuery);
+			if (!existingPolls.empty) {
+				console.log('[SmartEngine] Daily poll already exists for today');
+				return null;
+			}
+
+			// Select random poll template
+			const template = this.selectPollTemplate();
+			if (!template) {
+				console.error('[SmartEngine] No poll template found');
+				return null;
+			}
+
+			// Create poll
+			const now = new Date();
+			const closesAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+
+			const poll: DailyPoll = {
+				question: template.question,
+				options: template.options,
+				votes: {},
+				createdAt: serverTimestamp() as Timestamp,
+				closesAt: Timestamp.fromDate(closesAt),
+				isClosed: false,
+				resultsPosted: false,
+				familyId
+			};
+
+			const pollRef = await addDoc(collection(db, 'daily_polls'), poll);
+			console.log(`[SmartEngine] Generated daily poll: ${pollRef.id}`);
+
+			// Track analytics
+			await this.trackFamilyAnalytics(familyId, 'poll_generated');
+
+			return { ...poll, id: pollRef.id };
+		} catch (error) {
+			console.error('[SmartEngine] Failed to generate daily poll:', error);
+			return null;
+		}
+	}
+
+	/**
+	 * Select poll template with weighted random selection
+	 */
+	static selectPollTemplate(): PollTemplate | null {
+		if (pollTemplates.length === 0) return null;
+
+		// Get seasonal configuration for boosted content
+		const seasonalConfig = getCurrentSeasonalConfig();
+		
+		// Apply seasonal weights
+		let templates = [...pollTemplates];
+		if (seasonalConfig) {
+			// During special seasons, prefer family and preference polls
+			templates = templates.map(template => ({
+				...template,
+				weight: template.category === 'family' || template.category === 'preferences' 
+					? template.weight * 1.5 
+					: template.weight
+			}));
+		}
+
+		// Weighted random selection
+		const totalWeight = templates.reduce((sum, t) => sum + t.weight, 0);
+		let randomWeight = Math.random() * totalWeight;
+
+		for (const template of templates) {
+			randomWeight -= template.weight;
+			if (randomWeight <= 0) {
+				return template;
+			}
+		}
+
+		return templates[0];
+	}
+
+	/**
+	 * Process expired polls and post results
+	 */
+	static async processExpiredPolls(familyId: string): Promise<void> {
+		try {
+			const now = new Date();
+			
+			// Find polls that should be closed
+			const expiredPollsQuery = query(
+				collection(db, 'daily_polls'),
+				where('familyId', '==', familyId),
+				where('isClosed', '==', false),
+				where('closesAt', '<=', Timestamp.fromDate(now))
+			);
+
+			const expiredPolls = await getDocs(expiredPollsQuery);
+
+			for (const pollDoc of expiredPolls.docs) {
+				const poll = pollDoc.data() as DailyPoll;
+				
+				// Close the poll
+				await updateDoc(doc(db, 'daily_polls', pollDoc.id), {
+					isClosed: true
+				});
+
+				// Post results to Fun Feed if not already posted
+				if (!poll.resultsPosted) {
+					await this.postPollResultsToFeed(pollDoc.id, poll);
+					
+					await updateDoc(doc(db, 'daily_polls', pollDoc.id), {
+						resultsPosted: true
+					});
+				}
+
+				console.log(`[SmartEngine] Processed expired poll: ${pollDoc.id}`);
+			}
+		} catch (error) {
+			console.error('[SmartEngine] Failed to process expired polls:', error);
+		}
+	}
+
+	/**
+	 * Post poll results to Fun Feed
+	 */
+	static async postPollResultsToFeed(pollId: string, poll: DailyPoll): Promise<void> {
+		try {
+			// Calculate results
+			const optionCounts = poll.options.map(() => 0);
+			Object.values(poll.votes).forEach(optionIndex => {
+				const index = parseInt(optionIndex);
+				if (index >= 0 && index < optionCounts.length) {
+					optionCounts[index]++;
+				}
+			});
+
+			const totalVotes = optionCounts.reduce((sum, count) => sum + count, 0);
+			
+			// Find winning option(s)
+			const maxVotes = Math.max(...optionCounts);
+			const winners = poll.options.filter((_, index) => optionCounts[index] === maxVotes);
+
+			// Create result text
+			let resultText = `📊 Poll Results: "${poll.question}"\n\n`;
+			
+			if (totalVotes === 0) {
+				resultText += 'No votes received 😔';
+			} else {
+				poll.options.forEach((option, index) => {
+					const count = optionCounts[index];
+					const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+					const isWinner = winners.includes(option);
+					resultText += `${isWinner ? '🏆' : '📊'} ${option}: ${count} vote${count !== 1 ? 's' : ''} (${percentage}%)\n`;
+				});
+
+				if (winners.length === 1) {
+					resultText += `\n🎉 Winner: ${winners[0]}!`;
+				} else {
+					resultText += `\n🤝 It's a tie between: ${winners.join(' and ')}!`;
+				}
+			}
+
+			// Post to feed as a system post
+			await addDoc(collection(db, 'posts'), {
+				authorUid: 'system',
+				familyId: poll.familyId,
+				kind: 'text',
+				text: resultText,
+				createdAt: serverTimestamp(),
+				likes: [],
+				comments: []
+			});
+
+			console.log(`[SmartEngine] Posted poll results to feed for poll ${pollId}`);
+		} catch (error) {
+			console.error('[SmartEngine] Failed to post poll results to feed:', error);
+		}
+	}
+
+	/**
+	 * Get current seasonal banners
+	 */
+	static getCurrentSeasonalBanners(): SeasonalBanner[] {
+		return getCurrentSeasonalBanners();
+	}
+
+	/**
+	 * Initialize daily analytics
+	 */
+	static async initializeDailyAnalytics(dateString: string, familyId: string): Promise<void> {
+		try {
+			const analyticsDoc = await getDoc(doc(db, 'analytics', dateString));
+			
+			if (!analyticsDoc.exists()) {
+				const analytics = AnalyticsEngine.initializeDailyAnalytics(dateString, familyId);
+				await setDoc(doc(db, 'analytics', dateString), analytics);
+				console.log(`[SmartEngine] Initialized daily analytics for ${dateString}`);
+			}
+		} catch (error) {
+			console.error('[SmartEngine] Failed to initialize daily analytics:', error);
+		}
+	}
+
+	/**
+	 * Track user analytics event
+	 */
+	static async trackUserAnalytics(userId: string, event: string, data?: any): Promise<void> {
+		try {
+			const dateString = new Date().toISOString().split('T')[0];
+			const analyticsRef = doc(db, 'analytics', dateString);
+			const analyticsDoc = await getDoc(analyticsRef);
+
+			if (analyticsDoc.exists()) {
+				const analytics = analyticsDoc.data() as DailyAnalytics;
+				
+				// Initialize user metrics if not exists
+				if (!analytics.userMetrics[userId]) {
+					analytics.userMetrics[userId] = AnalyticsEngine.initializeUserMetrics(userId);
+				}
+
+				// Update metrics based on event
+				switch (event) {
+					case 'nudge_generated':
+						analytics.metrics.nudgesGenerated++;
+						break;
+					case 'nudge_shown':
+						analytics.metrics.nudgesShown++;
+						analytics.userMetrics[userId].nudgeShown = true;
+						break;
+					case 'nudge_answered':
+						analytics.metrics.nudgesAnswered++;
+						analytics.userMetrics[userId].nudgeAnswered = true;
+						break;
+					case 'nudge_skipped':
+						analytics.metrics.nudgesSkipped++;
+						analytics.userMetrics[userId].nudgeSkipped = true;
+						break;
+					case 'feedback_completed':
+						analytics.metrics.feedbackCompleted++;
+						analytics.userMetrics[userId].feedbackCompleted = true;
+						break;
+					case 'poll_voted':
+						analytics.metrics.pollVotes++;
+						analytics.userMetrics[userId].pollVoted = true;
+						break;
+					case 'islamic_question_answered':
+						analytics.metrics.islamicQuestionsAnswered++;
+						analytics.userMetrics[userId].islamicQuestionsAnswered++;
+						if (data?.isCorrect) {
+							analytics.metrics.islamicQuestionsCorrect++;
+							analytics.userMetrics[userId].islamicQuestionsCorrect++;
+						}
+						break;
+					case 'badge_earned':
+						analytics.metrics.badgesEarned++;
+						analytics.userMetrics[userId].badgesEarned++;
+						break;
+				}
+
+				// Update user last seen
+				analytics.userMetrics[userId].lastSeen = new Date();
+				analytics.updatedAt = new Date();
+
+				// Recalculate rates
+				analytics.metrics.nudgeEngagementRate = 
+					analytics.metrics.nudgesShown > 0 
+						? analytics.metrics.nudgesAnswered / analytics.metrics.nudgesShown 
+						: 0;
+
+				analytics.metrics.feedbackCompletionRate = 
+					analytics.metrics.feedbackGenerated > 0 
+						? analytics.metrics.feedbackCompleted / analytics.metrics.feedbackGenerated 
+						: 0;
+
+				analytics.metrics.pollParticipationRate = 
+					analytics.metrics.pollsGenerated > 0 
+						? analytics.metrics.pollVotes / analytics.metrics.pollsGenerated 
+						: 0;
+
+				analytics.metrics.islamicAccuracyRate = 
+					analytics.metrics.islamicQuestionsAnswered > 0 
+						? analytics.metrics.islamicQuestionsCorrect / analytics.metrics.islamicQuestionsAnswered 
+						: 0;
+
+				// Update active users count
+				analytics.metrics.activeUsers = Object.keys(analytics.userMetrics).length;
+
+				await updateDoc(analyticsRef, analytics);
+			}
+		} catch (error) {
+			console.error('[SmartEngine] Failed to track user analytics:', error);
+		}
+	}
+
+	/**
+	 * Track family-level analytics event
+	 */
+	static async trackFamilyAnalytics(familyId: string, event: string): Promise<void> {
+		try {
+			const dateString = new Date().toISOString().split('T')[0];
+			const analyticsRef = doc(db, 'analytics', dateString);
+			const analyticsDoc = await getDoc(analyticsRef);
+
+			if (analyticsDoc.exists()) {
+				const analytics = analyticsDoc.data() as DailyAnalytics;
+
+				switch (event) {
+					case 'poll_generated':
+						analytics.metrics.pollsGenerated++;
+						break;
+					case 'feedback_generated':
+						analytics.metrics.feedbackGenerated++;
+						break;
+				}
+
+				analytics.updatedAt = new Date();
+				await updateDoc(analyticsRef, analytics);
+			}
+		} catch (error) {
+			console.error('[SmartEngine] Failed to track family analytics:', error);
+		}
+	}
+
+	/**
+	 * Enhanced nudge selection with seasonal and analytics optimization
+	 */
+	static selectNudgeTemplateEnhanced(userTraits: UserTraits, userId: string): NudgeTemplate | null {
+		// Get seasonal configuration
+		const seasonalConfig = getCurrentSeasonalConfig();
+		
+		// Combine regular and seasonal templates
+		let candidateTemplates = [...nudgeTemplates];
+		
+		if (seasonalConfig) {
+			// Add seasonal templates
+			const seasonalTemplates = seasonalNudgeTemplates.filter(t => 
+				t.season === seasonalConfig.season
+			);
+			candidateTemplates.push(...seasonalTemplates);
+
+			// Boost seasonal nudge types
+			candidateTemplates = candidateTemplates.map(template => {
+				if (seasonalConfig.nudgeBoosts.includes(template.id)) {
+					return { ...template, weight: template.weight * 1.5 };
+				}
+				return template;
+			});
+		}
+
+		// Apply basic 80/20 rule
+		const random = Math.random();
+		let filteredTemplates: NudgeTemplate[];
+
+		if (random < 0.8) {
+			// 80% positive/bonding/reflection/islamic/personalized
+			filteredTemplates = candidateTemplates.filter(
+				(t) => t.type !== 'constructive'
+			);
+		} else {
+			// 20% constructive
+			filteredTemplates = candidateTemplates.filter(
+				(t) => t.type === 'constructive'
+			);
+		}
+
+		// Filter by available traits
+		const availableTemplates = filteredTemplates.filter((template) => {
+			if (!template.requiredTraits) return true;
+			if (template.requiredTraits.includes('any')) {
+				return userTraits.traits.length > 0;
+			}
+			return template.requiredTraits.some((trait) => userTraits.traits.includes(trait));
+		});
+
+		if (availableTemplates.length === 0) {
+			console.warn('[SmartEngine] No available templates found, falling back to all candidates');
+			availableTemplates.push(...filteredTemplates);
+		}
+
+		// Weighted random selection
+		const totalWeight = availableTemplates.reduce((sum, t) => sum + t.weight, 0);
+		let randomWeight = Math.random() * totalWeight;
+
+		for (const template of availableTemplates) {
+			randomWeight -= template.weight;
+			if (randomWeight <= 0) {
+				return template;
+			}
+		}
+
+		return availableTemplates[0] || null;
 	}
 }

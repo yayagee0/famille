@@ -12,8 +12,11 @@
 		orderBy 
 	} from 'firebase/firestore';
 	import { db } from '$lib/firebase';
-	import { SmartEngine, type UserTraits, type IslamicProgress } from '$lib/smartEngine';
+	import { SmartEngine, type UserTraits, type IslamicProgress, type DailyPoll } from '$lib/smartEngine';
 	import { identityTraits, nudgeTemplates, badgeTemplates } from '$lib/data/smartEngine';
+	import { pollTemplates } from '$lib/data/polls';
+	import { getCurrentSeasonalBanners, getCurrentSeasonalConfig } from '$lib/data/seasonal';
+	import { type DailyAnalytics } from '$lib/data/analytics';
 	import { themeStore } from '$lib/themes/neo';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import PlayCard from '$lib/components/PlayCard.svelte';
@@ -27,7 +30,10 @@
 		RefreshCw, 
 		Save,
 		MessageSquare,
-		BarChart
+		BarChart,
+		Vote,
+		Calendar,
+		Zap
 	} from 'lucide-svelte';
 
 	// State
@@ -42,6 +48,12 @@
 	let islamicProgress = $state<IslamicProgress | null>(null);
 	let selectedTraits = $state<string[]>([]);
 	let customTraits = $state<string[]>([]);
+
+	// Analytics data
+	let todayAnalytics = $state<DailyAnalytics | null>(null);
+	let currentPoll = $state<DailyPoll | null>(null);
+	let seasonalBanners = $state<any[]>([]);
+	let seasonalConfig = $state<any>(null);
 
 	// Subscribe to theme changes
 	$effect(() => {
@@ -70,12 +82,56 @@
 			selectedTraits = [...traits.traits];
 			customTraits = [...(traits.customTraits || [])];
 
+			// Load analytics and seasonal data
+			await loadAnalyticsData();
+			loadSeasonalData();
+
 		} catch (error) {
 			console.error('[Settings] Failed to load user data:', error);
 		} finally {
 			loading = false;
 		}
 	});
+
+	// Load analytics data
+	async function loadAnalyticsData() {
+		try {
+			const dateString = new Date().toISOString().split('T')[0];
+			const analyticsDoc = await getDoc(doc(db, 'analytics', dateString));
+			
+			if (analyticsDoc.exists()) {
+				todayAnalytics = analyticsDoc.data() as DailyAnalytics;
+			}
+
+			// Load current poll
+			const familyId = process.env.VITE_FAMILY_ID || 'default_family';
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			const tomorrow = new Date(today);
+			tomorrow.setDate(tomorrow.getDate() + 1);
+
+			const pollQuery = query(
+				collection(db, 'daily_polls'),
+				where('familyId', '==', familyId),
+				where('createdAt', '>=', today),
+				where('createdAt', '<', tomorrow),
+				orderBy('createdAt', 'desc')
+			);
+
+			const pollSnapshot = await getDocs(pollQuery);
+			if (!pollSnapshot.empty) {
+				currentPoll = { id: pollSnapshot.docs[0].id, ...pollSnapshot.docs[0].data() } as DailyPoll;
+			}
+		} catch (error) {
+			console.error('[Settings] Failed to load analytics data:', error);
+		}
+	}
+
+	// Load seasonal data
+	function loadSeasonalData() {
+		seasonalBanners = getCurrentSeasonalBanners();
+		seasonalConfig = getCurrentSeasonalConfig();
+	}
 
 	// Save trait changes
 	async function saveTraits() {
@@ -131,6 +187,36 @@
 		}
 	}
 
+	// Generate test poll
+	async function generateTestPoll() {
+		try {
+			const familyId = process.env.VITE_FAMILY_ID || 'default_family';
+			const poll = await SmartEngine.generateDailyPoll(familyId);
+			if (poll) {
+				currentPoll = poll;
+				alert(`Test poll generated: ${poll.question}`);
+			} else {
+				alert('Poll already exists for today');
+			}
+		} catch (error) {
+			console.error('[Settings] Failed to generate test poll:', error);
+			alert('Failed to generate test poll');
+		}
+	}
+
+	// Generate all daily content
+	async function generateAllDailyContent() {
+		try {
+			const allowedEmails = process.env.VITE_ALLOWED_EMAILS?.split(',') || [];
+			await SmartEngine.generateDailyContentForAllUsers(allowedEmails);
+			alert('Daily content generated for all users!');
+			await loadAnalyticsData(); // Refresh analytics
+		} catch (error) {
+			console.error('[Settings] Failed to generate daily content:', error);
+			alert('Failed to generate daily content');
+		}
+	}
+
 	// Get tab styling
 	function getTabStyling(tabId: string) {
 		const isActive = activeTab === tabId;
@@ -167,6 +253,9 @@
 			{#each [
 				{ id: 'traits', label: 'Identity Traits', icon: User },
 				{ id: 'progress', label: 'Islamic Progress', icon: Star },
+				{ id: 'analytics', label: 'Analytics', icon: BarChart },
+				{ id: 'polls', label: 'Polls', icon: Vote },
+				{ id: 'seasonal', label: 'Seasonal', icon: Calendar },
 				{ id: 'testing', label: 'Testing', icon: RefreshCw }
 			] as tab}
 				{@const TabIcon = tab.icon}
@@ -330,6 +419,270 @@
 				</PlayCard>
 			{/if}
 
+		{:else if activeTab === 'analytics'}
+			{#if currentTheme === 'neo'}
+				<GlassCard header="📊 Smart Engine Analytics">
+					<div class="space-y-6">
+						<div class="flex items-center gap-2">
+							<BarChart class="h-5 w-5 text-cyan-400" />
+							<h2 class="text-xl font-bold text-slate-200">Today's Analytics</h2>
+						</div>
+
+						{#if todayAnalytics}
+							<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+								<div class="rounded-lg border border-lime-400/30 bg-lime-500/10 p-4">
+									<h3 class="font-medium text-lime-300">Nudges Generated</h3>
+									<p class="text-2xl font-bold text-slate-200">{todayAnalytics.metrics.nudgesGenerated}</p>
+								</div>
+								<div class="rounded-lg border border-cyan-400/30 bg-cyan-500/10 p-4">
+									<h3 class="font-medium text-cyan-300">Engagement Rate</h3>
+									<p class="text-2xl font-bold text-slate-200">{Math.round(todayAnalytics.metrics.nudgeEngagementRate * 100)}%</p>
+								</div>
+								<div class="rounded-lg border border-purple-400/30 bg-purple-500/10 p-4">
+									<h3 class="font-medium text-purple-300">Poll Votes</h3>
+									<p class="text-2xl font-bold text-slate-200">{todayAnalytics.metrics.pollVotes}</p>
+								</div>
+								<div class="rounded-lg border border-amber-400/30 bg-amber-500/10 p-4">
+									<h3 class="font-medium text-amber-300">Active Users</h3>
+									<p class="text-2xl font-bold text-slate-200">{todayAnalytics.metrics.activeUsers}</p>
+								</div>
+							</div>
+
+							<!-- Optimization Recommendations -->
+							{#if todayAnalytics.optimization}
+								<div class="rounded-lg border border-slate-600 bg-slate-800/50 p-4">
+									<h3 class="font-medium text-slate-300 mb-3">Smart Optimization</h3>
+									<div class="space-y-2">
+										<div>
+											<span class="text-sm text-slate-400">Recommended Nudge Types:</span>
+											<div class="flex flex-wrap gap-1 mt-1">
+												{#each todayAnalytics.optimization.recommendedNudgeTypes as type}
+													<span class="rounded-full bg-lime-500/20 px-2 py-1 text-xs text-lime-300">{type}</span>
+												{/each}
+											</div>
+										</div>
+										{#if todayAnalytics.optimization.lowEngagementUsers.length > 0}
+											<div>
+												<span class="text-sm text-amber-400">Low Engagement Users: {todayAnalytics.optimization.lowEngagementUsers.length}</span>
+											</div>
+										{/if}
+									</div>
+								</div>
+							{/if}
+						{:else}
+							<p class="text-slate-400">No analytics data available for today</p>
+						{/if}
+					</div>
+				</GlassCard>
+			{:else}
+				<PlayCard header="📊 Smart Engine Analytics">
+					{#if todayAnalytics}
+						<div class="space-y-6">
+							<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+								<div class="rounded-lg border border-green-200 bg-green-50 p-4">
+									<h3 class="font-medium text-green-700">Nudges Generated</h3>
+									<p class="text-2xl font-bold text-gray-800">{todayAnalytics.metrics.nudgesGenerated}</p>
+								</div>
+								<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
+									<h3 class="font-medium text-blue-700">Engagement Rate</h3>
+									<p class="text-2xl font-bold text-gray-800">{Math.round(todayAnalytics.metrics.nudgeEngagementRate * 100)}%</p>
+								</div>
+								<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
+									<h3 class="font-medium text-purple-700">Poll Votes</h3>
+									<p class="text-2xl font-bold text-gray-800">{todayAnalytics.metrics.pollVotes}</p>
+								</div>
+								<div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+									<h3 class="font-medium text-amber-700">Active Users</h3>
+									<p class="text-2xl font-bold text-gray-800">{todayAnalytics.metrics.activeUsers}</p>
+								</div>
+							</div>
+						</div>
+					{:else}
+						<p class="text-gray-600">No analytics data available for today</p>
+					{/if}
+				</PlayCard>
+			{/if}
+
+		{:else if activeTab === 'polls'}
+			{#if currentTheme === 'neo'}
+				<GlassCard header="📊 Daily Polls Management">
+					<div class="space-y-6">
+						<div class="flex items-center gap-2">
+							<Vote class="h-5 w-5 text-cyan-400" />
+							<h2 class="text-xl font-bold text-slate-200">Daily Polls</h2>
+						</div>
+
+						{#if currentPoll}
+							<div class="rounded-lg border border-cyan-400/30 bg-cyan-500/10 p-4">
+								<h3 class="font-medium text-cyan-300 mb-2">Today's Poll</h3>
+								<p class="text-slate-200 mb-3">{currentPoll.question}</p>
+								<div class="flex flex-wrap gap-2">
+									{#each currentPoll.options as option}
+										<span class="rounded-full bg-slate-700/50 px-3 py-1 text-sm text-slate-300">{option}</span>
+									{/each}
+								</div>
+								<p class="text-xs text-slate-400 mt-2">
+									Votes: {Object.keys(currentPoll.votes || {}).length} | 
+									Status: {currentPoll.isClosed ? 'Closed' : 'Open'}
+								</p>
+							</div>
+						{:else}
+							<p class="text-slate-400">No poll generated for today</p>
+						{/if}
+
+						<div class="space-y-3">
+							<h3 class="font-medium text-slate-300">Available Poll Templates ({pollTemplates.length})</h3>
+							<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+								{#each pollTemplates.slice(0, 6) as template}
+									<div class="rounded-lg border border-slate-600 bg-slate-800/50 p-3">
+										<p class="text-sm text-slate-200">{template.question}</p>
+										<span class="inline-block mt-1 rounded bg-slate-700 px-2 py-1 text-xs text-slate-400">{template.category}</span>
+									</div>
+								{/each}
+							</div>
+						</div>
+					</div>
+				</GlassCard>
+			{:else}
+				<PlayCard header="📊 Daily Polls Management">
+					<div class="space-y-6">
+						{#if currentPoll}
+							<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
+								<h3 class="font-medium text-blue-700 mb-2">Today's Poll</h3>
+								<p class="text-gray-800 mb-3">{currentPoll.question}</p>
+								<div class="flex flex-wrap gap-2">
+									{#each currentPoll.options as option}
+										<span class="rounded-full bg-gray-200 px-3 py-1 text-sm text-gray-700">{option}</span>
+									{/each}
+								</div>
+								<p class="text-xs text-gray-600 mt-2">
+									Votes: {Object.keys(currentPoll.votes || {}).length} | 
+									Status: {currentPoll.isClosed ? 'Closed' : 'Open'}
+								</p>
+							</div>
+						{:else}
+							<p class="text-gray-600">No poll generated for today</p>
+						{/if}
+
+						<div class="space-y-3">
+							<h3 class="font-medium text-gray-700">Available Poll Templates ({pollTemplates.length})</h3>
+							<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+								{#each pollTemplates.slice(0, 6) as template}
+									<div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+										<p class="text-sm text-gray-800">{template.question}</p>
+										<span class="inline-block mt-1 rounded bg-gray-200 px-2 py-1 text-xs text-gray-600">{template.category}</span>
+									</div>
+								{/each}
+							</div>
+						</div>
+					</div>
+				</PlayCard>
+			{/if}
+
+		{:else if activeTab === 'seasonal'}
+			{#if currentTheme === 'neo'}
+				<GlassCard header="📅 Seasonal Content">
+					<div class="space-y-6">
+						<div class="flex items-center gap-2">
+							<Calendar class="h-5 w-5 text-purple-400" />
+							<h2 class="text-xl font-bold text-slate-200">Seasonal Content</h2>
+						</div>
+
+						{#if seasonalBanners.length > 0}
+							<div class="space-y-3">
+								<h3 class="font-medium text-slate-300">Active Seasonal Banners</h3>
+								{#each seasonalBanners as banner}
+									<div class="rounded-lg border border-purple-400/30 bg-purple-500/10 p-4">
+										<div class="flex items-center gap-2 mb-2">
+											<span class="text-xl">{banner.emoji}</span>
+											<h4 class="font-medium text-purple-300">{banner.title}</h4>
+											<span class="rounded bg-slate-700 px-2 py-1 text-xs text-slate-400">{banner.category}</span>
+										</div>
+										<p class="text-slate-200 text-sm">{banner.message}</p>
+									</div>
+								{/each}
+							</div>
+						{:else}
+							<p class="text-slate-400">No active seasonal banners</p>
+						{/if}
+
+						{#if seasonalConfig}
+							<div class="rounded-lg border border-slate-600 bg-slate-800/50 p-4">
+								<h3 class="font-medium text-slate-300 mb-3">Current Season: {seasonalConfig.season}</h3>
+								<div class="space-y-2">
+									<div>
+										<span class="text-sm text-slate-400">Boosted Nudge Types:</span>
+										<div class="flex flex-wrap gap-1 mt-1">
+											{#each seasonalConfig.nudgeBoosts as boost}
+												<span class="rounded-full bg-purple-500/20 px-2 py-1 text-xs text-purple-300">{boost}</span>
+											{/each}
+										</div>
+									</div>
+									<div>
+										<span class="text-sm text-slate-400">Special Badges Available:</span>
+										<div class="flex flex-wrap gap-1 mt-1">
+											{#each seasonalConfig.specialBadges as badge}
+												<span class="rounded-full bg-amber-500/20 px-2 py-1 text-xs text-amber-300">{badge}</span>
+											{/each}
+										</div>
+									</div>
+								</div>
+							</div>
+						{:else}
+							<p class="text-slate-400">No seasonal configuration active</p>
+						{/if}
+					</div>
+				</GlassCard>
+			{:else}
+				<PlayCard header="📅 Seasonal Content">
+					<div class="space-y-6">
+						{#if seasonalBanners.length > 0}
+							<div class="space-y-3">
+								<h3 class="font-medium text-gray-700">Active Seasonal Banners</h3>
+								{#each seasonalBanners as banner}
+									<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
+										<div class="flex items-center gap-2 mb-2">
+											<span class="text-xl">{banner.emoji}</span>
+											<h4 class="font-medium text-purple-700">{banner.title}</h4>
+											<span class="rounded bg-gray-200 px-2 py-1 text-xs text-gray-600">{banner.category}</span>
+										</div>
+										<p class="text-gray-800 text-sm">{banner.message}</p>
+									</div>
+								{/each}
+							</div>
+						{:else}
+							<p class="text-gray-600">No active seasonal banners</p>
+						{/if}
+
+						{#if seasonalConfig}
+							<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+								<h3 class="font-medium text-gray-700 mb-3">Current Season: {seasonalConfig.season}</h3>
+								<div class="space-y-2">
+									<div>
+										<span class="text-sm text-gray-600">Boosted Nudge Types:</span>
+										<div class="flex flex-wrap gap-1 mt-1">
+											{#each seasonalConfig.nudgeBoosts as boost}
+												<span class="rounded-full bg-purple-100 px-2 py-1 text-xs text-purple-700">{boost}</span>
+											{/each}
+										</div>
+									</div>
+									<div>
+										<span class="text-sm text-gray-600">Special Badges Available:</span>
+										<div class="flex flex-wrap gap-1 mt-1">
+											{#each seasonalConfig.specialBadges as badge}
+												<span class="rounded-full bg-amber-100 px-2 py-1 text-xs text-amber-700">{badge}</span>
+											{/each}
+										</div>
+									</div>
+								</div>
+							</div>
+						{:else}
+							<p class="text-gray-600">No seasonal configuration active</p>
+						{/if}
+					</div>
+				</PlayCard>
+			{/if}
+
 		{:else if activeTab === 'testing'}
 			{#if currentTheme === 'neo'}
 				<GlassCard header="🧪 Testing & Debug">
@@ -355,6 +708,25 @@
 								<h3 class="font-medium text-cyan-400">Create Test Feedback</h3>
 								<p class="text-sm text-slate-400">Generate a weekly feedback card</p>
 							</button>
+
+							<button
+								onclick={generateTestPoll}
+								class="w-full rounded-lg border border-purple-400/50 bg-purple-500/20 p-4 text-left hover:bg-purple-500/30"
+							>
+								<h3 class="font-medium text-purple-400">Generate Test Poll</h3>
+								<p class="text-sm text-slate-400">Create a daily poll for testing</p>
+							</button>
+
+							<button
+								onclick={generateAllDailyContent}
+								class="w-full rounded-lg border border-amber-400/50 bg-amber-500/20 p-4 text-left hover:bg-amber-500/30"
+							>
+								<div class="flex items-center gap-2">
+									<Zap class="h-4 w-4 text-amber-400" />
+									<h3 class="font-medium text-amber-400">Generate All Daily Content</h3>
+								</div>
+								<p class="text-sm text-slate-400">Run complete daily content generation for all users</p>
+							</button>
 						</div>
 					</div>
 				</GlassCard>
@@ -375,6 +747,25 @@
 						>
 							<h3 class="font-medium text-blue-700">Create Test Feedback</h3>
 							<p class="text-sm text-gray-600">Generate a weekly feedback card</p>
+						</button>
+
+						<button
+							onclick={generateTestPoll}
+							class="w-full rounded-lg border border-purple-300 bg-purple-50 p-4 text-left hover:bg-purple-100"
+						>
+							<h3 class="font-medium text-purple-700">Generate Test Poll</h3>
+							<p class="text-sm text-gray-600">Create a daily poll for testing</p>
+						</button>
+
+						<button
+							onclick={generateAllDailyContent}
+							class="w-full rounded-lg border border-amber-300 bg-amber-50 p-4 text-left hover:bg-amber-100"
+						>
+							<div class="flex items-center gap-2">
+								<Zap class="h-4 w-4 text-amber-700" />
+								<h3 class="font-medium text-amber-700">Generate All Daily Content</h3>
+							</div>
+							<p class="text-sm text-gray-600">Run complete daily content generation for all users</p>
 						</button>
 					</div>
 				</PlayCard>
