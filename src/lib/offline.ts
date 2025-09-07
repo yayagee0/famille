@@ -1,9 +1,24 @@
 import { browser } from '$app/environment';
 import { writable } from 'svelte/store';
+import { collection, addDoc, serverTimestamp, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { db } from './firebase';
+import { FAMILY_ID } from './config';
 
 // Online/offline state management
 export const isOnline = writable(browser ? navigator.onLine : true);
 export const hasOfflineData = writable(false);
+export const syncStatus = writable<'idle' | 'syncing' | 'synced' | 'error'>('idle');
+
+// Offline action queue
+const OFFLINE_QUEUE_KEY = 'famille_offline_queue';
+
+interface OfflineAction {
+	id: string;
+	type: 'post' | 'like' | 'comment';
+	timestamp: number;
+	data: any;
+	retries: number;
+}
 
 if (browser) {
 	// Listen for online/offline events
@@ -164,6 +179,128 @@ export function clearAllCache(): void {
 }
 
 /**
+ * Add an action to the offline queue
+ */
+export function queueOfflineAction(type: OfflineAction['type'], data: any): string {
+	if (!browser) return '';
+
+	const action: OfflineAction = {
+		id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+		type,
+		timestamp: Date.now(),
+		data,
+		retries: 0
+	};
+
+	try {
+		const queue = getOfflineQueue();
+		queue.push(action);
+		localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+		hasOfflineData.set(queue.length > 0);
+		console.log(`[Offline Manager] Queued ${type} action:`, action.id);
+		return action.id;
+	} catch (error) {
+		console.error('[Offline Manager] Failed to queue action:', error);
+		return '';
+	}
+}
+
+/**
+ * Get the current offline queue
+ */
+function getOfflineQueue(): OfflineAction[] {
+	if (!browser) return [];
+
+	try {
+		const queue = localStorage.getItem(OFFLINE_QUEUE_KEY);
+		return queue ? JSON.parse(queue) : [];
+	} catch (error) {
+		console.error('[Offline Manager] Failed to get offline queue:', error);
+		return [];
+	}
+}
+
+/**
+ * Clear the offline queue
+ */
+function clearOfflineQueue(): void {
+	if (!browser) return;
+
+	localStorage.removeItem(OFFLINE_QUEUE_KEY);
+	hasOfflineData.set(false);
+}
+
+/**
+ * Process offline actions when back online
+ */
+async function processOfflineQueue(): Promise<void> {
+	const queue = getOfflineQueue();
+	if (queue.length === 0) return;
+
+	console.log(`[Offline Manager] Processing ${queue.length} offline actions...`);
+	
+	const successfulActions: string[] = [];
+	
+	for (const action of queue) {
+		try {
+			await processOfflineAction(action);
+			successfulActions.push(action.id);
+			console.log(`[Offline Manager] Successfully processed action: ${action.id}`);
+		} catch (error) {
+			console.error(`[Offline Manager] Failed to process action ${action.id}:`, error);
+			
+			// Increment retry count
+			action.retries += 1;
+			
+			// Remove action if too many retries (avoid infinite loops)
+			if (action.retries >= 3) {
+				console.warn(`[Offline Manager] Removing action ${action.id} after ${action.retries} retries`);
+				successfulActions.push(action.id);
+			}
+		}
+	}
+	
+	// Remove successfully processed actions from queue
+	if (successfulActions.length > 0) {
+		const remainingQueue = queue.filter(action => !successfulActions.includes(action.id));
+		localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(remainingQueue));
+		hasOfflineData.set(remainingQueue.length > 0);
+	}
+}
+
+/**
+ * Process a single offline action
+ */
+async function processOfflineAction(action: OfflineAction): Promise<void> {
+	switch (action.type) {
+		case 'post':
+			await addDoc(collection(db, 'posts'), {
+				...action.data,
+				createdAt: serverTimestamp(),
+				familyId: FAMILY_ID
+			});
+			break;
+			
+		case 'like':
+			const likeRef = doc(db, 'posts', action.data.postId);
+			if (action.data.isLiked) {
+				await updateDoc(likeRef, { likes: arrayRemove(action.data.userId) });
+			} else {
+				await updateDoc(likeRef, { likes: arrayUnion(action.data.userId) });
+			}
+			break;
+			
+		case 'comment':
+			const commentRef = doc(db, 'posts', action.data.postId);
+			await updateDoc(commentRef, { comments: arrayUnion(action.data.comment) });
+			break;
+			
+		default:
+			throw new Error(`Unknown action type: ${action.type}`);
+	}
+}
+
+/**
  * Get cache size and statistics
  */
 export function getCacheStats(): { size: number; items: number; keys: string[] } {
@@ -194,19 +331,66 @@ export function getCacheStats(): { size: number; items: number; keys: string[] }
  * This function should be called when the app detects it's back online
  */
 async function syncOfflineData(): Promise<void> {
+	if (!browser) return;
+	
+	syncStatus.set('syncing');
 	console.log('[Offline Manager] Starting offline data sync...');
 
-	// This is where you would implement conflict resolution
-	// For now, we'll just invalidate cache to force fresh data fetch
-	// In a more sophisticated implementation, you would:
-	// 1. Compare local cached data with server data
-	// 2. Resolve conflicts (server wins according to requirements)
-	// 3. Upload any pending local changes
+	try {
+		// Process queued offline actions first
+		await processOfflineQueue();
+		
+		// Clear cached data to force fresh fetch from server (network-first strategy)
+		clearAllCache();
+		
+		syncStatus.set('synced');
+		console.log('[Offline Manager] Offline data sync completed successfully');
+		
+		// Reset sync status after a delay
+		setTimeout(() => {
+			syncStatus.set('idle');
+		}, 3000);
+		
+	} catch (error) {
+		console.error('[Offline Manager] Offline data sync failed:', error);
+		syncStatus.set('error');
+		
+		// Reset sync status after a delay
+		setTimeout(() => {
+			syncStatus.set('idle');
+		}, 5000);
+	}
+}
 
-	// For this implementation, we'll clear cache to force fresh data fetch
+/**
+ * Clear all caches including service worker caches
+ */
+export function clearAllCachesAndStorage(): void {
+	if (!browser) return;
+
+	// Clear localStorage caches
 	clearAllCache();
-
-	console.log('[Offline Manager] Offline data sync completed');
+	
+	// Clear offline queue
+	clearOfflineQueue();
+	
+	// Clear IndexedDB (Firestore persistence)
+	if ('indexedDB' in window) {
+		try {
+			// Clear Firestore IndexedDB data
+			indexedDB.deleteDatabase('firestore');
+			console.log('[Offline Manager] Cleared Firestore IndexedDB');
+		} catch (error) {
+			console.warn('[Offline Manager] Failed to clear IndexedDB:', error);
+		}
+	}
+	
+	// Message service worker to clear caches
+	if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+		navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHES' });
+	}
+	
+	console.log('[Offline Manager] Cleared all caches and storage');
 }
 
 /**

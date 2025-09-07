@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { Image, Video, Youtube, BarChart3, Send, X } from 'lucide-svelte';
+	import { Image, Video, Youtube, BarChart3, Send, X, WifiOff } from 'lucide-svelte';
 	import { validatePost } from '$lib/schemas';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 	import { storage, db } from '$lib/firebase';
@@ -10,6 +10,7 @@
 	import GlassCard from '$lib/themes/neo/components/GlassCard.svelte';
 	import GlassChip from '$lib/themes/neo/components/GlassChip.svelte';
 	import { themeStore } from '$lib/themes/neo';
+	import { isOnline, queueOfflineAction } from '$lib/offline';
 
 	const dispatch = createEventDispatcher();
 
@@ -26,6 +27,7 @@
 	let previewUrls: string[] = $state([]);
 	let uploadProgress = $state('');
 	let currentTheme = $state('default');
+	let showOfflineWarning = $state(false);
 
 	// Subscribe to theme changes
 	$effect(() => {
@@ -36,6 +38,15 @@
 	});
 
 	function setPostType(type: typeof postType) {
+		// Check if trying to set media type while offline
+		if (!$isOnline && (type === 'photo' || type === 'video')) {
+			showOfflineWarning = true;
+			setTimeout(() => {
+				showOfflineWarning = false;
+			}, 4000);
+			return;
+		}
+
 		postType = type;
 		// Reset form when changing type
 		selectedFiles = null;
@@ -109,6 +120,15 @@
 			return; // No unreachable code after this - validation exit point
 		}
 
+		// Check if trying to upload media while offline
+		if (!$isOnline && (postType === 'photo' || postType === 'video')) {
+			showOfflineWarning = true;
+			setTimeout(() => {
+				showOfflineWarning = false;
+			}, 4000);
+			return;
+		}
+
 		// Main submission logic starts here - no unreachable code issue
 		isUploading = true;
 		uploadProgress = '';
@@ -117,8 +137,8 @@
 			let imagePaths: string[] = [];
 			let videoPaths: string[] = [];
 
-			// Handle file uploads FIRST before creating Firestore document
-			if (selectedFiles && (postType === 'photo' || postType === 'video')) {
+			// Handle file uploads FIRST before creating Firestore document (only when online)
+			if (selectedFiles && (postType === 'photo' || postType === 'video') && $isOnline) {
 				uploadProgress = 'Uploading files...';
 
 				for (const file of Array.from(selectedFiles)) {
@@ -143,7 +163,7 @@
 			}
 
 			// Now create Firestore document with uploaded URLs
-			uploadProgress = 'Creating post...';
+			uploadProgress = $isOnline ? 'Creating post...' : 'Queueing post for sync...';
 
 			// Create post object following unified Firestore schema
 			const postData = {
@@ -190,15 +210,25 @@
 				throw new Error('Invalid post data');
 			}
 
-			// Replace client timestamp with server timestamp for Firestore
-			const firestorePostData = {
-				...postData,
-				createdAt: serverTimestamp()
-			};
+			if ($isOnline) {
+				// Replace client timestamp with server timestamp for Firestore
+				const firestorePostData = {
+					...postData,
+					createdAt: serverTimestamp()
+				};
 
-			// Add to Firestore
-			await addDoc(collection(db, 'posts'), firestorePostData);
-			uploadProgress = 'Post created successfully!';
+				// Add to Firestore
+				await addDoc(collection(db, 'posts'), firestorePostData);
+				uploadProgress = 'Post created successfully!';
+			} else {
+				// Queue for offline sync (only text-based posts)
+				if (postType === 'text' || postType === 'youtube' || postType === 'poll') {
+					queueOfflineAction('post', postData);
+					uploadProgress = 'Post queued for sync when online!';
+				} else {
+					throw new Error('Media uploads require internet connection');
+				}
+			}
 
 			// Dispatch success event to parent
 			dispatch('post-created');
@@ -254,16 +284,28 @@
 					onclick={() => setPostType('photo')}
 					variant={postType === 'photo' ? 'accent' : 'default'}
 					size="small"
+					disabled={!$isOnline}
+					class={!$isOnline ? 'opacity-50 cursor-not-allowed' : ''}
 				>
-					<Image class="mr-1 h-4 w-4" />
+					{#if !$isOnline}
+						<WifiOff class="mr-1 h-4 w-4" />
+					{:else}
+						<Image class="mr-1 h-4 w-4" />
+					{/if}
 					Photo
 				</GlassChip>
 				<GlassChip
 					onclick={() => setPostType('video')}
 					variant={postType === 'video' ? 'accent' : 'default'}
 					size="small"
+					disabled={!$isOnline}
+					class={!$isOnline ? 'opacity-50 cursor-not-allowed' : ''}
 				>
-					<Video class="mr-1 h-4 w-4" />
+					{#if !$isOnline}
+						<WifiOff class="mr-1 h-4 w-4" />
+					{:else}
+						<Video class="mr-1 h-4 w-4" />
+					{/if}
 					Video
 				</GlassChip>
 				<GlassChip
@@ -283,6 +325,23 @@
 					Poll
 				</GlassChip>
 			</div>
+
+			<!-- Offline warning for media uploads -->
+			{#if showOfflineWarning}
+				<div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+					<div class="flex">
+						<div class="flex-shrink-0">
+							<WifiOff class="h-5 w-5 text-amber-400" />
+						</div>
+						<div class="ml-3">
+							<h3 class="text-sm font-medium text-amber-800">Internet needed for media uploads</h3>
+							<p class="mt-1 text-sm text-amber-700">
+								📡 Photo and video uploads require an internet connection. Try again once you're back online.
+							</p>
+						</div>
+					</div>
+				</div>
+			{/if}
 
 			<!-- Content textarea -->
 			{#if postType !== 'poll'}

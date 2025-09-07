@@ -23,7 +23,7 @@
 	import { Heart, MessageCircle, Trash2, WifiOff } from 'lucide-svelte';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
-	import { isOnline, cachePosts, getCachedPosts } from '$lib/offline';
+	import { isOnline, cachePosts, getCachedPosts, queueOfflineAction } from '$lib/offline';
 	dayjs.extend(relativeTime);
 
 	let user = $state(auth.currentUser);
@@ -179,15 +179,45 @@
 	// ❤️ Likes
 	async function toggleLike(postId: string, isLiked: boolean) {
 		if (!user?.uid) return;
-		try {
-			const postRef = doc(db, 'posts', postId);
+		
+		// Optimistic UI update
+		const postIndex = posts.findIndex(p => p.id === postId);
+		if (postIndex !== -1) {
 			if (isLiked) {
-				await updateDoc(postRef, { likes: arrayRemove(user.uid) });
+				posts[postIndex].likes = posts[postIndex].likes.filter((uid: string) => uid !== user.uid);
 			} else {
-				await updateDoc(postRef, { likes: arrayUnion(user.uid) });
+				posts[postIndex].likes = [...posts[postIndex].likes, user.uid];
+			}
+		}
+		
+		try {
+			if ($isOnline) {
+				// Online: Update Firestore directly
+				const postRef = doc(db, 'posts', postId);
+				if (isLiked) {
+					await updateDoc(postRef, { likes: arrayRemove(user.uid) });
+				} else {
+					await updateDoc(postRef, { likes: arrayUnion(user.uid) });
+				}
+			} else {
+				// Offline: Queue for sync when online
+				queueOfflineAction('like', {
+					postId,
+					userId: user.uid,
+					isLiked
+				});
+				console.log('[Feed] Like queued for offline sync');
 			}
 		} catch (err) {
 			console.error('Like toggle failed:', err);
+			// Revert optimistic update on error
+			if (postIndex !== -1) {
+				if (isLiked) {
+					posts[postIndex].likes = [...posts[postIndex].likes, user.uid];
+				} else {
+					posts[postIndex].likes = posts[postIndex].likes.filter((uid: string) => uid !== user.uid);
+				}
+			}
 		}
 	}
 
@@ -294,23 +324,43 @@
 			return;
 		}
 
+		const newComment = {
+			author: getDisplayName(user?.email, { nickname: undefined }),
+			text: sanitizedText, // Use sanitized text
+			createdAt: new Date()
+		};
+
+		// Optimistic UI update
+		const postIndex = posts.findIndex(p => p.id === postId);
+		if (postIndex !== -1) {
+			posts[postIndex].comments = [...(posts[postIndex].comments || []), newComment];
+		}
+
+		// Clear the input immediately for better UX
+		commentInputs.set(postId, '');
+		commentInputs = new Map(commentInputs); // Trigger reactivity
+
 		try {
-			const newComment = {
-				author: getDisplayName(user?.email, { nickname: undefined }),
-				text: sanitizedText, // Use sanitized text
-				createdAt: new Date()
-			};
-
-			const postRef = doc(db, 'posts', postId);
-			await updateDoc(postRef, {
-				comments: arrayUnion(newComment)
-			});
-
-			// Clear the input
-			commentInputs.set(postId, '');
-			commentInputs = new Map(commentInputs); // Trigger reactivity
+			if ($isOnline) {
+				// Online: Update Firestore directly
+				const postRef = doc(db, 'posts', postId);
+				await updateDoc(postRef, {
+					comments: arrayUnion(newComment)
+				});
+			} else {
+				// Offline: Queue for sync when online
+				queueOfflineAction('comment', {
+					postId,
+					comment: newComment
+				});
+				console.log('[Feed] Comment queued for offline sync');
+			}
 		} catch (err) {
 			console.error('Add comment failed:', err);
+			// Revert optimistic update on error
+			if (postIndex !== -1) {
+				posts[postIndex].comments = posts[postIndex].comments.filter(c => c !== newComment);
+			}
 		}
 	}
 
