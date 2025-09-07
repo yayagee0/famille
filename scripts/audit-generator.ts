@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 /**
  * Family Hub – Audit Generator
- * Generates appstatus.md (A–AE sections) with comprehensive real data.
+ * Generates APP_STATUS_REVIEW.md (A–AE sections) with comprehensive real data.
  * Includes Islamic module detection, evidence collection, and cost optimization.
  */
 
@@ -954,5 +954,5 @@ ${m.costOptimizations.map((opt, index) => `${index + 1}. ${opt}`).join('\n')}
 
 const metrics = gatherMetrics();
 const md = generateMarkdown(metrics);
-writeFileSync('appstatus.md', md);
-console.log('✅ appstatus.md generated successfully');
+writeFileSync('APP_STATUS_REVIEW.md', md);
+console.log('✅ APP_STATUS_REVIEW.md generated successfully');
