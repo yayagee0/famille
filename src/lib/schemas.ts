@@ -237,11 +237,31 @@ export function validateUserAnswer(answer: unknown) {
 	}
 }
 
+export function validateNotification(notification: unknown) {
+	try {
+		return { success: true as const, data: notificationSchema.parse(notification) };
+	} catch (error) {
+		return { success: false as const, error };
+	}
+}
+
+// Notification schema
+export const notificationSchema = z.object({
+	id: z.string().min(1, 'Notification ID is required'),
+	type: z.enum(['newPost', 'comment', 'birthday', 'system']),
+	title: z.string().min(1, 'Notification title is required'),
+	body: z.string().min(1, 'Notification body is required'),
+	createdAt: z.date(),
+	read: z.boolean().default(false),
+	link: z.string().optional() // optional deep-link
+});
+
 // Export inferred types
 export type Post = z.infer<typeof postSchema>;
 export type User = z.infer<typeof userSchema>;
 export type Question = z.infer<typeof questionSchema>;
 export type UserAnswer = z.infer<typeof userAnswerSchema>;
+export type Notification = z.infer<typeof notificationSchema>;
 
 // Additional UI types for enriched data
 export interface EnrichedPost extends Omit<Post, 'createdAt'> {

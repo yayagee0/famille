@@ -4,7 +4,7 @@
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { auth, getAllUserProfiles } from '$lib/firebase';
+	import { auth, getAllUserProfiles, initializeFCMForUser } from '$lib/firebase';
 	import { onAuthStateChanged, type User } from 'firebase/auth';
 	import { validateFamilyMember } from '$lib/allowlist';
 	import { getAllowedEmails } from '$lib/users';
@@ -42,8 +42,11 @@
 							profiles,
 							allowedEmails
 						});
+
+						// Initialize FCM for push notifications
+						await initializeFCMForUser(firebaseUser.uid);
 					} catch (error) {
-						console.error('Failed to initialize widget context:', error);
+						console.error('Failed to initialize widget context or FCM:', error);
 					}
 
 					// Redirect to dashboard if on login page

@@ -6,6 +6,7 @@
 	import { Home, User, Rss, LogOut, Menu, X, Gamepad2, Moon } from 'lucide-svelte';
 	import { getDisplayName } from '$lib/getDisplayName';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import NotificationBell from '$lib/NotificationBell.svelte';
 	import GlassNav from '$lib/themes/neo/components/GlassNav.svelte';
 	import { themeStore } from '$lib/themes/neo';
 
@@ -116,6 +117,11 @@
 							<ThemeToggle variant="minimal" />
 						</div>
 
+						<!-- Notification Bell -->
+						<div class="px-2">
+							<NotificationBell {user} />
+						</div>
+
 						{#if user}
 							<div
 								class="flex items-center gap-x-4 px-2 py-3 text-sm leading-6 font-semibold text-gray-900"
@@ -179,6 +185,9 @@
 
 	<!-- Theme toggle in mobile header -->
 	<ThemeToggle variant="minimal" />
+
+	<!-- Notification Bell in mobile header -->
+	<NotificationBell {user} />
 
 	{#if user && user.photoURL}
 		<img

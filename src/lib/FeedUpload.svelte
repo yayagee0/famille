@@ -3,7 +3,7 @@
 	import { Image, Video, Youtube, BarChart3, Send, X, WifiOff } from 'lucide-svelte';
 	import { validatePost } from '$lib/schemas';
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-	import { storage, db } from '$lib/firebase';
+	import { storage, db, notifyFamilyOfNewPost } from '$lib/firebase';
 	import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 	import { FAMILY_ID } from '$lib/config';
 	import { getDisplayName } from '$lib/getDisplayName';
@@ -218,8 +218,21 @@
 				};
 
 				// Add to Firestore
-				await addDoc(collection(db, 'posts'), firestorePostData);
+				const docRef = await addDoc(collection(db, 'posts'), firestorePostData);
 				uploadProgress = 'Post created successfully!';
+
+				// Notify family members of new post
+				try {
+					await notifyFamilyOfNewPost(
+						user.uid,
+						getDisplayName(user.email, { nickname: user.nickname }),
+						postType,
+						docRef.id
+					);
+				} catch (error) {
+					console.error('Error sending notifications:', error);
+					// Don't fail the post creation if notifications fail
+				}
 			} else {
 				// Queue for offline sync (only text-based posts)
 				if (postType === 'text' || postType === 'youtube' || postType === 'poll') {

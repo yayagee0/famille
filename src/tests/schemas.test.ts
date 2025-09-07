@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateEnv, validateImageFile, validateVideoFile, validatePost } from '../lib/schemas';
+import { validateEnv, validateImageFile, validateVideoFile, validatePost, validateNotification } from '../lib/schemas';
 
 describe('Schema Validation', () => {
 	describe('Environment Variables', () => {
@@ -179,6 +179,84 @@ describe('Schema Validation', () => {
 
 			const result = validatePost(youtubePost);
 			expect(result.success).toBe(false);
+		});
+	});
+
+	describe('Notification Validation', () => {
+		it('should validate a valid notification', () => {
+			const validNotification = {
+				id: 'notification-123',
+				type: 'newPost' as const,
+				title: 'New Family Post',
+				body: 'John shared a new photo',
+				createdAt: new Date(),
+				read: false,
+				link: '/feed#post-123'
+			};
+
+			const result = validateNotification(validNotification);
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.data.type).toBe('newPost');
+				expect(result.data.read).toBe(false);
+			}
+		});
+
+		it('should validate notification without optional link', () => {
+			const notification = {
+				id: 'notification-456',
+				type: 'birthday' as const,
+				title: 'Happy Birthday!',
+				body: "It's Sarah's birthday today!",
+				createdAt: new Date(),
+				read: true
+			};
+
+			const result = validateNotification(notification);
+			expect(result.success).toBe(true);
+		});
+
+		it('should reject notification with invalid type', () => {
+			const invalidNotification = {
+				id: 'notification-789',
+				type: 'invalidType' as any,
+				title: 'Test',
+				body: 'Test body',
+				createdAt: new Date(),
+				read: false
+			};
+
+			const result = validateNotification(invalidNotification);
+			expect(result.success).toBe(false);
+		});
+
+		it('should reject notification with missing required fields', () => {
+			const incompleteNotification = {
+				id: 'notification-999',
+				type: 'comment' as const,
+				// missing title and body
+				createdAt: new Date(),
+				read: false
+			};
+
+			const result = validateNotification(incompleteNotification);
+			expect(result.success).toBe(false);
+		});
+
+		it('should default read to false if not provided', () => {
+			const notification = {
+				id: 'notification-default',
+				type: 'system' as const,
+				title: 'System Update',
+				body: 'App updated successfully',
+				createdAt: new Date()
+			};
+
+			const result = validateNotification(notification);
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.data.read).toBe(false);
+			}
 		});
 	});
 });
