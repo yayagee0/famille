@@ -68,6 +68,7 @@ import {
 	query,
 	where,
 	orderBy,
+	limit,
 	getDocs,
 	doc,
 	getDoc,
