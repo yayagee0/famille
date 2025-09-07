@@ -133,10 +133,6 @@
 			console.error('Failed to save question progress:', error);
 		}
 	}
-		} catch (error) {
-			console.error('Failed to save progress:', error);
-		}
-	}
 
 	// Reset all progress
 	async function resetProgress() {
