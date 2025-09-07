@@ -4,6 +4,7 @@
 	import QuestionCard from '$lib/components/QuestionCard.svelte';
 	import KnowledgeTree from '$lib/components/KnowledgeTree.svelte';
 	import GlassCard from '$lib/themes/neo/components/GlassCard.svelte';
+	import GlassChip from '$lib/themes/neo/components/GlassChip.svelte';
 	import { themeStore } from '$lib/themes/neo';
 	import { auth, db, getUserProfile } from '$lib/firebase';
 	import { getDisplayName } from '$lib/getDisplayName';
@@ -284,16 +285,37 @@
 			<div class="space-y-4">
 				<div class="flex items-center justify-between">
 					<h2 class="text-xl font-semibold {currentTheme === 'neo' ? 'neo-gradient-text' : 'text-gray-800'}">What I Know Now</h2>
-					<button
-						onclick={resetProgress}
-						class="rounded-lg px-3 py-1 text-sm font-medium transition-colors {currentTheme === 'neo' 
-							? 'neo-glass hover:bg-white/10' 
-							: 'bg-red-100 text-red-700 hover:bg-red-200'}"
-						style="{currentTheme === 'neo' ? 'border-color: var(--neo-magenta); color: var(--neo-magenta);' : ''}"
-					>
-						Reset Progress
-					</button>
+					{#if currentTheme === 'neo'}
+						<GlassChip
+							onclick={resetProgress}
+							size="medium"
+							variant="accent"
+						>
+							<span style="color: var(--neo-magenta);">Reset Progress</span>
+						</GlassChip>
+					{:else}
+						<button
+							onclick={resetProgress}
+							class="rounded-lg px-3 py-1 text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+						>
+							Reset Progress
+						</button>
+					{/if}
 				</div>
+
+				<!-- Category summary with GlassChip badges -->
+				{#if currentTheme === 'neo' && Object.keys(groupedAnsweredQuestions()).length > 0}
+					<div class="flex flex-wrap gap-2 mb-4">
+						{#each Object.entries(groupedAnsweredQuestions()) as [category, questions]}
+							<GlassChip size="small" variant="accent">
+								<span>{categoryIcons[category] || '📚'}</span>
+								<span>{category}</span>
+								<span style="color: var(--neo-cyan);">({questions.length})</span>
+							</GlassChip>
+						{/each}
+					</div>
+				{/if}
+
 				{#if currentTheme === 'neo'}
 					<GlassCard header="🌟 Knowledge Tree" glow={true}>
 						<KnowledgeTree

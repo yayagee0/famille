@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { ChevronDown, ChevronRight } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
+	import GlassChip from '$lib/themes/neo/components/GlassChip.svelte';
+	import { themeStore } from '$lib/themes/neo';
 
 	// Custom transition that combines fade and scale
 	function growIn(node: Element, { duration = 500 } = {}) {
@@ -43,6 +45,17 @@
 	// State for collapsible sections
 	let expandedCategories = $state<Set<string>>(new Set());
 
+	// Theme state
+	let currentTheme = $state('default');
+
+	// Subscribe to theme changes
+	$effect(() => {
+		const unsubscribe = themeStore.subscribe((theme) => {
+			currentTheme = theme;
+		});
+		return unsubscribe;
+	});
+
 	function toggleCategory(category: string) {
 		if (expandedCategories.has(category)) {
 			expandedCategories.delete(category);
@@ -75,7 +88,155 @@
 		{@const isExpanded = expandedCategories.has(category)}
 		{@const icon = categoryIcons[category] || '📝'}
 
-		<div class="rounded-2xl border border-gray-200 bg-white shadow-sm">
+		{#if currentTheme === 'neo'}
+			<div class="neo-glass neo-row-hover rounded-2xl border" style="border-color: var(--neo-border);">
+				<!-- Category Header -->
+				<button
+					onclick={() => toggleCategory(category)}
+					class="flex w-full items-center justify-between rounded-2xl p-4 text-left transition-colors focus:outline-none"
+					aria-expanded={isExpanded}
+					aria-controls="category-{category}"
+				>
+					<div class="flex items-center gap-3">
+						<span class="text-2xl">{icon}</span>
+						<div>
+							<h3 class="font-semibold" style="color: var(--neo-text-primary);">{category}</h3>
+							<p class="text-sm" style="color: var(--neo-text-secondary);">
+								{questions.length} question{questions.length === 1 ? '' : 's'} learned
+							</p>
+						</div>
+					</div>
+
+					<div style="color: var(--neo-text-muted);">
+						{#if isExpanded}
+							<ChevronDown class="h-5 w-5" />
+						{:else}
+							<ChevronRight class="h-5 w-5" />
+						{/if}
+					</div>
+				</button>
+
+				<!-- Expanded Content -->
+				{#if isExpanded}
+					<div id="category-{category}" class="space-y-4 border-t p-4" style="border-color: var(--neo-border);">
+						{#each questions as question}
+							{@const isJustAdded = justAddedId === question.id}
+							<div
+								class="neo-glass relative rounded-xl border p-4"
+								style="border-color: var(--neo-border);"
+								class:animate-grow={isJustAdded}
+							>
+								{#if isJustAdded}
+									<!-- Apply animation only to newly added items -->
+									<div
+										in:growIn={{ duration: 500 }}
+										onintroend={handleAnimationComplete}
+										class="w-full"
+									>
+										<!-- Leaf emoji for newly added items -->
+										<div
+											class="absolute -top-2 -right-2 text-lg"
+											style="color: var(--neo-lime);"
+											in:scale={{ duration: 300, delay: 200 }}
+										>
+											🌱
+										</div>
+
+										<!-- Question content for animated items -->
+										<div class="mb-3 space-y-2">
+											<h4 class="text-left font-medium" style="color: var(--neo-text-primary);">
+												{question.question_en}
+											</h4>
+											<h4 class="font-amiri text-arabic-lg arabic-text" dir="rtl" lang="ar" style="color: var(--neo-text-secondary);">
+												{question.question_ar}
+											</h4>
+										</div>
+
+										<!-- Feedback -->
+										<div class="space-y-2 border-t pt-3" style="border-color: var(--neo-border);">
+											<!-- Arabic Feedback -->
+											<p
+												class="font-amiri text-arabic-lg leading-relaxed arabic-text"
+												style="color: var(--neo-text-primary);"
+												dir="rtl"
+												lang="ar"
+											>
+												{question.feedback_ar}
+											</p>
+
+											<!-- English Feedback -->
+											<p class="text-left text-sm leading-relaxed" style="color: var(--neo-text-secondary);">
+												{question.feedback_en}
+											</p>
+
+											<!-- Reference -->
+											<p class="text-center text-xs font-medium" style="color: var(--neo-text-muted);">
+												— {question.reference}
+											</p>
+										</div>
+
+										<!-- Question Type Badge -->
+										<div class="mt-3 flex items-center justify-between">
+											<GlassChip size="small">
+												{question.format.toUpperCase()}
+											</GlassChip>
+											<span class="text-xs" style="color: var(--neo-text-muted);">
+												{question.id}
+											</span>
+										</div>
+									</div>
+								{:else}
+									<!-- Regular display for existing items (no animation) -->
+									<!-- Original Question -->
+									<div class="mb-3 space-y-2">
+										<h4 class="text-left font-medium" style="color: var(--neo-text-primary);">
+											{question.question_en}
+										</h4>
+										<h4 class="font-amiri text-arabic-lg arabic-text" dir="rtl" lang="ar" style="color: var(--neo-text-secondary);">
+											{question.question_ar}
+										</h4>
+									</div>
+
+									<!-- Feedback -->
+									<div class="space-y-2 border-t pt-3" style="border-color: var(--neo-border);">
+										<!-- Arabic Feedback -->
+										<p
+											class="font-amiri text-arabic-lg leading-relaxed arabic-text"
+											style="color: var(--neo-text-primary);"
+											dir="rtl"
+											lang="ar"
+										>
+											{question.feedback_ar}
+										</p>
+
+										<!-- English Feedback -->
+										<p class="text-left text-sm leading-relaxed" style="color: var(--neo-text-secondary);">
+											{question.feedback_en}
+										</p>
+
+										<!-- Reference -->
+										<p class="text-center text-xs font-medium" style="color: var(--neo-text-muted);">
+											— {question.reference}
+										</p>
+									</div>
+
+									<!-- Question Type Badge -->
+									<div class="mt-3 flex items-center justify-between">
+										<GlassChip size="small">
+											{question.format.toUpperCase()}
+										</GlassChip>
+										<span class="text-xs" style="color: var(--neo-text-muted);">
+											{question.id}
+										</span>
+									</div>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
+		{:else}
+			<div class="rounded-2xl border border-gray-200 bg-white shadow-sm">
 			<!-- Category Header -->
 			<button
 				onclick={() => toggleCategory(category)}
@@ -221,13 +382,21 @@
 				</div>
 			{/if}
 		</div>
+		{/if}
 	{/each}
 </div>
 
 <!-- Empty state if no categories -->
 {#if sortedCategories().length === 0}
-	<div class="rounded-2xl bg-gray-50 p-8 text-center">
-		<div class="mb-3 text-4xl">📚</div>
-		<p class="text-gray-600">Answer questions to build your knowledge tree!</p>
-	</div>
+	{#if currentTheme === 'neo'}
+		<div class="neo-glass rounded-2xl border p-8 text-center" style="border-color: var(--neo-border);">
+			<div class="mb-3 text-4xl">📚</div>
+			<p style="color: var(--neo-text-secondary);">Answer questions to build your knowledge tree!</p>
+		</div>
+	{:else}
+		<div class="rounded-2xl bg-gray-50 p-8 text-center">
+			<div class="mb-3 text-4xl">📚</div>
+			<p class="text-gray-600">Answer questions to build your knowledge tree!</p>
+		</div>
+	{/if}
 {/if}
