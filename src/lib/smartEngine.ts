@@ -47,6 +47,7 @@ import {
 	type SeasonalBanner
 } from '$lib/data/seasonal';
 import { AnalyticsEngine, type DailyAnalytics, type UserDailyMetrics } from '$lib/data/analytics';
+import { type FunFeedEntry } from '$lib/schema';
 
 // ============================================================================
 // INTERFACES
@@ -2050,5 +2051,36 @@ export async function seedStoryTemplates(): Promise<void> {
 		
 	} catch (error) {
 		console.error('[Stories] Failed to seed story templates:', error);
+	}
+}
+
+/**
+ * Add an entry to the Fun Feed collection
+ * @param type Type of activity (poll, story, feedback)
+ * @param text Description text for the feed
+ * @param createdBy User ID who performed the action
+ */
+export async function addToFunFeed(
+	type: 'poll' | 'story' | 'feedback',
+	text: string,
+	createdBy: string
+): Promise<void> {
+	try {
+		const familyId = getFamilyId();
+		
+		const feedEntry = {
+			type,
+			text,
+			createdBy,
+			familyId,
+			createdAt: serverTimestamp()
+		};
+		
+		await addDoc(collection(db, 'fun_feed'), feedEntry);
+		console.log(`[FunFeed] Added ${type} entry: ${text}`);
+		
+	} catch (error) {
+		console.error('[FunFeed] Failed to add entry:', error);
+		throw error;
 	}
 }

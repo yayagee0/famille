@@ -183,6 +183,15 @@ export interface DailyAnalytics {
 	updatedAt: Date;
 }
 
+export interface FunFeedEntry {
+	id?: string;
+	type: 'poll' | 'story' | 'feedback';
+	text: string;
+	createdBy: string; // uid
+	familyId: string;
+	createdAt: Timestamp;
+}
+
 // ============================================================================
 // ZOD VALIDATION SCHEMAS
 // ============================================================================
@@ -333,6 +342,15 @@ export const dailyAnalyticsSchema = z.object({
 	updatedAt: z.date()
 });
 
+export const funFeedEntrySchema = z.object({
+	id: z.string().optional(),
+	type: z.enum(['poll', 'story', 'feedback']),
+	text: z.string().min(1),
+	createdBy: z.string().min(1),
+	familyId: z.string().min(1),
+	createdAt: z.any() // Timestamp
+});
+
 // ============================================================================
 // VALIDATION HELPERS
 // ============================================================================
@@ -417,6 +435,14 @@ export function validateDailyAnalytics(data: unknown) {
 	}
 }
 
+export function validateFunFeedEntry(data: unknown) {
+	try {
+		return { success: true as const, data: funFeedEntrySchema.parse(data) };
+	} catch (error) {
+		return { success: false as const, error };
+	}
+}
+
 // ============================================================================
 // COLLECTION HELPERS
 // ============================================================================
@@ -434,7 +460,8 @@ export const COLLECTION_PATHS = {
 	BOT_TURNS: 'bot_turns',
 	STORY_TEMPLATES: 'story_templates',
 	SEASONAL: 'seasonal',
-	ANALYTICS: 'analytics'
+	ANALYTICS: 'analytics',
+	FUN_FEED: 'fun_feed'
 } as const;
 
 export const DOCUMENT_IDS = {
@@ -456,5 +483,6 @@ export type {
 	StoryTemplate,
 	SeasonalContent,
 	UserDailyMetrics,
-	DailyAnalytics
+	DailyAnalytics,
+	FunFeedEntry
 };

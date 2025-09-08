@@ -6,7 +6,8 @@
 		getPersonalizedStoryTemplate, 
 		assignBotTurn,
 		getAdaptiveEngagementBias,
-		getSeasonalSuggestion
+		getSeasonalSuggestion,
+		addToFunFeed
 	} from "$lib/smartEngine";
 	import { 
 		getPreferences, 
@@ -20,7 +21,7 @@
 	import { auth } from '$lib/firebase';
 	import { getDisplayName } from '$lib/getDisplayName';
 
-	type State = "idle" | "greeting" | "suggest" | "action" | "close";
+	type State = "idle" | "greeting" | "suggest" | "action" | "followUp" | "goodbye";
 
 	let state: State = $state("idle");
 	let nickname = $state("Friend");
@@ -28,6 +29,19 @@
 	let suggestions: { label: string; action: () => Promise<void> }[] = $state([]);
 	let isLoading = $state(false);
 	let userPreferences: UserPreferences | null = $state(null);
+	
+	// Poll wizard state
+	let pollWizardStep: "kind" | "options" | "confirm" | null = $state(null);
+	let pollKind: string = $state("");
+	let pollOptions: string[] = $state([]);
+	let pollQuestion = $state("");
+	
+	// Story state
+	let currentStory = $state("");
+	let storyTheme = $state("");
+	
+	// Feedback wizard state
+	let feedbackTopic = $state("");
 
 	const db = getFirestore();
 
@@ -74,13 +88,13 @@
 					assignedUserName = getDisplayName(userData.email, { nickname: userData.nickname });
 				}
 				
-				state = "close";
+				state = "goodbye";
 				suggestionMessage = `It's ${assignedUserName}'s turn today! 🎉 I want to make sure everyone gets equal time with me.`;
 				setTimeout(() => (state = "idle"), 3000);
 				return;
 			} catch (error) {
 				console.error('[FamilyBot] Failed to get assigned user info:', error);
-				state = "close";
+				state = "goodbye";
 				suggestionMessage = `It's someone else's turn today! 🎉 I want to make sure everyone gets equal time with me.`;
 				setTimeout(() => (state = "idle"), 3000);
 				return;
@@ -109,7 +123,7 @@
 			baseSuggestions.push({
 				label: seasonalSuggestion.label,
 				action: async () => {
-					finish(seasonalSuggestion.content);
+					await showFollowUp(seasonalSuggestion.content);
 				}
 			});
 		}
@@ -120,7 +134,7 @@
 			baseSuggestions.push({
 				label: "🎮 Play a quick game",
 				action: async () => {
-					finish("Let's play a quick riddle! What has keys but no locks? A piano! 🎹 Thanks for playing with me!");
+					await showFollowUp("Let's play a quick riddle! What has keys but no locks? A piano! 🎹 Thanks for playing with me!");
 				}
 			});
 			
@@ -133,7 +147,7 @@
 						"Why did the math book look so sad? Because it had too many problems! 📚😢"
 					];
 					const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
-					finish(randomJoke);
+					await showFollowUp(randomJoke);
 				}
 			});
 		} else if (engagementBias === 'deeper') {
@@ -147,48 +161,29 @@
 						"If you could teach someone younger one important lesson, what would it be? 💭"
 					];
 					const randomReflection = reflections[Math.floor(Math.random() * reflections.length)];
-					finish(randomReflection);
+					await showFollowUp(randomReflection);
 				}
 			});
 			
 			baseSuggestions.push({
 				label: "📚 Learn something new",
 				action: async () => {
-					finish("Did you know that honeybees communicate by dancing? They do a special wiggle dance to tell other bees where flowers are! What amazing fact would you like to share? 🐝💃");
+					await showFollowUp("Did you know that honeybees communicate by dancing? They do a special wiggle dance to tell other bees where flowers are! What amazing fact would you like to share? 🐝💃");
 				}
 			});
 		}
 
 		// Standard suggestions (always available)
 		
-		// Lunch poll - bias towards user's preferred food if they have one
-		const preferredFood = userPreferences ? getMostPreferredPollOption(userPreferences) : null;
-		let pollOptions = ["Pasta 🍝", "Pizza 🍕", "Rice 🍚"];
-		
-		if (preferredFood && hasStrongPreference(userPreferences!, 'poll')) {
-			// Reorder to prioritize preferred food
-			pollOptions = pollOptions.filter(opt => opt.includes(preferredFood.split(' ')[0]));
-			pollOptions = [...pollOptions, ...["Pasta 🍝", "Pizza 🍕", "Rice 🍚"].filter(opt => !pollOptions.includes(opt))];
-		}
-
+		// Multi-step poll creation wizard
 		baseSuggestions.push({
-			label: "🍝 Create a lunch poll",
+			label: "📊 Create a poll",
 			action: async () => {
-				const selectedOption = pollOptions[0]; // Use first (preferred) option
-				await createPoll({
-					question: "What should we eat for lunch?",
-					options: pollOptions
-				});
-				
-				// Track preference
-				const foodType = selectedOption.split(' ')[0].toLowerCase(); // Extract "pasta", "pizza", etc.
-				await updatePreference(uid, 'poll', foodType);
-				
-				finish("I've created a lunch poll for the family!");
+				startPollWizard();
 			}
 		});
 
-		// Story suggestion - bias towards preferred themes
+		// Persistent story system
 		const preferredTheme = userPreferences ? getMostPreferredStoryTheme(userPreferences) : null;
 		let storyLabel = "📖 Tell me a story";
 		
@@ -199,74 +194,15 @@
 		baseSuggestions.push({
 			label: storyLabel,
 			action: async () => {
-				const story = await getPersonalizedStoryTemplate(uid, userPreferences);
-				
-				// Extract theme from story content for preference tracking
-				let detectedTheme = 'adventure'; // default
-				if (story.includes('family') || story.includes('brother') || story.includes('sister')) {
-					detectedTheme = 'family';
-				} else if (story.includes('wise') || story.includes('learn') || story.includes('teach')) {
-					detectedTheme = 'wisdom';
-				} else if (story.includes('magical') || story.includes('magic')) {
-					detectedTheme = 'fantasy';
-				} else if (story.includes('mosque') || story.includes('Allah') || story.includes('Quran')) {
-					detectedTheme = 'islamic';
-				}
-				
-				// Track preference
-				await updatePreference(uid, 'story', detectedTheme);
-				
-				finish(story);
+				await startStory();
 			}
 		});
 
-		// Feedback suggestion
+		// Enhanced feedback suggestion
 		baseSuggestions.push({
 			label: "💬 Share feedback",
 			action: async () => {
-				// Ask user for feedback topic first
-				state = "suggest";
-				suggestionMessage = "What would you like to share feedback about?";
-				
-				// Show topic options
-				suggestions = [
-					{
-						label: "🏠 Family Hub Experience",
-						action: async () => {
-							const feedbackMessage = `Family Hub feedback from ${nickname}: Thanks for the great family experience!`;
-							await sendFeedback(uid, feedbackMessage, 'Family Hub Experience');
-							await updatePreference(uid, 'feedback');
-							finish("Thank you for your Family Hub feedback! It helps make our platform better. 🙏");
-						}
-					},
-					{
-						label: "🤖 FamilyBot Interaction",
-						action: async () => {
-							const feedbackMessage = `FamilyBot feedback from ${nickname}: I enjoyed talking with the bot!`;
-							await sendFeedback(uid, feedbackMessage, 'FamilyBot Interaction');
-							await updatePreference(uid, 'feedback');
-							finish("Thank you for your FamilyBot feedback! I'll keep learning to help better. 🤖💙");
-						}
-					},
-					{
-						label: "📖 Story & Content",
-						action: async () => {
-							const feedbackMessage = `Content feedback from ${nickname}: The stories are wonderful!`;
-							await sendFeedback(uid, feedbackMessage, 'Story & Content');
-							await updatePreference(uid, 'feedback');
-							finish("Thank you for your content feedback! I'll share more great stories. 📚✨");
-						}
-					},
-					{
-						label: "💡 General Suggestion",
-						action: async () => {
-							const feedbackMessage = `General suggestion from ${nickname}: Keep up the great work!`;
-							await sendFeedback(uid, feedbackMessage, 'General Suggestion');
-							await updatePreference(uid, 'feedback');
-							finish("Thank you for your suggestion! Every idea helps us improve. 💡");
-						}
-					}
-				];
+				startFeedbackWizard();
 			}
 		});
 
@@ -284,19 +220,285 @@
 			await fn();
 		} catch (error) {
 			console.error("FamilyBot action failed:", error);
-			finish("Sorry, something went wrong. Please try again! 😅");
+			await showFollowUp("Sorry, something went wrong. Please try again! 😅");
 		} finally {
 			isLoading = false;
 		}
 	}
 
-	function finish(message: string) {
+	async function showFollowUp(message: string) {
 		suggestionMessage = message;
-		state = "close";
+		state = "followUp";
+		suggestions = [
+			{
+				label: "Yes",
+				action: async () => {
+					await showSuggestions();
+				}
+			},
+			{
+				label: "No",
+				action: async () => {
+					showGoodbye();
+				}
+			}
+		];
+	}
+
+	function showGoodbye() {
+		suggestionMessage = "Okay! Goodbye for today 👋";
+		state = "goodbye";
 		setTimeout(() => (state = "idle"), 2500);
 	}
 
+	// Poll Wizard Functions
+	function startPollWizard() {
+		pollWizardStep = "kind";
+		state = "suggest";
+		suggestionMessage = "What kind of poll should we create?";
+		suggestions = [
+			{
+				label: "🍽️ Food",
+				action: async () => {
+					pollKind = "food";
+					setPollOptionsForKind("food");
+				}
+			},
+			{
+				label: "🎉 Activity",
+				action: async () => {
+					pollKind = "activity";
+					setPollOptionsForKind("activity");
+				}
+			},
+			{
+				label: "🎮 Game",
+				action: async () => {
+					pollKind = "game";
+					setPollOptionsForKind("game");
+				}
+			},
+			{
+				label: "📝 Custom",
+				action: async () => {
+					pollKind = "custom";
+					setPollOptionsForKind("custom");
+				}
+			}
+		];
+	}
+
+	function setPollOptionsForKind(kind: string) {
+		pollWizardStep = "confirm";
+		
+		// Set question and options based on kind
+		switch (kind) {
+			case "food":
+				pollQuestion = "What should we eat?";
+				// Bias towards user's preferred food if they have one
+				const preferredFood = userPreferences ? getMostPreferredPollOption(userPreferences) : null;
+				pollOptions = ["Pasta 🍝", "Pizza 🍕", "Rice 🍚"];
+				
+				if (preferredFood && hasStrongPreference(userPreferences!, 'poll')) {
+					// Reorder to prioritize preferred food
+					pollOptions = pollOptions.filter(opt => opt.includes(preferredFood.split(' ')[0]));
+					pollOptions = [...pollOptions, ...["Pasta 🍝", "Pizza 🍕", "Rice 🍚"].filter(opt => !pollOptions.includes(opt))];
+				}
+				break;
+			case "activity":
+				pollQuestion = "What activity should we do?";
+				pollOptions = ["Board games 🎲", "Watch a movie 🎬", "Go for a walk 🚶"];
+				break;
+			case "game":
+				pollQuestion = "What game should we play?";
+				pollOptions = ["Trivia 🧠", "Charades 🎭", "Twenty Questions ❓"];
+				break;
+			case "custom":
+				pollQuestion = "What's your choice?";
+				pollOptions = ["Option A 🅰️", "Option B 🅱️", "Option C 🅲"];
+				break;
+		}
+		
+		state = "suggest";
+		suggestionMessage = `Got it! Creating poll: "${pollQuestion}" with options: ${pollOptions.join(', ')}`;
+		suggestions = [
+			{
+				label: "✅ Create this poll",
+				action: async () => {
+					await createPollFromWizard();
+				}
+			},
+			{
+				label: "🔄 Choose different kind",
+				action: async () => {
+					startPollWizard();
+				}
+			}
+		];
+	}
+
+	async function createPollFromWizard() {
+		try {
+			await createPoll({
+				question: pollQuestion,
+				options: pollOptions
+			});
+			
+			// Track preference
+			if (pollKind !== "custom") {
+				await updatePreference(uid, 'poll', pollKind);
+			}
+			
+			// Add to Fun Feed
+			await addToFunFeed(
+				'poll',
+				`📊 ${nickname} started a poll: ${pollQuestion}`,
+				uid
+			);
+			
+			pollWizardStep = null;
+			await showFollowUp("Poll created! Your family can now vote on it. 📊");
+			
+		} catch (error) {
+			console.error('[FamilyBot] Failed to create poll:', error);
+			await showFollowUp("Sorry, I couldn't create the poll. Please try again! 😅");
+		}
+	}
+
+	// Story Functions
+	async function startStory() {
+		try {
+			const story = await getPersonalizedStoryTemplate(uid, userPreferences);
+			currentStory = story;
+			
+			// Extract theme from story content for preference tracking
+			let detectedTheme = 'adventure'; // default
+			if (story.includes('family') || story.includes('brother') || story.includes('sister')) {
+				detectedTheme = 'family';
+			} else if (story.includes('wise') || story.includes('learn') || story.includes('teach')) {
+				detectedTheme = 'wisdom';
+			} else if (story.includes('magical') || story.includes('magic')) {
+				detectedTheme = 'fantasy';
+			} else if (story.includes('mosque') || story.includes('Allah') || story.includes('Quran')) {
+				detectedTheme = 'islamic';
+			}
+			
+			storyTheme = detectedTheme;
+			
+			// Track preference
+			await updatePreference(uid, 'story', detectedTheme);
+			
+			// Add to Fun Feed
+			await addToFunFeed(
+				'story',
+				`📖 FamilyBot told a story about ${detectedTheme}`,
+				uid
+			);
+			
+			showStoryOptions();
+			
+		} catch (error) {
+			console.error('[FamilyBot] Failed to get story:', error);
+			await showFollowUp("Sorry, I couldn't get a story right now. Please try again! 😅");
+		}
+	}
+
+	function showStoryOptions() {
+		state = "suggest";
+		suggestionMessage = currentStory;
+		suggestions = [
+			{
+				label: "➡️ Continue story",
+				action: async () => {
+					// Get next part of story (simplified - just show encouragement)
+					currentStory += " And they lived happily, knowing that kindness brings the greatest joy! ✨";
+					showStoryOptions();
+				}
+			},
+			{
+				label: "🔄 Another story",
+				action: async () => {
+					await startStory();
+				}
+			},
+			{
+				label: "❌ End story",
+				action: async () => {
+					currentStory = "";
+					await showFollowUp("Thanks for enjoying the story with me! 📚");
+				}
+			}
+		];
+	}
+
+	// Feedback Wizard Functions
+	function startFeedbackWizard() {
+		state = "suggest";
+		suggestionMessage = "What topic is your feedback about?";
+		suggestions = [
+			{
+				label: "🏠 Family Hub",
+				action: async () => {
+					feedbackTopic = "Family Hub Experience";
+					await submitFeedback("Thanks for the great family experience!");
+				}
+			},
+			{
+				label: "🤖 FamilyBot",
+				action: async () => {
+					feedbackTopic = "FamilyBot Interaction";
+					await submitFeedback("I enjoyed talking with the bot!");
+				}
+			},
+			{
+				label: "📖 Stories",
+				action: async () => {
+					feedbackTopic = "Story & Content";
+					await submitFeedback("The stories are wonderful!");
+				}
+			},
+			{
+				label: "💡 General",
+				action: async () => {
+					feedbackTopic = "General Suggestion";
+					await submitFeedback("Keep up the great work!");
+				}
+			}
+		];
+	}
+
+	async function submitFeedback(message: string) {
+		try {
+			const feedbackMessage = `${feedbackTopic} feedback from ${nickname}: ${message}`;
+			await sendFeedback(uid, feedbackMessage, feedbackTopic);
+			await updatePreference(uid, 'feedback');
+			
+			// Add to Fun Feed
+			await addToFunFeed(
+				'feedback',
+				`💡 Feedback submitted by ${nickname}`,
+				uid
+			);
+			
+			feedbackTopic = "";
+			await showFollowUp("Thanks! Your feedback has been sent ✅");
+			
+		} catch (error) {
+			console.error('[FamilyBot] Failed to send feedback:', error);
+			await showFollowUp("Sorry, I couldn't send your feedback. Please try again! 😅");
+		}
+	}
+
 	function closeBot() {
+		// Reset all wizard states
+		pollWizardStep = null;
+		pollKind = "";
+		pollOptions = [];
+		pollQuestion = "";
+		currentStory = "";
+		storyTheme = "";
+		feedbackTopic = "";
+		
 		state = "idle";
 	}
 
@@ -471,9 +673,20 @@
 				{/each}
 			{/if}
 			
-			{#if state === "suggest" || state === "close"}
+			{#if state === "followUp"}
+				<div class="message" style="margin-top: 1rem; color: #6b7280; font-size: 0.85rem;">
+					Would you like me to help with something else?
+				</div>
+				{#each suggestions as s}
+					<button onclick={() => handleAction(s.action)} disabled={isLoading}>
+						{s.label}
+					</button>
+				{/each}
+			{/if}
+			
+			{#if state === "suggest" || state === "followUp" || state === "goodbye"}
 				<button class="close-button" onclick={closeBot}>
-					{state === "close" ? "Thanks!" : "Close"}
+					{state === "goodbye" ? "Thanks!" : "Close"}
 				</button>
 			{/if}
 		{/if}
