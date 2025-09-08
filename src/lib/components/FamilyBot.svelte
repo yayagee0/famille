@@ -1,6 +1,21 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	import { createPoll, sendFeedback, getRandomStoryTemplate } from "$lib/smartEngine";
+	import { 
+		createPoll, 
+		sendFeedback, 
+		getPersonalizedStoryTemplate, 
+		assignBotTurn,
+		getAdaptiveEngagementBias,
+		getSeasonalSuggestion
+	} from "$lib/smartEngine";
+	import { 
+		getPreferences, 
+		updatePreference, 
+		getMostPreferredPollOption,
+		getMostPreferredStoryTheme,
+		hasStrongPreference,
+		type UserPreferences 
+	} from "$lib/preferences";
 	import { getFirestore, doc, getDoc } from "firebase/firestore";
 	import { auth } from '$lib/firebase';
 	import { getDisplayName } from '$lib/getDisplayName';
@@ -12,6 +27,7 @@
 	let suggestionMessage = $state("");
 	let suggestions: { label: string; action: () => Promise<void> }[] = $state([]);
 	let isLoading = $state(false);
+	let userPreferences: UserPreferences | null = $state(null);
 
 	const db = getFirestore();
 
@@ -31,33 +47,178 @@
 		}
 	}
 
-	function startInteraction() {
+	async function loadUserPreferences() {
+		try {
+			if (!uid) return;
+			
+			userPreferences = await getPreferences(uid);
+			console.log('[FamilyBot] Loaded user preferences:', userPreferences);
+		} catch (error) {
+			console.error('[FamilyBot] Failed to load preferences:', error);
+		}
+	}
+
+	async function startInteraction() {
+		// Check fairness - ensure this user gets appropriate interaction opportunity
+		const assignedUid = await assignBotTurn(uid);
+		
+		if (assignedUid !== uid) {
+			// Another user should get priority - show brief message
+			state = "close";
+			suggestionMessage = `It's ${getDisplayName(assignedUid)}'s turn to interact with me! 😊`;
+			setTimeout(() => (state = "idle"), 2500);
+			return;
+		}
+
 		state = "greeting";
 		suggestionMessage = `Hello ${nickname}! 👋 I can help you today.`;
 		setTimeout(() => showSuggestions(), 1200);
 	}
 
-	function showSuggestions() {
+	async function showSuggestions() {
 		state = "suggest";
-		suggestions = [
-			{
-				label: "🍝 Create a lunch poll",
+		
+		// Get adaptive engagement bias and seasonal content
+		const [engagementBias, seasonalSuggestion] = await Promise.all([
+			getAdaptiveEngagementBias(uid),
+			getSeasonalSuggestion()
+		]);
+		
+		// Create personalized suggestions based on preferences and engagement
+		const baseSuggestions = [];
+
+		// Seasonal suggestion (highest priority if available)
+		if (seasonalSuggestion) {
+			baseSuggestions.push({
+				label: seasonalSuggestion.label,
 				action: async () => {
-					await createPoll({
-						question: "What should we eat for lunch?",
-						options: ["Pasta 🍝", "Pizza 🍕", "Rice 🍚"]
-					});
-					finish("I've created a lunch poll for the family!");
+					finish(seasonalSuggestion.content);
 				}
-			},
-			{
-				label: "📖 Tell me a story",
+			});
+		}
+
+		// Adaptive suggestions based on engagement level
+		if (engagementBias === 'playful') {
+			// Low engagement - focus on fun, easy activities
+			baseSuggestions.push({
+				label: "🎮 Play a quick game",
 				action: async () => {
-					const story = await getRandomStoryTemplate();
-					finish(story);
+					finish("Let's play a quick riddle! What has keys but no locks? A piano! 🎹 Thanks for playing with me!");
 				}
+			});
+			
+			baseSuggestions.push({
+				label: "😄 Tell me a joke",
+				action: async () => {
+					const jokes = [
+						"Why don't scientists trust atoms? Because they make up everything! 😂",
+						"What do you call a sleeping bull? A bulldozer! 🐂💤",
+						"Why did the math book look so sad? Because it had too many problems! 📚😢"
+					];
+					const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+					finish(randomJoke);
+				}
+			});
+		} else if (engagementBias === 'deeper') {
+			// High engagement - focus on reflection and learning
+			baseSuggestions.push({
+				label: "🤔 Share a reflection",
+				action: async () => {
+					const reflections = [
+						"Take a moment to think about something kind you did today. How did it make you feel? ✨",
+						"What's one thing you're grateful for right now? Gratitude makes our hearts grow stronger. 🙏",
+						"If you could teach someone younger one important lesson, what would it be? 💭"
+					];
+					const randomReflection = reflections[Math.floor(Math.random() * reflections.length)];
+					finish(randomReflection);
+				}
+			});
+			
+			baseSuggestions.push({
+				label: "📚 Learn something new",
+				action: async () => {
+					finish("Did you know that honeybees communicate by dancing? They do a special wiggle dance to tell other bees where flowers are! What amazing fact would you like to share? 🐝💃");
+				}
+			});
+		}
+
+		// Standard suggestions (always available)
+		
+		// Lunch poll - bias towards user's preferred food if they have one
+		const preferredFood = userPreferences ? getMostPreferredPollOption(userPreferences) : null;
+		let pollOptions = ["Pasta 🍝", "Pizza 🍕", "Rice 🍚"];
+		
+		if (preferredFood && hasStrongPreference(userPreferences!, 'poll')) {
+			// Reorder to prioritize preferred food
+			pollOptions = pollOptions.filter(opt => opt.includes(preferredFood.split(' ')[0]));
+			pollOptions = [...pollOptions, ...["Pasta 🍝", "Pizza 🍕", "Rice 🍚"].filter(opt => !pollOptions.includes(opt))];
+		}
+
+		baseSuggestions.push({
+			label: "🍝 Create a lunch poll",
+			action: async () => {
+				const selectedOption = pollOptions[0]; // Use first (preferred) option
+				await createPoll({
+					question: "What should we eat for lunch?",
+					options: pollOptions
+				});
+				
+				// Track preference
+				const foodType = selectedOption.split(' ')[0].toLowerCase(); // Extract "pasta", "pizza", etc.
+				await updatePreference(uid, 'poll', foodType);
+				
+				finish("I've created a lunch poll for the family!");
 			}
-		];
+		});
+
+		// Story suggestion - bias towards preferred themes
+		const preferredTheme = userPreferences ? getMostPreferredStoryTheme(userPreferences) : null;
+		let storyLabel = "📖 Tell me a story";
+		
+		if (preferredTheme && hasStrongPreference(userPreferences!, 'story')) {
+			storyLabel = `📖 Tell me a ${preferredTheme} story`;
+		}
+
+		baseSuggestions.push({
+			label: storyLabel,
+			action: async () => {
+				const story = await getPersonalizedStoryTemplate(uid, userPreferences);
+				
+				// Extract theme from story content for preference tracking
+				let detectedTheme = 'adventure'; // default
+				if (story.includes('family') || story.includes('brother') || story.includes('sister')) {
+					detectedTheme = 'family';
+				} else if (story.includes('wise') || story.includes('learn') || story.includes('teach')) {
+					detectedTheme = 'wisdom';
+				} else if (story.includes('magical') || story.includes('magic')) {
+					detectedTheme = 'fantasy';
+				} else if (story.includes('mosque') || story.includes('Allah') || story.includes('Quran')) {
+					detectedTheme = 'islamic';
+				}
+				
+				// Track preference
+				await updatePreference(uid, 'story', detectedTheme);
+				
+				finish(story);
+			}
+		});
+
+		// Feedback suggestion
+		baseSuggestions.push({
+			label: "💬 Share feedback",
+			action: async () => {
+				const feedbackMessage = `Family Hub feedback from ${nickname}: Thanks for the great family experience!`;
+				await sendFeedback(uid, feedbackMessage);
+				
+				// Track feedback sent
+				await updatePreference(uid, 'feedback');
+				
+				finish("Thank you for your feedback! It helps make our family hub better. 🙏");
+			}
+		});
+
+		// Limit suggestions to 4 max for better UX
+		suggestions = baseSuggestions.slice(0, 4);
 	}
 
 	async function handleAction(fn: () => Promise<void>) {
@@ -96,13 +257,15 @@
 	onMount(() => {
 		if (currentUser) {
 			loadNickname();
+			loadUserPreferences();
 		}
 	});
 
-	// Update nickname when user changes
+	// Update nickname and preferences when user changes
 	$effect(() => {
 		if (currentUser) {
 			loadNickname();
+			loadUserPreferences();
 		}
 	});
 </script>
