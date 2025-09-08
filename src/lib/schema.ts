@@ -87,11 +87,14 @@ export interface DailyPoll {
 		votes: string[]; // Array of user UIDs
 	}>;
 	familyId: string;
+	createdBy?: string; // Phase 8: Track who created the poll
 	createdAt: Timestamp;
 	expiresAt: number; // Unix timestamp
 	totalVotes: number;
 	isClosed?: boolean;
 	resultsPosted?: boolean;
+	isCustom?: boolean; // Phase 8: Mark custom polls
+	childCreated?: boolean; // Phase 8: Psychology tracking
 }
 
 export interface UserPreferences {
@@ -222,6 +225,63 @@ export interface FunFeedEntry {
 }
 
 // ============================================================================
+// PHASE 8: MEMORY NUDGES AND SEASONAL BADGES
+// ============================================================================
+
+export interface MemoryNudge {
+	userId: string;
+	message: string;
+	basedOn: 'story' | 'poll' | 'feedback' | 'interaction';
+	lastActivity: string;
+	lastActivityDate: string;
+	createdAt: Timestamp;
+	gentle: boolean; // Always true for children's psychology
+}
+
+export interface SeasonalBadge {
+	userId: string;
+	badgeId: string;
+	name: string;
+	icon: string;
+	rarity: 'seasonal';
+	yearEarned: number;
+	requirement: string;
+	earnedAt: Timestamp;
+	reason: string;
+}
+
+export interface StoryTemplate {
+	id: string;
+	title: string;
+	category: 'Islamic Wisdom' | 'Family Bonding' | 'Adventure' | 'Fantasy' | 'Wisdom & Reflection' | 'Seasonal Specials';
+	chapters: string[]; // Multi-chapter support
+	choices?: {
+		[chapterIndex: number]: {
+			question: string;
+			options: Array<{
+				text: string;
+				nextChapter: number;
+				emoji: string;
+			}>;
+		};
+	};
+	placeholders: {
+		nickname?: boolean;
+		trait1?: boolean;
+		trait2?: boolean;
+		ayah?: boolean;
+		theme?: boolean;
+	};
+	reflection?: {
+		question: string;
+		ayah: string;
+		reference: string;
+	};
+	createdAt: Timestamp;
+	updatedAt: Timestamp;
+}
+
+// ============================================================================
 // ZOD VALIDATION SCHEMAS
 // ============================================================================
 
@@ -292,11 +352,14 @@ export const dailyPollSchema = z.object({
 		votes: z.array(z.string())
 	})).min(2),
 	familyId: z.string().min(1),
+	createdBy: z.string().optional(), // Added for Phase 8 custom polls
 	createdAt: z.any(), // Timestamp
 	expiresAt: z.number(),
 	totalVotes: z.number().min(0),
 	isClosed: z.boolean().optional(),
-	resultsPosted: z.boolean().optional()
+	resultsPosted: z.boolean().optional(),
+	isCustom: z.boolean().optional(), // Phase 8: Mark custom polls
+	childCreated: z.boolean().optional() // Phase 8: Psychology tracking
 });
 
 export const userPreferencesSchema = z.object({

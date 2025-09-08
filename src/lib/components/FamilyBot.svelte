@@ -11,7 +11,14 @@
 		trackPollVote,
 		addPollSuggestion,
 		addFeedbackSuggestion,
-		addStorySuggestion
+		addStorySuggestion,
+		// Phase 8: New functions
+		generateMemoryNudge,
+		awardSeasonalBadge,
+		getEnhancedStoryTemplate,
+		processStoryWithChoices,
+		createCustomPollWizard,
+		createCustomPoll
 	} from "$lib/smartEngine";
 	import { 
 		getPreferences, 
@@ -50,6 +57,24 @@
 	let feedbackMessage = $state("");
 	let feedbackInputType: "text" | "emoji" = $state("text");
 
+	// Phase 8: Enhanced story state with chapters and choices
+	let currentStoryTemplate: any = $state(null);
+	let currentChapter = $state(0);
+	let storyChoices: any = $state(null);
+	let storyComplete = $state(false);
+	let storyReflection: any = $state(null);
+
+	// Phase 8: Custom poll wizard state
+	let customPollStep: "question" | "options" | "review" | null = $state(null);
+	let customPollQuestion = $state("");
+	let customPollOptions: string[] = $state([]);
+	let customPollGuidance: string[] = $state([]);
+	let customPollValidated = $state(false);
+
+	// Phase 8: Memory nudges state
+	let memoryNudgeMessage = $state("");
+	let showMemoryNudge = $state(false);
+
 	const db = getFirestore();
 
 	// Get current user from auth using derived
@@ -76,6 +101,22 @@
 			console.log('[FamilyBot] Loaded user preferences:', userPreferences);
 		} catch (error) {
 			console.error('[FamilyBot] Failed to load preferences:', error);
+		}
+	}
+
+	// Phase 8: Load memory-based nudges with psychology guardrails
+	async function loadMemoryNudge() {
+		try {
+			if (!uid) return;
+			
+			const nudgeMessage = await generateMemoryNudge(uid);
+			if (nudgeMessage) {
+				memoryNudgeMessage = nudgeMessage;
+				showMemoryNudge = true;
+				console.log('[FamilyBot] Generated memory nudge:', nudgeMessage);
+			}
+		} catch (error) {
+			console.error('[FamilyBot] Failed to load memory nudge:', error);
 		}
 	}
 
@@ -151,7 +192,18 @@
 		// Create personalized suggestions based on preferences and engagement
 		const baseSuggestions = [];
 
-		// Seasonal suggestion (highest priority if available)
+		// Phase 8: Memory-based nudge (highest priority, gentle psychology)
+		if (showMemoryNudge && memoryNudgeMessage) {
+			baseSuggestions.push({
+				label: "💭 Memory nudge",
+				action: async () => {
+					await showFollowUp(memoryNudgeMessage);
+					showMemoryNudge = false; // Reset after showing
+				}
+			});
+		}
+
+		// Seasonal suggestion (high priority if available)
 		if (seasonalSuggestion) {
 			baseSuggestions.push({
 				label: seasonalSuggestion.label,
@@ -208,20 +260,12 @@
 
 		// Standard suggestions (always available)
 		
-		// Multi-step poll creation wizard
+		// Phase 8: Enhanced poll creation with custom wizard
 		baseSuggestions.push({
 			label: "📊 Create a poll",
 			action: async () => {
-				// Add poll suggestion to Fun Feed
-				const preferredOption = userPreferences ? getMostPreferredPollOption(userPreferences) : null;
-				let suggestionQuestion = "What should we have for dinner tonight?";
-				
-				if (preferredOption && hasStrongPreference(userPreferences!, 'poll')) {
-					suggestionQuestion = `Should we have ${preferredOption} for our next meal?`;
-				}
-				
-				await addPollSuggestion(uid, suggestionQuestion);
-				startPollWizard();
+				// Start custom poll wizard
+				startCustomPollWizard();
 			}
 		});
 
@@ -236,11 +280,8 @@
 		baseSuggestions.push({
 			label: storyLabel,
 			action: async () => {
-				// Add story suggestion to Fun Feed
-				const targetNickname = nickname || 'you';
-				const storyTheme = (preferredTheme && hasStrongPreference(userPreferences!, 'story')) ? preferredTheme : 'adventure';
-				await addStorySuggestion(uid, targetNickname, storyTheme);
-				await startStory();
+				// Phase 8: Enhanced story system with chapters and choices
+				await startEnhancedStory();
 			}
 		});
 
@@ -675,8 +716,286 @@ ${motivationalNudge}`);
 		}
 	}
 
+	// Phase 8: Enhanced Story System with Chapters and Choices
+	async function startEnhancedStory() {
+		try {
+			const storyTemplate = await getEnhancedStoryTemplate();
+			if (!storyTemplate) {
+				await showFollowUp("Sorry, I couldn't find any stories right now. Please try again! 📖");
+				return;
+			}
+
+			currentStoryTemplate = storyTemplate;
+			currentChapter = 0;
+			storyComplete = false;
+			storyReflection = null;
+
+			// Process first chapter
+			const result = await processStoryWithChoices(storyTemplate, uid, 0);
+			currentStory = result.content;
+			storyChoices = result.choice;
+			storyComplete = result.isComplete;
+			storyReflection = result.reflection;
+
+			// Show story with appropriate UI
+			await showStoryChapter();
+
+		} catch (error) {
+			console.error('[FamilyBot] Failed to start enhanced story:', error);
+			await showFollowUp("Sorry, something went wrong with the story. Please try again! 😅");
+		}
+	}
+
+	async function showStoryChapter() {
+		let storyMessage = currentStory;
+
+		if (storyChoices) {
+			// Add choice options
+			storyMessage += `\n\n${storyChoices.question}`;
+			
+			// Show story with choices
+			state = "action";
+			suggestionMessage = storyMessage;
+			suggestions = storyChoices.options.map((option: any, index: number) => ({
+				label: `${option.emoji} ${option.text}`,
+				action: async () => {
+					await handleStoryChoice(index);
+				}
+			}));
+		} else if (storyComplete && storyReflection) {
+			// Show reflection
+			storyMessage += `\n\n✨ Reflection: ${storyReflection.question}\n\n"${storyReflection.ayah}" - ${storyReflection.reference}`;
+			await showFollowUp(storyMessage);
+		} else if (!storyComplete) {
+			// Continue story
+			state = "action";
+			suggestionMessage = storyMessage;
+			suggestions = [
+				{
+					label: "➡️ Continue story",
+					action: async () => {
+						await continueStory();
+					}
+				},
+				{
+					label: "🔄 Different story",
+					action: async () => {
+						await startEnhancedStory();
+					}
+				},
+				{
+					label: "❌ End story",
+					action: async () => {
+						await showFollowUp("Thanks for reading with me! Stories help us learn and grow together. 📖✨");
+					}
+				}
+			];
+		} else {
+			// Story complete
+			await showFollowUp(storyMessage);
+		}
+	}
+
+	async function handleStoryChoice(choiceIndex: number) {
+		try {
+			if (!currentStoryTemplate) return;
+
+			// Process choice
+			const result = await processStoryWithChoices(currentStoryTemplate, uid, currentChapter, choiceIndex);
+			currentStory = result.content;
+			storyChoices = result.choice;
+			storyComplete = result.isComplete;
+			storyReflection = result.reflection;
+			currentChapter++;
+
+			// Show next chapter
+			await showStoryChapter();
+
+		} catch (error) {
+			console.error('[FamilyBot] Failed to handle story choice:', error);
+			await showFollowUp("Sorry, something went wrong. Let's try a different story! 😅");
+		}
+	}
+
+	async function continueStory() {
+		try {
+			if (!currentStoryTemplate) return;
+
+			currentChapter++;
+			const result = await processStoryWithChoices(currentStoryTemplate, uid, currentChapter);
+			currentStory = result.content;
+			storyChoices = result.choice;
+			storyComplete = result.isComplete;
+			storyReflection = result.reflection;
+
+			await showStoryChapter();
+
+		} catch (error) {
+			console.error('[FamilyBot] Failed to continue story:', error);
+			await showFollowUp("The story adventure ends here! Thanks for reading with me 📖✨");
+		}
+	}
+
+	// Phase 8: Custom Poll Wizard with Psychology Guardrails
+	async function startCustomPollWizard() {
+		customPollStep = "question";
+		customPollQuestion = "";
+		customPollOptions = [];
+		customPollGuidance = [];
+		customPollValidated = false;
+
+		state = "action";
+		suggestionMessage = "Let's create a custom poll! What question would you like to ask your family? 📊";
+		suggestions = [
+			{
+				label: "🍽️ Food question",
+				action: async () => {
+					customPollQuestion = "What should we have for dinner tonight?";
+					await validateCustomPoll();
+				}
+			},
+			{
+				label: "🎉 Activity question", 
+				action: async () => {
+					customPollQuestion = "What should we do this weekend?";
+					await validateCustomPoll();
+				}
+			},
+			{
+				label: "🎮 Game question",
+				action: async () => {
+					customPollQuestion = "Which game should we play together?";
+					await validateCustomPoll();
+				}
+			},
+			{
+				label: "✏️ Write my own",
+				action: async () => {
+					await promptCustomQuestion();
+				}
+			}
+		];
+	}
+
+	async function promptCustomQuestion() {
+		// In a real implementation, this would open a text input
+		// For now, provide helpful guidance
+		await showFollowUp(`💡 Great! Here are some tips for good poll questions:
+
+✅ Keep it family-friendly and positive
+✅ Make it fun and engaging  
+✅ Ask about choices everyone can participate in
+✅ Avoid words like "worst" or "hate"
+
+Examples:
+• "What's our next family movie night pick?"
+• "Which treats should we make this weekend?"
+• "What new activity should we try together?"
+
+Try asking me with one of the suggested categories! 😊`);
+	}
+
+	async function validateCustomPoll() {
+		try {
+			const validation = await createCustomPollWizard(uid, customPollQuestion, customPollOptions);
+			
+			customPollGuidance = validation.guidance;
+			customPollValidated = validation.validated && validation.childFriendly;
+
+			if (customPollValidated) {
+				// Show suggested options
+				customPollStep = "options";
+				state = "action";
+				suggestionMessage = `Great question! "${customPollQuestion}"
+
+Here are some suggested options:`;
+				
+				suggestions = validation.suggestedOptions.slice(0, 4).map(option => ({
+					label: option,
+					action: async () => {
+						if (customPollOptions.length < 4) {
+							customPollOptions.push(option);
+							await updatePollOptions();
+						}
+					}
+				}));
+
+				suggestions.push({
+					label: "✅ Create poll",
+					action: async () => {
+						await finalizeCustomPoll();
+					}
+				});
+
+			} else {
+				// Show guidance for improvement
+				await showFollowUp(`Let's make that question even better! 
+
+${customPollGuidance.join('\n')}
+
+Would you like to try a different question? 😊`);
+			}
+
+		} catch (error) {
+			console.error('[FamilyBot] Failed to validate custom poll:', error);
+			await showFollowUp("Let's try a simpler poll question! 😊");
+		}
+	}
+
+	async function updatePollOptions() {
+		state = "action";
+		suggestionMessage = `Poll question: "${customPollQuestion}"
+
+Current options: ${customPollOptions.join(', ')}
+
+${customPollOptions.length >= 2 ? 'You can create the poll now or add more options!' : 'Add at least one more option to create the poll.'}`;
+
+		suggestions = [
+			{
+				label: "✅ Create poll now",
+				action: async () => {
+					await finalizeCustomPoll();
+				}
+			}
+		];
+
+		if (customPollOptions.length < 4) {
+			suggestions.push({
+				label: "➕ Add another option",
+				action: async () => {
+					// In real implementation, would prompt for custom option
+					await showFollowUp("Great! You can add more options to make your poll even better! 🎯");
+				}
+			});
+		}
+	}
+
+	async function finalizeCustomPoll() {
+		try {
+			if (customPollOptions.length < 2) {
+				// Add default options if needed
+				customPollOptions = ["Option A 🅰️", "Option B 🅱️"];
+			}
+
+			const result = await createCustomPoll(uid, customPollQuestion, customPollOptions);
+			
+			if (result.success) {
+				await showFollowUp(`🎉 Amazing! Your poll "${customPollQuestion}" has been created! Your family can now vote on it. Thanks for being creative! 📊✨`);
+				
+				// Award seasonal badge if appropriate
+				await awardSeasonalBadge(uid, 'celebrate_birthday'); // Example action
+			} else {
+				await showFollowUp(`${result.guidance?.join('\n') || "Let's try creating a different poll! 😊"}`);
+			}
+
+		} catch (error) {
+			console.error('[FamilyBot] Failed to finalize custom poll:', error);
+			await showFollowUp("Something went wrong creating your poll. Let's try again! 😊");
+		}
+	}
+
 	function closeBot() {
-		// Reset all wizard states
+		// Reset all wizard states including Phase 8
 		pollWizardStep = null;
 		pollKind = "";
 		pollOptions = [];
@@ -687,6 +1006,20 @@ ${motivationalNudge}`);
 		feedbackMessage = "";
 		feedbackStep = null;
 		feedbackInputType = "text";
+		
+		// Phase 8: Reset enhanced states
+		currentStoryTemplate = null;
+		currentChapter = 0;
+		storyChoices = null;
+		storyComplete = false;
+		storyReflection = null;
+		customPollStep = null;
+		customPollQuestion = "";
+		customPollOptions = [];
+		customPollGuidance = [];
+		customPollValidated = false;
+		memoryNudgeMessage = "";
+		showMemoryNudge = false;
 		
 		state = "idle";
 	}
@@ -703,6 +1036,7 @@ ${motivationalNudge}`);
 			loadNickname();
 			loadUserPreferences();
 			checkForNewBadges();
+			loadMemoryNudge(); // Phase 8: Load memory nudges
 		}
 	});
 
@@ -711,6 +1045,7 @@ ${motivationalNudge}`);
 		if (currentUser) {
 			loadNickname();
 			loadUserPreferences();
+			loadMemoryNudge(); // Phase 8: Load memory nudges when user changes
 		}
 	});
 </script>
