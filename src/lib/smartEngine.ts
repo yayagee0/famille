@@ -39,14 +39,13 @@ import {
 	type IdentityTrait,
 	type BadgeTemplate
 } from '$lib/data/smartEngine';
-import { seasonalNudgeTemplates } from '$lib/data/seasonal';
-import { pollTemplates, type PollTemplate } from '$lib/data/polls';
-import {
-import {
+import { 
+	seasonalNudgeTemplates, 
 	getCurrentSeasonalConfig,
 	getCurrentSeasonalBanners,
 	type SeasonalBanner
 } from '$lib/data/seasonal';
+import { pollTemplates, type PollTemplate } from '$lib/data/polls';
 import { AnalyticsEngine, type DailyAnalytics, type UserDailyMetrics } from '$lib/data/analytics';
 import { type FunFeedEntry, type DailyPoll } from '$lib/schema';
 
