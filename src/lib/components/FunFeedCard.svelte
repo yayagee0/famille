@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createPollFromSuggestion } from '$lib/smartEngine';
+	import { createPollFromSuggestion, createStoryFromSuggestion, addFunFeedReaction } from '$lib/smartEngine';
 	import { auth } from '$lib/firebase';
 	import type { FunFeedEntry } from '$lib/schema';
 	
@@ -7,6 +7,12 @@
 	
 	const currentUser = $derived(auth.currentUser);
 	let isCreatingPoll = $state(false);
+	let isReadingStory = $state(false);
+	let currentStory = $state('');
+	let showReactions = $state(false);
+	
+	// Common emoji reactions
+	const reactionEmojis = ['❤️', '😄', '👍', '🎉', '😮', '👏'];
 	
 	// Format timestamp for display
 	function formatTimestamp(timestamp: any): string {
@@ -38,6 +44,47 @@
 		}
 	}
 	
+	// Handle reading a story from suggestion
+	async function handleReadStory() {
+		if (!currentUser?.uid || !entry.metadata?.storyTheme || !entry.metadata?.targetNickname) return;
+		
+		try {
+			isReadingStory = true;
+			const story = await createStoryFromSuggestion(
+				entry.metadata.storyTheme, 
+				entry.metadata.targetNickname, 
+				currentUser.uid
+			);
+			currentStory = story;
+		} catch (error) {
+			console.error('Failed to read story from suggestion:', error);
+		} finally {
+			isReadingStory = false;
+		}
+	}
+	
+	// Handle reaction toggle
+	async function handleReaction(emoji: string) {
+		if (!currentUser?.uid || !entry.id) return;
+		
+		try {
+			await addFunFeedReaction(entry.id, emoji, currentUser.uid);
+			// Note: In a real app, we'd want to refetch the entry or use reactive updates
+		} catch (error) {
+			console.error('Failed to add reaction:', error);
+		}
+	}
+	
+	// Get reaction count for an emoji
+	function getReactionCount(emoji: string): number {
+		return entry.reactions?.[emoji]?.length || 0;
+	}
+	
+	// Check if current user has reacted with this emoji
+	function hasUserReacted(emoji: string): boolean {
+		return entry.reactions?.[emoji]?.includes(currentUser?.uid || '') || false;
+	}
+	
 	// Get card styling based on entry type
 	function getCardStyling(type: string): string {
 		switch (type) {
@@ -45,6 +92,8 @@
 				return 'border-blue-200 bg-blue-50';
 			case 'feedbackSuggestion':
 				return 'border-green-200 bg-green-50';
+			case 'storySuggestion':
+				return 'border-purple-200 bg-purple-50';
 			case 'badge':
 				if (entry.rarity === 'legendary') {
 					return 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50 shadow-lg';
@@ -68,6 +117,7 @@
 			case 'pollSuggestion':
 				return '📊';
 			case 'story':
+			case 'storySuggestion':
 				return '📖';
 			case 'feedback':
 			case 'feedbackSuggestion':
@@ -130,6 +180,28 @@
 				Share your thoughts with the family about this topic!
 			</p>
 		</div>
+	{:else if entry.type === 'storySuggestion' && entry.metadata?.storyTheme && entry.metadata?.targetNickname}
+		<div class="mt-3 p-3 bg-white rounded-lg border border-purple-200">
+			<p class="text-sm text-gray-700 mb-3">
+				<strong>Story Theme:</strong> {entry.metadata.storyTheme} for {entry.metadata.targetNickname}
+			</p>
+			<button
+				class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+				onclick={handleReadStory}
+				disabled={isReadingStory || !currentUser}
+			>
+				{isReadingStory ? 'Loading...' : '📖 Read Story'}
+			</button>
+			
+			<!-- Show story content if loaded -->
+			{#if currentStory}
+				<div class="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-300">
+					<p class="text-sm text-gray-800 italic leading-relaxed">
+						{currentStory}
+					</p>
+				</div>
+			{/if}
+		</div>
 	{:else if entry.type === 'story' && entry.metadata?.storyPreview}
 		<div class="mt-3 p-3 bg-white rounded-lg border border-emerald-200">
 			<p class="text-sm text-gray-700 italic">
@@ -153,6 +225,54 @@
 			<p class="text-sm text-gray-800 font-medium">
 				🌟 A legendary achievement unlocked! This is a special milestone worth celebrating.
 			</p>
+		</div>
+	{/if}
+	
+	<!-- Reactions System -->
+	<div class="mt-3 flex items-center justify-between">
+		<!-- Reaction Emojis -->
+		<div class="flex items-center gap-1">
+			<button
+				class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+				onclick={() => showReactions = !showReactions}
+			>
+				😊 React
+			</button>
+			
+			<!-- Show existing reactions -->
+			{#if entry.reactions}
+				{#each Object.entries(entry.reactions) as [emoji, users]}
+					{#if users.length > 0}
+						<button
+							class="text-xs px-2 py-1 rounded-full transition-colors {hasUserReacted(emoji) ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-gray-100 hover:bg-gray-200'}"
+							onclick={() => handleReaction(emoji)}
+							disabled={!currentUser}
+						>
+							{emoji} {users.length}
+						</button>
+					{/if}
+				{/each}
+			{/if}
+		</div>
+	</div>
+	
+	<!-- Reaction Picker -->
+	{#if showReactions}
+		<div class="mt-2 p-2 bg-gray-50 rounded-lg border">
+			<div class="flex gap-1 flex-wrap">
+				{#each reactionEmojis as emoji}
+					<button
+						class="text-lg px-2 py-1 rounded hover:bg-gray-200 transition-colors {hasUserReacted(emoji) ? 'bg-blue-100' : ''}"
+						onclick={() => {
+							handleReaction(emoji);
+							showReactions = false;
+						}}
+						disabled={!currentUser}
+					>
+						{emoji}
+					</button>
+				{/each}
+			</div>
 		</div>
 	{/if}
 	

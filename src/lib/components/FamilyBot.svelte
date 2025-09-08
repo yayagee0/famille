@@ -10,7 +10,8 @@
 		addToFunFeed,
 		trackPollVote,
 		addPollSuggestion,
-		addFeedbackSuggestion
+		addFeedbackSuggestion,
+		addStorySuggestion
 	} from "$lib/smartEngine";
 	import { 
 		getPreferences, 
@@ -235,6 +236,10 @@
 		baseSuggestions.push({
 			label: storyLabel,
 			action: async () => {
+				// Add story suggestion to Fun Feed
+				const targetNickname = nickname || 'you';
+				const storyTheme = (preferredTheme && hasStrongPreference(userPreferences!, 'story')) ? preferredTheme : 'adventure';
+				await addStorySuggestion(uid, targetNickname, storyTheme);
 				await startStory();
 			}
 		});

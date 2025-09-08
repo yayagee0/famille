@@ -199,13 +199,15 @@ export interface DailyAnalytics {
 
 export interface FunFeedEntry {
 	id?: string;
-	type: 'poll' | 'story' | 'feedback' | 'badge' | 'pollSuggestion' | 'feedbackSuggestion'; // Added suggestion types
+	type: 'poll' | 'story' | 'feedback' | 'badge' | 'pollSuggestion' | 'feedbackSuggestion' | 'storySuggestion'; // Added story suggestion type
 	text: string;
 	createdBy: string; // uid
 	familyId: string;
 	createdAt: Timestamp;
 	// Phase 6 enrichment fields
 	rarity?: 'common' | 'rare' | 'legendary'; // For badge entries
+	// Phase 7 reactions system
+	reactions?: Record<string, string[]>; // emoji -> uid[] mapping
 	metadata?: {
 		pollQuestion?: string; // For poll entries and suggestions
 		storyPreview?: string; // For story entries  
@@ -214,6 +216,8 @@ export interface FunFeedEntry {
 		suggestedBy?: string; // For suggestion entries
 		suggestedAt?: string; // For suggestion entries
 		content?: string; // General content for suggestions
+		storyTheme?: string; // For story suggestions
+		targetNickname?: string; // For personalized story suggestions
 	};
 }
 

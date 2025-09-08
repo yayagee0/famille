@@ -2633,3 +2633,122 @@ export async function createPollFromSuggestion(question: string, uid: string): P
 		throw error;
 	}
 }
+
+/**
+ * Add a story suggestion to Fun Feed (throttled)
+ * @param uid User ID who initiated the suggestion
+ * @param targetNickname Target family member's nickname
+ * @param storyTheme Story theme (e.g., 'bravery', 'kindness', 'adventure')
+ */
+export async function addStorySuggestion(uid: string, targetNickname: string, storyTheme: string): Promise<void> {
+	try {
+		const sessionId = `${uid}-${new Date().toISOString().split('T')[0]}`;
+		
+		if (!canAddSuggestion(sessionId, 'story')) {
+			console.log('[FamilyBot] Story suggestion throttled for this session');
+			return;
+		}
+
+		await SmartEngine.addEnhancedFunFeedEntry('storySuggestion', {
+			text: `📖 FamilyBot suggests a ${storyTheme} story for ${targetNickname}`,
+			createdBy: 'bot', 
+			rarity: 'common',
+			metadata: {
+				suggestedBy: uid,
+				suggestedAt: new Date().toISOString(),
+				storyTheme,
+				targetNickname,
+				content: `An inspiring ${storyTheme} story tailored for ${targetNickname}`
+			}
+		});
+
+		markSuggestionAdded(sessionId, 'story');
+		console.log(`[FamilyBot] Added story suggestion: ${storyTheme} for ${targetNickname}`);
+		
+	} catch (error) {
+		console.error('[FamilyBot] Failed to add story suggestion:', error);
+	}
+}
+
+/**
+ * Create a story from a FamilyBot suggestion and start story flow
+ * @param storyTheme Suggested story theme
+ * @param targetNickname Target family member's nickname
+ * @param uid User who is reading the story
+ */
+export async function createStoryFromSuggestion(storyTheme: string, targetNickname: string, uid: string): Promise<string> {
+	try {
+		// Get a personalized story template based on the theme
+		const storyTemplate = await getPersonalizedStoryTemplate(uid, storyTheme);
+		
+		// Add a real story entry to Fun Feed (not a suggestion)
+		await SmartEngine.addEnhancedFunFeedEntry('story', {
+			text: `📖 ${await SmartEngine.getUserDisplayName(uid)} started reading a ${storyTheme} story`,
+			createdBy: uid,
+			rarity: 'common',
+			metadata: {
+				storyPreview: storyTemplate.substring(0, 100) + '...',
+				storyTheme,
+				targetNickname
+			}
+		});
+
+		// Track milestone progress
+		await SmartEngine.updateMilestoneProgress(uid, 'story_read');
+		await SmartEngine.updateMilestoneProgress(uid, 'daily_interaction');
+
+		console.log(`[FamilyBot] Created story from suggestion: ${storyTheme}`);
+		return storyTemplate;
+		
+	} catch (error) {
+		console.error('[FamilyBot] Failed to create story from suggestion:', error);
+		throw error;
+	}
+}
+
+/**
+ * Add reaction to a Fun Feed entry
+ * @param entryId Fun Feed entry ID
+ * @param emoji Emoji reaction
+ * @param uid User ID adding the reaction
+ */
+export async function addFunFeedReaction(entryId: string, emoji: string, uid: string): Promise<void> {
+	try {
+		const entryRef = doc(db, 'fun_feed', entryId);
+		const entrySnap = await getDoc(entryRef);
+		
+		if (!entrySnap.exists()) {
+			throw new Error('Fun Feed entry not found');
+		}
+
+		const entryData = entrySnap.data();
+		const reactions = entryData.reactions || {};
+		
+		// Initialize emoji array if it doesn't exist
+		if (!reactions[emoji]) {
+			reactions[emoji] = [];
+		}
+		
+		// Toggle reaction (add if not present, remove if present)
+		const userIndex = reactions[emoji].indexOf(uid);
+		if (userIndex > -1) {
+			// Remove reaction
+			reactions[emoji].splice(userIndex, 1);
+			// Clean up empty arrays
+			if (reactions[emoji].length === 0) {
+				delete reactions[emoji];
+			}
+		} else {
+			// Add reaction
+			reactions[emoji].push(uid);
+		}
+
+		// Update the document
+		await updateDoc(entryRef, { reactions });
+		console.log(`[FamilyBot] Updated reaction ${emoji} for entry ${entryId}`);
+		
+	} catch (error) {
+		console.error('[FamilyBot] Failed to add reaction:', error);
+		throw error;
+	}
+}
