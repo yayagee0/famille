@@ -1100,7 +1100,7 @@ export class SmartEngine {
 			const maxVotes = Math.max(...optionCounts);
 			const winners = poll.options.filter((_, index) => optionCounts[index] === maxVotes);
 
-			// Create result text
+			// Create result text for main feed
 			let resultText = `📊 Poll Results: "${poll.question}"\n\n`;
 
 			if (totalVotes === 0) {
@@ -1130,6 +1130,35 @@ export class SmartEngine {
 				likes: [],
 				comments: []
 			});
+
+			// Also post to Fun Feed with concise format
+			if (totalVotes > 0 && winners.length === 1) {
+				const winnerText = winners[0];
+				const winnerCount = optionCounts[poll.options.indexOf(winnerText)];
+				
+				await this.addEnhancedFunFeedEntry('poll', {
+					text: `📊 Poll closed: ${winnerText} won with ${winnerCount} vote${winnerCount !== 1 ? 's' : ''}`,
+					createdBy: 'system',
+					rarity: 'common',
+					metadata: {
+						pollId,
+						question: poll.question,
+						winner: winnerText,
+						totalVotes
+					}
+				});
+			} else if (totalVotes === 0) {
+				await this.addEnhancedFunFeedEntry('poll', {
+					text: `📊 Poll closed: "${poll.question}" - no votes received`,
+					createdBy: 'system',
+					rarity: 'common',
+					metadata: {
+						pollId,
+						question: poll.question,
+						totalVotes: 0
+					}
+				});
+			}
 
 			console.log(`[SmartEngine] Posted poll results to feed for poll ${pollId}`);
 		} catch (error) {
@@ -3396,6 +3425,43 @@ export async function addFunFeedReaction(entryId: string, emoji: string, uid: st
 		
 	} catch (error) {
 		console.error('[FamilyBot] Failed to add reaction:', error);
+		throw error;
+	}
+}
+
+/**
+ * Add comment to Fun Feed entry
+ */
+export async function addFunFeedComment(
+	entryId: string, 
+	commentText: string, 
+	userId: string
+): Promise<void> {
+	try {
+		const entryRef = doc(db, 'fun_feed', entryId);
+		const entryDoc = await getDoc(entryRef);
+		
+		if (!entryDoc.exists()) {
+			throw new Error('Fun Feed entry not found');
+		}
+		
+		const entry = entryDoc.data();
+		const comments = entry.comments || [];
+		
+		const newComment = {
+			id: Date.now().toString(), // Simple ID generation
+			text: commentText,
+			createdBy: userId,
+			createdAt: serverTimestamp()
+		};
+		
+		await updateDoc(entryRef, {
+			comments: [...comments, newComment]
+		});
+		
+		console.log(`[FunFeed] Added comment to entry ${entryId}`);
+	} catch (error) {
+		console.error('[FunFeed] Failed to add comment:', error);
 		throw error;
 	}
 }

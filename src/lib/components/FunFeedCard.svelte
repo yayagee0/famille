@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { createPollFromSuggestion, createStoryFromSuggestion, addFunFeedReaction } from '$lib/smartEngine';
+	import { createPollFromSuggestion, createStoryFromSuggestion, addFunFeedReaction, addFunFeedComment } from '$lib/smartEngine';
 	import { auth } from '$lib/firebase';
+	import { getDisplayName } from '$lib/getDisplayName';
 	import type { FunFeedEntry } from '$lib/schema';
 	
 	let { entry } = $props<{ entry: FunFeedEntry }>();
@@ -10,6 +11,9 @@
 	let isReadingStory = $state(false);
 	let currentStory = $state('');
 	let showReactions = $state(false);
+	let showComments = $state(false);
+	let newComment = $state('');
+	let isAddingComment = $state(false);
 	
 	// Common emoji reactions
 	const reactionEmojis = ['❤️', '😄', '👍', '🎉', '😮', '👏'];
@@ -83,6 +87,31 @@
 	// Check if current user has reacted with this emoji
 	function hasUserReacted(emoji: string): boolean {
 		return entry.reactions?.[emoji]?.includes(currentUser?.uid || '') || false;
+	}
+	
+	// Handle adding a comment
+	async function handleAddComment() {
+		if (!currentUser?.uid || !newComment.trim() || isAddingComment) return;
+		
+		try {
+			isAddingComment = true;
+			await addFunFeedComment(entry.id!, newComment.trim(), currentUser.uid);
+			
+			// Add the comment locally for immediate feedback
+			if (!entry.comments) entry.comments = [];
+			entry.comments.push({
+				id: Date.now().toString(),
+				text: newComment.trim(),
+				createdBy: currentUser.uid,
+				createdAt: new Date() as any
+			});
+			
+			newComment = '';
+		} catch (error) {
+			console.error('Failed to add comment:', error);
+		} finally {
+			isAddingComment = false;
+		}
 	}
 	
 	// Get card styling based on entry type
@@ -275,6 +304,62 @@
 			</div>
 		</div>
 	{/if}
+	
+	<!-- Comments Section -->
+	<div class="mt-4">
+		<!-- Comments toggle -->
+		<button
+			onclick={() => showComments = !showComments}
+			class="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+		>
+			💬 {entry.comments?.length || 0} comment{(entry.comments?.length || 0) !== 1 ? 's' : ''}
+		</button>
+		
+		{#if showComments}
+			<div class="mt-3 space-y-2">
+				<!-- Existing comments -->
+				{#if entry.comments && entry.comments.length > 0}
+					{#each entry.comments as comment (comment.id)}
+						<div class="bg-gray-50 rounded-lg p-3">
+							<div class="flex justify-between items-start">
+								<span class="font-medium text-sm text-gray-700">
+									{getDisplayName(comment.createdBy, {})}
+								</span>
+								<span class="text-xs text-gray-500">
+									{formatTimestamp(comment.createdAt)}
+								</span>
+							</div>
+							<p class="text-sm text-gray-600 mt-1">{comment.text}</p>
+						</div>
+					{/each}
+				{/if}
+				
+				<!-- Add comment form -->
+				{#if currentUser}
+					<div class="flex gap-2 mt-3">
+						<input
+							type="text"
+							bind:value={newComment}
+							placeholder="Add a comment..."
+							class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+							onkeydown={(e) => {
+								if (e.key === 'Enter') {
+									handleAddComment();
+								}
+							}}
+						/>
+						<button
+							onclick={handleAddComment}
+							disabled={!newComment.trim() || isAddingComment}
+							class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							{isAddingComment ? '⏳' : '💬'}
+						</button>
+					</div>
+				{/if}
+			</div>
+		{/if}
+	</div>
 	
 	<!-- Timestamp -->
 	<div class="mt-3 pt-2 border-t border-gray-200">

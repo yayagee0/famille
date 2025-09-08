@@ -5,7 +5,9 @@
 		query,
 		orderBy,
 		limit,
+		startAfter,
 		getDoc,
+		getDocs,
 		doc,
 		updateDoc,
 		deleteDoc,
@@ -31,8 +33,12 @@
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let posts = $state<any[]>([]);
 	let loading = $state(true);
+	let loadingMore = $state(false);
 	let unsubscribePosts: (() => void) | null = null;
 	let currentTheme = $state('default');
+	let lastDoc = $state<any>(null);
+	let hasMorePosts = $state(true);
+	const POSTS_PER_PAGE = 4;
 
 	// Subscribe to theme changes
 	$effect(() => {
@@ -112,9 +118,9 @@
 			loading = false;
 		}
 
-		// If online, subscribe to real-time updates
+		// If online, subscribe to real-time updates for first page
 		if ($isOnline) {
-			const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(10));
+			const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(POSTS_PER_PAGE));
 
 			if (!cachedPosts) loading = true;
 
@@ -122,6 +128,14 @@
 				postsQuery,
 				async (snapshot) => {
 					const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<any>;
+
+					// Store the last document for pagination
+					if (snapshot.docs.length > 0) {
+						lastDoc = snapshot.docs[snapshot.docs.length - 1];
+						hasMorePosts = snapshot.docs.length === POSTS_PER_PAGE;
+					} else {
+						hasMorePosts = false;
+					}
 
 					// Preload VideoPlayer if there are video posts
 					const hasVideoPosts = rawPosts.some((post: any) => post.videoPath);
@@ -175,6 +189,60 @@
 	// ➕ Handle post creation completion
 	function handlePostCreated() {
 		// Post was already created by FeedUpload, real-time subscription will update the feed automatically
+	}
+
+	// 📄 Load more posts
+	async function loadMorePosts() {
+		if (!$isOnline || !lastDoc || !hasMorePosts || loadingMore) return;
+
+		try {
+			loadingMore = true;
+
+			const nextQuery = query(
+				collection(db, 'posts'),
+				orderBy('createdAt', 'desc'),
+				startAfter(lastDoc),
+				limit(POSTS_PER_PAGE)
+			);
+
+			const snapshot = await getDocs(nextQuery);
+			const rawPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<any>;
+
+			if (rawPosts.length > 0) {
+				// Enrich posts with author data
+				const enriched = await Promise.all(
+					rawPosts.map(async (post: any) => {
+						if (post.authorUid) {
+							const uDoc = await getDoc(doc(db, 'users', post.authorUid));
+							if (uDoc.exists()) {
+								const u = uDoc.data();
+								return {
+									...post,
+									author: {
+										displayName: getDisplayName(u.email, { nickname: u.nickname }),
+										avatarUrl: u.avatarUrl || null
+									}
+								};
+							}
+						}
+						return { ...post, author: null };
+					})
+				);
+
+				// Append to existing posts
+				posts = [...posts, ...enriched];
+
+				// Update pagination state
+				lastDoc = snapshot.docs[snapshot.docs.length - 1];
+				hasMorePosts = snapshot.docs.length === POSTS_PER_PAGE;
+			} else {
+				hasMorePosts = false;
+			}
+		} catch (error) {
+			console.error('[Feed] Failed to load more posts:', error);
+		} finally {
+			loadingMore = false;
+		}
 	}
 
 	// ❤️ Likes
@@ -907,6 +975,21 @@
 						</article>
 					{/if}
 				{/each}
+
+				<!-- Show More Button -->
+				{#if hasMorePosts && $isOnline}
+					<div class="mt-8 text-center">
+						<button
+							onclick={loadMorePosts}
+							disabled={loadingMore}
+							class="rounded-2xl px-6 py-3 font-medium shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-50 {currentTheme === 'neo'
+								? 'neo-button border border-lime-400/50 bg-lime-500/20 text-lime-400 hover:bg-lime-500/30'
+								: 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700 hover:shadow-md'}"
+						>
+							{loadingMore ? 'Loading...' : 'Show More Posts'}
+						</button>
+					</div>
+				{/if}
 			</div>
 		{/if}
 	{:else}

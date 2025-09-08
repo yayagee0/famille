@@ -211,6 +211,8 @@ export interface FunFeedEntry {
 	rarity?: 'common' | 'rare' | 'legendary'; // For badge entries
 	// Phase 7 reactions system
 	reactions?: Record<string, string[]>; // emoji -> uid[] mapping
+	// Phase 9 comments system
+	comments?: FunFeedComment[]; // Comment threads
 	metadata?: {
 		pollQuestion?: string; // For poll entries and suggestions
 		storyPreview?: string; // For story entries  
@@ -222,6 +224,13 @@ export interface FunFeedEntry {
 		storyTheme?: string; // For story suggestions
 		targetNickname?: string; // For personalized story suggestions
 	};
+}
+
+export interface FunFeedComment {
+	id?: string;
+	text: string;
+	createdBy: string; // uid
+	createdAt: Timestamp;
 }
 
 // ============================================================================
