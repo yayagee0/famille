@@ -12,6 +12,7 @@
 	import Nav from '$lib/Nav.svelte';
 	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
 	import OfflineIndicator from '$lib/components/OfflineIndicator.svelte';
+	import FamilyBot from '$lib/components/FamilyBot.svelte';
 	import { registerServiceWorker, clearAllCachesAndStorage } from '$lib/offline';
 
 	let { children } = $props();
@@ -145,6 +146,8 @@
 						</div>
 					</main>
 				</div>
+				<!-- FamilyBot for authenticated users -->
+				<FamilyBot />
 			{:else}
 				<main>
 					{@render children?.()}

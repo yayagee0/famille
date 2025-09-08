@@ -1140,3 +1140,52 @@ export class SmartEngine {
 		return availableTemplates[0] || null;
 	}
 }
+
+// ============================================================================
+// FamilyBot Helper Functions
+// ============================================================================
+
+/**
+ * Create a poll for FamilyBot
+ */
+export async function createPoll({ question, options }: { question: string; options: string[] }) {
+	const familyId = getFamilyId();
+	const ref = collection(db, "daily_polls");
+	await addDoc(ref, {
+		question,
+		options: options.map(text => ({ text, votes: [] })),
+		familyId,
+		createdAt: serverTimestamp(),
+		expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+		totalVotes: 0
+	});
+}
+
+/**
+ * Send feedback from FamilyBot
+ */
+export async function sendFeedback(uid: string, message: string) {
+	const ref = collection(db, `users/${uid}/feedback`);
+	await addDoc(ref, {
+		message,
+		source: 'FamilyBot',
+		createdAt: serverTimestamp()
+	});
+}
+
+/**
+ * Get a random story template (stub for now)
+ */
+const sampleStories = [
+	"Once upon a time, a brave explorer set out on an adventure 🌍.",
+	"A curious cat 🐱 discovered hidden wisdom in the forest.",
+	"Two brothers set out to find a treasure, guided by kindness ✨.",
+	"A little bird 🐦 learned the importance of helping others.",
+	"In a magical garden, flowers taught a young child about patience 🌸.",
+	"A wise owl 🦉 shared ancient secrets with a group of friends."
+];
+
+export async function getRandomStoryTemplate(): Promise<string> {
+	const idx = Math.floor(Math.random() * sampleStories.length);
+	return sampleStories[idx];
+}
