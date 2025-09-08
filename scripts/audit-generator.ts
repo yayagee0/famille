@@ -184,7 +184,7 @@ const evidence: string[] = [
 
 // ---- Generate Comprehensive Markdown ----
 
-let md = `# 🌟 Family Hub – App Status Dashboard (v${pkg.version || '0.0.1'})
+const md = `# 🌟 Family Hub – App Status Dashboard (v${pkg.version || '0.0.1'})
 
 🗓️ **Generated:** ${TIMESTAMP}  
 👨‍💻 **Developer:** Ghassan  
