@@ -37,16 +37,15 @@
 		}
 
 		try {
-			// Try to generate today's nudge (will return null if already exists)
-			const nudge = await SmartEngine.generateDailyNudge(user.uid);
-
-			if (nudge) {
-				todaysNudge = nudge;
-			} else {
-				// Load existing nudge for today
-				// TODO: Add method to get today's nudge from Firestore
-				console.log('[DailyNudge] No new nudge generated (already exists for today)');
+			// First, try to get today's existing nudge
+			let nudge = await SmartEngine.getTodaysNudge(user.uid);
+			
+			if (!nudge) {
+				// If no nudge exists for today, generate one
+				nudge = await SmartEngine.generateDailyNudge(user.uid);
 			}
+			
+			todaysNudge = nudge;
 		} catch (err) {
 			console.error('[DailyNudge] Failed to load nudge:', err);
 			error = 'Failed to load your daily nudge. Please try again later.';
@@ -57,11 +56,17 @@
 
 	// Mark nudge as read
 	async function markAsRead() {
-		if (!todaysNudge?.id || !user?.uid) return;
+		if (!user?.uid) return;
 
 		try {
-			// TODO: Update nudge as read in Firestore
-			console.log('[DailyNudge] Marked as read:', todaysNudge.id);
+			await SmartEngine.markTodaysNudgeAsRead(user.uid);
+			
+			// Update local state to show as read
+			if (todaysNudge) {
+				todaysNudge = { ...todaysNudge, readAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any };
+			}
+			
+			console.log('[DailyNudge] Marked as read');
 		} catch (err) {
 			console.error('[DailyNudge] Failed to mark as read:', err);
 		}
@@ -271,7 +276,7 @@
 			</div>
 		{:else}
 			<div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center">
-				<p class="text-gray-600">No nudge available today. Check back tomorrow! 🌟</p>
+				<p class="text-gray-600">No nudge available today. Check back tomorrow 🌟</p>
 			</div>
 		{/if}
 	</PlayCard>

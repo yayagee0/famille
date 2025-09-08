@@ -292,6 +292,84 @@ describe('Smart Engine Core Logic', () => {
 				expect(milestone).toBeGreaterThan(0);
 			});
 		});
+
+		it('should generate meaningful badge reasons', () => {
+			// Test the private getBadgeReason method through badge awarding
+			// These are the expected reason patterns based on our implementation
+			
+			// Islamic Q&A badges
+			expect(SmartEngine['getBadgeReason']('answered_1_islamic_question', { description: 'First Steps' }))
+				.toBe('Answered your first Islamic question');
+			
+			expect(SmartEngine['getBadgeReason']('answered_5_islamic_questions', { description: 'Knowledge Seeker' }))
+				.toBe('Answered 5 Islamic questions correctly');
+			
+			// Login streak badges
+			expect(SmartEngine['getBadgeReason']('login_streak_7', { description: 'Weekly Warrior' }))
+				.toBe('Logged in 7 days in a row');
+			
+			// Social engagement badges
+			expect(SmartEngine['getBadgeReason']('first_post', { description: 'First Post' }))
+				.toBe('Shared your first post');
+			
+			expect(SmartEngine['getBadgeReason']('first_comment', { description: 'First Comment' }))
+				.toBe('Left your first comment');
+			
+			// Fallback for unknown conditions
+			expect(SmartEngine['getBadgeReason']('unknown_condition', { description: 'Unknown Badge' }))
+				.toBe('Unknown Badge');
+			
+			// Fallback when no description provided
+			expect(SmartEngine['getBadgeReason']('unknown_condition', null))
+				.toBe('Achieved a special milestone');
+		});
+	});
+
+	describe('Daily Nudge Persistence', () => {
+		it('should use date-based document IDs for nudges', () => {
+			// Test that the date key format is correct
+			const today = new Date();
+			const dateKey = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+			
+			expect(dateKey).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+			expect(dateKey.length).toBe(10);
+		});
+
+		it('should handle getTodaysNudge method', async () => {
+			// Mock getDoc to return a nudge
+			const { getDoc } = await import('firebase/firestore');
+			const mockNudge = {
+				id: '2025-01-08',
+				userId: 'test-user',
+				templateId: 'test-template',
+				generatedText: 'Test nudge',
+				character: 'noor',
+				traits: ['curious'],
+				createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+				type: 'positive'
+			};
+
+			vi.mocked(getDoc).mockResolvedValue({
+				exists: () => true,
+				data: () => mockNudge,
+				id: '2025-01-08'
+			} as any);
+
+			const result = await SmartEngine.getTodaysNudge('test-user');
+			expect(result).toBeTruthy();
+			expect(result?.id).toBe('2025-01-08');
+		});
+
+		it('should return null when no nudge exists for today', async () => {
+			const { getDoc } = await import('firebase/firestore');
+			
+			vi.mocked(getDoc).mockResolvedValue({
+				exists: () => false
+			} as any);
+
+			const result = await SmartEngine.getTodaysNudge('test-user');
+			expect(result).toBeNull();
+		});
 	});
 
 	describe('Template Placeholder System', () => {

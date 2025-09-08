@@ -160,6 +160,11 @@
 		if (!timestamp?.toDate) return '';
 		return timestamp.toDate().toLocaleDateString();
 	}
+
+	// Get badge reason with fallback
+	function getBadgeReason(badge: any): string {
+		return badge.reason || "Unlocked by surprise 🎉";
+	}
 </script>
 
 {#if currentTheme === 'neo'}
@@ -208,6 +213,9 @@
 									</h3>
 									<p class="text-xs text-slate-400 capitalize">
 										{badge.template.rarity}
+									</p>
+									<p class="text-xs text-slate-500 mt-1">
+										{getBadgeReason(badge)}
 									</p>
 									{#if showRecent}
 										<p class="text-xs text-slate-500">
@@ -261,6 +269,9 @@
 								<p class="text-xs text-gray-500 capitalize">
 									{badge.template.rarity}
 								</p>
+								<p class="text-xs text-gray-600 mt-1">
+									{getBadgeReason(badge)}
+								</p>
 								{#if showRecent}
 									<p class="text-xs text-gray-400">
 										{formatDate(badge.earnedAt)}
@@ -281,7 +292,17 @@
 		<div class="rounded-xl bg-white p-8 text-center shadow-2xl">
 			<div class="mb-4 text-6xl">🎉</div>
 			<h2 class="text-xl font-bold text-gray-800">Badge Earned!</h2>
-			<p class="text-gray-600">Playing animation: {showLottieAnimation}</p>
+			{#if userBadges.length > 0}
+				{@const clickedBadge = userBadges.find(b => b.template.lottieUrl === showLottieAnimation)}
+				{#if clickedBadge}
+					<p class="text-gray-600 font-medium">{clickedBadge.template.name}</p>
+					<p class="text-gray-500 text-sm mt-1">{getBadgeReason(clickedBadge)}</p>
+				{:else}
+					<p class="text-gray-600">Playing animation: {showLottieAnimation}</p>
+				{/if}
+			{:else}
+				<p class="text-gray-600">Playing animation: {showLottieAnimation}</p>
+			{/if}
 			<button
 				onclick={() => (showLottieAnimation = null)}
 				class="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"

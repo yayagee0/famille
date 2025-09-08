@@ -106,6 +106,7 @@ export interface UserBadge {
 	badgeId: string;
 	earnedAt: Timestamp;
 	notificationSent: boolean;
+	reason?: string; // Forward-only: short explanation of why badge was earned
 }
 
 export interface DailyPoll {
@@ -126,27 +127,58 @@ export interface DailyPoll {
 
 export class SmartEngine {
 	/**
+	 * Mark today's nudge as read
+	 */
+	static async markTodaysNudgeAsRead(userId: string): Promise<void> {
+		try {
+			const today = new Date();
+			const dateKey = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+			const nudgeRef = doc(db, 'users', userId, 'nudges', dateKey);
+			
+			await updateDoc(nudgeRef, {
+				readAt: serverTimestamp()
+			});
+			
+			console.log(`[SmartEngine] Marked today's nudge as read for user ${userId}`);
+		} catch (error) {
+			console.error('[SmartEngine] Failed to mark nudge as read:', error);
+		}
+	}
+
+	/**
+	 * Get today's nudge if it exists
+	 */
+	static async getTodaysNudge(userId: string): Promise<UserNudge | null> {
+		try {
+			const today = new Date();
+			const dateKey = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+			
+			const nudgeDoc = await getDoc(doc(db, 'users', userId, 'nudges', dateKey));
+			
+			if (nudgeDoc.exists()) {
+				return { ...nudgeDoc.data(), id: nudgeDoc.id } as UserNudge;
+			}
+			
+			return null;
+		} catch (error) {
+			console.error('[SmartEngine] Failed to get today\'s nudge:', error);
+			return null;
+		}
+	}
+
+	/**
 	 * Generate exactly one daily nudge for a user
 	 */
 	static async generateDailyNudge(userId: string): Promise<UserNudge | null> {
 		try {
-			// Check if user already has a nudge for today
+			// Check if user already has a nudge for today using date-based document ID
 			const today = new Date();
-			today.setHours(0, 0, 0, 0);
-			const tomorrow = new Date(today);
-			tomorrow.setDate(tomorrow.getDate() + 1);
-
-			const existingNudgeQuery = query(
-				collection(db, 'users', userId, 'nudges'),
-				where('createdAt', '>=', Timestamp.fromDate(today)),
-				where('createdAt', '<', Timestamp.fromDate(tomorrow)),
-				limit(1)
-			);
-
-			const existingNudges = await getDocs(existingNudgeQuery);
-			if (!existingNudges.empty) {
+			const dateKey = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+			
+			const existingNudge = await this.getTodaysNudge(userId);
+			if (existingNudge) {
 				console.log(`[SmartEngine] User ${userId} already has a nudge for today`);
-				return null; // Already has today's nudge
+				return existingNudge; // Return existing nudge
 			}
 
 			// Get user traits and Islamic progress
@@ -171,14 +203,17 @@ export class SmartEngine {
 			);
 
 			if (nudge) {
-				// Save to Firestore
-				const nudgeRef = await addDoc(collection(db, 'users', userId, 'nudges'), nudge);
-				console.log(`[SmartEngine] Generated daily nudge for user ${userId}: ${nudgeRef.id}`);
+				// Save to Firestore using date-based document ID
+				const today = new Date();
+				const dateKey = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+				const nudgeRef = doc(db, 'users', userId, 'nudges', dateKey);
+				await setDoc(nudgeRef, nudge);
+				console.log(`[SmartEngine] Generated daily nudge for user ${userId} on ${dateKey}`);
 
 				// Update trait rotation if needed
 				await this.updateTraitRotation(userId, userTraits);
 
-				return { ...nudge, id: nudgeRef.id };
+				return { ...nudge, id: dateKey };
 			}
 
 			return null;
@@ -512,6 +547,53 @@ export class SmartEngine {
 	}
 
 	/**
+	 * Generate meaningful reason text for badge awarding
+	 */
+	private static getBadgeReason(condition: string, badgeTemplate: any): string {
+		// Islamic Q&A badges
+		if (condition.includes('answered_') && condition.includes('islamic_question')) {
+			const match = condition.match(/answered_(\d+)_islamic_question/);
+			if (match) {
+				const count = parseInt(match[1]);
+				if (count === 1) return "Answered your first Islamic question";
+				return `Answered ${count} Islamic questions correctly`;
+			}
+		}
+		
+		// Login streak badges
+		if (condition.includes('login_streak')) {
+			const match = condition.match(/login_streak_(\d+)/);
+			if (match) {
+				const days = parseInt(match[1]);
+				return `Logged in ${days} days in a row`;
+			}
+		}
+		
+		// Social engagement badges
+		if (condition.includes('first_post')) return "Shared your first post";
+		if (condition.includes('first_comment')) return "Left your first comment";
+		if (condition.includes('first_like')) return "Liked your first post";
+		
+		// Photo/media badges
+		if (condition.includes('first_photo')) return "Uploaded your first photo";
+		if (condition.includes('first_video')) return "Shared your first video";
+		
+		// Weekly engagement badges
+		if (condition.includes('weekly_feedback')) return "Completed weekly reflection";
+		if (condition.includes('daily_nudge_streak')) return "Consistently engaged with daily nudges";
+		
+		// Poll participation
+		if (condition.includes('poll_participation')) return "Participated in family polls";
+		
+		// Seasonal badges
+		if (condition.includes('ramadan')) return "Active during Ramadan";
+		if (condition.includes('eid')) return "Celebrated Eid with the family";
+		
+		// Fallback to badge template description or generic reason
+		return badgeTemplate?.description || "Achieved a special milestone";
+	}
+
+	/**
 	 * Award badge to user if not already earned
 	 */
 	static async awardBadge(userId: string, condition: string): Promise<void> {
@@ -532,12 +614,16 @@ export class SmartEngine {
 				return; // Already earned
 			}
 
+			// Generate meaningful reason
+			const reason = this.getBadgeReason(condition, badgeTemplate);
+
 			// Award badge
 			const badge: UserBadge = {
 				userId,
 				badgeId: badgeTemplate.id,
 				earnedAt: serverTimestamp() as Timestamp,
-				notificationSent: false
+				notificationSent: false,
+				reason: reason
 			};
 
 			await addDoc(collection(db, 'users', userId, 'badges'), badge);
@@ -545,7 +631,7 @@ export class SmartEngine {
 			// TODO: Add to Fun Feed
 			// TODO: Show Lottie animation
 
-			console.log(`[SmartEngine] Awarded badge ${badgeTemplate.name} to user ${userId}`);
+			console.log(`[SmartEngine] Awarded badge ${badgeTemplate.name} to user ${userId}: ${reason}`);
 		} catch (error) {
 			console.error('[SmartEngine] Failed to award badge:', error);
 		}
