@@ -15,6 +15,7 @@
 		getDocs,
 		addDoc,
 		deleteDoc,
+		setDoc,
 		serverTimestamp,
 		query,
 		orderBy
@@ -81,20 +82,14 @@
 				userNickname = getDisplayName(user.email, { nickname: undefined });
 			}
 
-			// Load progress documents
-			const progressQuery = query(
-				collection(db, 'users', user.uid, 'islamicProgress'),
-				orderBy('answeredAt', 'desc')
-			);
-			const progressSnapshot = await getDocs(progressQuery);
+			// Load Islamic progress from the correct location: islamic_identity/{uid}
+			const progressDoc = await doc(db, 'islamic_identity', user.uid);
+			const progressSnapshot = await getDocs(query(collection(progressDoc, 'answers'), orderBy('answeredAt', 'desc')));
 
-			const progressDocs = progressSnapshot.docs.map((doc) => ({
-				id: doc.id,
-				...doc.data()
-			})) as ProgressDoc[];
+			const answeredQuestionIds = progressSnapshot.docs.map(doc => doc.id);
 
 			// Update answered IDs
-			answeredIds = new Set(progressDocs.map((doc) => doc.id));
+			answeredIds = new Set(answeredQuestionIds);
 
 			// Filter questions to get unanswered ones
 			updateQuestionLists();
@@ -116,7 +111,16 @@
 		if (!user?.uid) return;
 
 		try {
-			// Update progress using Smart Engine
+			// Save answer under islamic_identity/{uid}/answers/{questionId}
+			const answerRef = doc(db, 'islamic_identity', user.uid, 'answers', question.id);
+			await setDoc(answerRef, {
+				questionId: question.id,
+				category: question.category,
+				isCorrect,
+				answeredAt: serverTimestamp()
+			});
+
+			// Also update the main progress using Smart Engine  
 			await SmartEngine.updateIslamicProgress(user.uid, question.id, isCorrect);
 
 			// Update local state
@@ -139,12 +143,22 @@
 		if (!user?.uid) return;
 
 		try {
-			const progressQuery = query(collection(db, 'users', user.uid, 'islamicProgress'));
-			const progressSnapshot = await getDocs(progressQuery);
+			// Delete from the answers subcollection
+			const answersQuery = query(collection(db, 'islamic_identity', user.uid, 'answers'));
+			const answersSnapshot = await getDocs(answersQuery);
 
-			const deletePromises = progressSnapshot.docs.map((doc) => deleteDoc(doc.ref));
-
+			const deletePromises = answersSnapshot.docs.map((doc) => deleteDoc(doc.ref));
 			await Promise.all(deletePromises);
+
+			// Also reset main progress document
+			const progressRef = doc(db, 'islamic_identity', user.uid);
+			await setDoc(progressRef, {
+				userId: user.uid,
+				answeredQuestions: [],
+				totalCorrect: 0,
+				streak: 0,
+				updatedAt: serverTimestamp()
+			});
 
 			// Remove localStorage key islamicProgress (defensive programming)
 			if (typeof localStorage !== 'undefined') {

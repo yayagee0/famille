@@ -1,13 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { auth } from '$lib/firebase';
-	import {
-		SmartEngine,
-		type UserNudge,
-		type WeeklyFeedback,
-		type UserBadge
-	} from '$lib/smartEngine';
-	import { characters } from '$lib/data/smartEngine';
+	import { generateMemoryNudge } from '$lib/smartEngine';
+	import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+	import { db } from '$lib/firebase';
 	import { themeStore } from '$lib/themes/neo';
 	import LoadingSpinner from '$lib/LoadingSpinner.svelte';
 	import PlayCard from '$lib/components/PlayCard.svelte';
@@ -16,10 +12,11 @@
 
 	// State
 	let loading = $state(true);
-	let todaysNudge = $state<UserNudge | null>(null);
+	let todaysNudge = $state<string | null>(null);
 	let error = $state<string | null>(null);
 	let currentTheme = $state('default');
 	let user = $state(auth.currentUser);
+	let acknowledged = $state(false);
 
 	// Subscribe to theme changes
 	$effect(() => {
@@ -37,14 +34,19 @@
 		}
 
 		try {
-			// First, try to get today's existing nudge
-			let nudge = await SmartEngine.getTodaysNudge(user.uid);
+			// Check if user already acknowledged today's nudge
+			const today = new Date().toISOString().split('T')[0];
+			const nudgeDoc = await getDoc(doc(db, 'users', user.uid, 'nudges', today));
 			
-			if (!nudge) {
-				// If no nudge exists for today, generate one
-				nudge = await SmartEngine.generateDailyNudge(user.uid);
+			if (nudgeDoc.exists() && nudgeDoc.data()?.acknowledged) {
+				// User already acknowledged today's nudge
+				acknowledged = true;
+				loading = false;
+				return;
 			}
 			
+			// Generate memory-based nudge for today
+			const nudge = await generateMemoryNudge(user.uid);
 			todaysNudge = nudge;
 		} catch (err) {
 			console.error('[DailyNudge] Failed to load nudge:', err);
@@ -54,85 +56,43 @@
 		}
 	});
 
-	// Mark nudge as read
-	async function markAsRead() {
-		if (!user?.uid) return;
+	// Mark nudge as acknowledged  
+	async function acknowledgNudge() {
+		if (!user?.uid || !todaysNudge) return;
 
 		try {
-			await SmartEngine.markTodaysNudgeAsRead(user.uid);
+			const today = new Date().toISOString().split('T')[0];
+			const nudgeRef = doc(db, 'users', user.uid, 'nudges', today);
 			
-			// Update local state to show as read
-			if (todaysNudge) {
-				todaysNudge = { ...todaysNudge, readAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any };
-			}
+			await setDoc(nudgeRef, {
+				acknowledged: true,
+				acknowledgedAt: serverTimestamp(),
+				nudgeText: todaysNudge
+			});
 			
-			console.log('[DailyNudge] Marked as read');
+			acknowledged = true;
+			console.log('[DailyNudge] Nudge acknowledged');
 		} catch (err) {
-			console.error('[DailyNudge] Failed to mark as read:', err);
+			console.error('[DailyNudge] Failed to acknowledge nudge:', err);
 		}
-	}
-
-	// Get character data
-	function getCharacterData(characterId: string) {
-		return characters.find((c) => c.id === characterId) || characters[0];
 	}
 
 	// Get type-specific styling
-	function getTypeStyles(type: string) {
+	function getTypeStyles() {
 		if (currentTheme === 'neo') {
-			switch (type) {
-				case 'positive':
-				case 'bonding':
-					return 'border-lime-400/30 bg-lime-500/10';
-				case 'islamic':
-					return 'border-cyan-400/30 bg-cyan-500/10';
-				case 'constructive':
-					return 'border-amber-400/30 bg-amber-500/10';
-				case 'reflection':
-					return 'border-purple-400/30 bg-purple-500/10';
-				default:
-					return 'border-slate-400/30 bg-slate-500/10';
-			}
+			return 'border-lime-400/30 bg-lime-500/10';
 		} else {
-			switch (type) {
-				case 'positive':
-				case 'bonding':
-					return 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200';
-				case 'islamic':
-					return 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200';
-				case 'constructive':
-					return 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200';
-				case 'reflection':
-					return 'bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200';
-				default:
-					return 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200';
-			}
-		}
-	}
-
-	// Get type icon
-	function getTypeIcon(type: string) {
-		switch (type) {
-			case 'positive':
-			case 'bonding':
-				return Heart;
-			case 'islamic':
-				return Star;
-			case 'constructive':
-			case 'reflection':
-				return CheckCircle;
-			default:
-				return Heart;
+			return 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200';
 		}
 	}
 </script>
 
 {#if currentTheme === 'neo'}
-	<GlassCard header="🌟 Your Daily Nudge">
+	<GlassCard header="🌟 Daily Memory Nudge">
 		<div class="space-y-4">
 			<div class="flex items-center gap-2">
 				<div class="text-2xl">🌟</div>
-				<h2 class="text-xl font-bold text-slate-200">Your Daily Nudge</h2>
+				<h2 class="text-xl font-bold text-slate-200">Daily Memory Nudge</h2>
 			</div>
 
 			{#if loading}
@@ -143,60 +103,26 @@
 				<div class="rounded-lg border border-red-400/30 bg-red-500/10 p-4 text-center">
 					<p class="text-red-400">{error}</p>
 				</div>
+			{:else if acknowledged}
+				<div class="rounded-lg border border-lime-400/30 bg-lime-500/10 p-4 text-center">
+					<p class="text-lime-300">✅ Thanks for checking in today! See you tomorrow.</p>
+				</div>
 			{:else if todaysNudge}
-				{@const character = getCharacterData(todaysNudge.character)}
-				{@const TypeIcon = getTypeIcon(todaysNudge.type)}
-
-				<div class="space-y-4 rounded-xl border p-4 {getTypeStyles(todaysNudge.type)}">
-					<!-- Character and Type -->
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-2">
-							<span class="text-2xl">{character.emoji}</span>
-							<span class="font-medium text-slate-300">{character.name}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<TypeIcon class="h-4 w-4 text-slate-400" />
-							<span class="text-xs text-slate-400 capitalize">{todaysNudge.type}</span>
-						</div>
-					</div>
-
+				<div class="space-y-4 rounded-xl border p-4 {getTypeStyles()}">
 					<!-- Generated Text -->
 					<div class="space-y-3">
 						<p class="text-lg leading-relaxed text-slate-200">
-							{todaysNudge.generatedText}
+							{todaysNudge}
 						</p>
-
-						<!-- Islamic Context -->
-						{#if todaysNudge.islamicContext}
-							<div class="rounded-lg border border-cyan-400/20 bg-cyan-500/5 p-3">
-								<p class="text-sm text-cyan-300 italic">
-									"{todaysNudge.islamicContext.ayah}"
-								</p>
-								<p class="mt-1 text-xs text-cyan-400">
-									— {todaysNudge.islamicContext.reference}
-								</p>
-							</div>
-						{/if}
-
-						<!-- Traits Used -->
-						{#if todaysNudge.traits.length > 0}
-							<div class="flex flex-wrap gap-1">
-								{#each todaysNudge.traits as trait}
-									<span class="rounded-full bg-lime-500/20 px-2 py-1 text-xs text-lime-300">
-										{trait}
-									</span>
-								{/each}
-							</div>
-						{/if}
 					</div>
 
 					<!-- Action Button -->
 					<div class="flex justify-center pt-2">
 						<button
-							onclick={markAsRead}
+							onclick={acknowledgNudge}
 							class="rounded-lg border border-lime-400/50 bg-lime-500/20 px-4 py-2 text-sm font-medium text-lime-400 transition-colors hover:bg-lime-500/30"
 						>
-							Thanks, {character.name}! ✨
+							Thanks! ✨
 						</button>
 					</div>
 				</div>
@@ -208,7 +134,7 @@
 		</div>
 	</GlassCard>
 {:else}
-	<PlayCard header="🌟 Your Daily Nudge">
+	<PlayCard header="🌟 Daily Memory Nudge">
 		{#if loading}
 			<div class="flex items-center justify-center py-8">
 				<LoadingSpinner />
@@ -217,60 +143,26 @@
 			<div class="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
 				<p class="text-red-700">{error}</p>
 			</div>
+		{:else if acknowledged}
+			<div class="rounded-lg border border-green-200 bg-green-50 p-4 text-center">
+				<p class="text-green-700">✅ Thanks for checking in today! See you tomorrow.</p>
+			</div>
 		{:else if todaysNudge}
-			{@const character = getCharacterData(todaysNudge.character)}
-			{@const TypeIcon = getTypeIcon(todaysNudge.type)}
-
-			<div class="space-y-4 rounded-xl border p-4 {getTypeStyles(todaysNudge.type)}">
-				<!-- Character and Type -->
-				<div class="flex items-center justify-between">
-					<div class="flex items-center gap-2">
-						<span class="text-2xl">{character.emoji}</span>
-						<span class="font-medium text-gray-700">{character.name}</span>
-					</div>
-					<div class="flex items-center gap-1">
-						<TypeIcon class="h-4 w-4 text-gray-500" />
-						<span class="text-xs text-gray-500 capitalize">{todaysNudge.type}</span>
-					</div>
-				</div>
-
+			<div class="space-y-4 rounded-xl border p-4 {getTypeStyles()}">
 				<!-- Generated Text -->
 				<div class="space-y-3">
 					<p class="text-lg leading-relaxed text-gray-800">
-						{todaysNudge.generatedText}
+						{todaysNudge}
 					</p>
-
-					<!-- Islamic Context -->
-					{#if todaysNudge.islamicContext}
-						<div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
-							<p class="text-sm text-blue-700 italic">
-								"{todaysNudge.islamicContext.ayah}"
-							</p>
-							<p class="mt-1 text-xs text-blue-600">
-								— {todaysNudge.islamicContext.reference}
-							</p>
-						</div>
-					{/if}
-
-					<!-- Traits Used -->
-					{#if todaysNudge.traits.length > 0}
-						<div class="flex flex-wrap gap-1">
-							{#each todaysNudge.traits as trait}
-								<span class="rounded-full bg-green-100 px-2 py-1 text-xs text-green-700">
-									{trait}
-								</span>
-							{/each}
-						</div>
-					{/if}
 				</div>
 
 				<!-- Action Button -->
 				<div class="flex justify-center pt-2">
 					<button
-						onclick={markAsRead}
+						onclick={acknowledgNudge}
 						class="rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-shadow hover:shadow-md"
 					>
-						Thanks, {character.name}! ✨
+						Thanks! ✨
 					</button>
 				</div>
 			</div>
