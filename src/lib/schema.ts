@@ -61,6 +61,19 @@ export interface UserBadge {
 	reason: string; // Short explanation why badge was earned
 }
 
+export interface UserBadgeCounters {
+	userId: string;
+	pollsCreated: number;
+	storiesRead: number;
+	feedbackSubmitted: number;
+	pollVotes: number;
+	islamicStoriesRead: number;
+	consecutiveDays: number;
+	lastInteractionDate: string; // YYYY-MM-DD format
+	createdAt: Timestamp;
+	updatedAt: Timestamp;
+}
+
 // ============================================================================
 // FAMILYBOT COLLECTIONS
 // ============================================================================
@@ -242,6 +255,19 @@ export const userBadgeSchema = z.object({
 	reason: z.string().min(1)
 });
 
+export const userBadgeCountersSchema = z.object({
+	userId: z.string().min(1),
+	pollsCreated: z.number().min(0),
+	storiesRead: z.number().min(0),
+	feedbackSubmitted: z.number().min(0),
+	pollVotes: z.number().min(0),
+	islamicStoriesRead: z.number().min(0),
+	consecutiveDays: z.number().min(0),
+	lastInteractionDate: z.string(),
+	createdAt: z.any(), // Timestamp
+	updatedAt: z.any() // Timestamp
+});
+
 export const dailyPollSchema = z.object({
 	question: z.string().min(1),
 	options: z.array(z.object({
@@ -387,6 +413,14 @@ export function validateUserBadge(data: unknown) {
 	}
 }
 
+export function validateUserBadgeCounters(data: unknown) {
+	try {
+		return { success: true as const, data: userBadgeCountersSchema.parse(data) };
+	} catch (error) {
+		return { success: false as const, error };
+	}
+}
+
 export function validateDailyPoll(data: unknown) {
 	try {
 		return { success: true as const, data: dailyPollSchema.parse(data) };
@@ -461,7 +495,8 @@ export const COLLECTION_PATHS = {
 	STORY_TEMPLATES: 'story_templates',
 	SEASONAL: 'seasonal',
 	ANALYTICS: 'analytics',
-	FUN_FEED: 'fun_feed'
+	FUN_FEED: 'fun_feed',
+	USER_BADGE_COUNTERS: 'user_badge_counters'
 } as const;
 
 export const DOCUMENT_IDS = {
@@ -477,6 +512,7 @@ export type {
 	UserFeedback,
 	UserNudge,
 	UserBadge,
+	UserBadgeCounters,
 	DailyPoll,
 	UserPreferences,
 	BotTurnTracker,

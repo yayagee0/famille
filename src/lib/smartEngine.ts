@@ -26,7 +26,7 @@ import {
 	Timestamp,
 	increment
 } from 'firebase/firestore';
-import { db } from '$lib/firebase';
+import { db, auth } from '$lib/firebase';
 import { getFamilyId } from '$lib/firebase';
 import { islamicQuestions } from '$lib/data/islamicQuestions';
 import {
@@ -98,8 +98,20 @@ export interface WeeklyFeedback {
 	}[];
 	answers?: Record<string, string>;
 	answeredAt?: Timestamp;
+	completedAt?: Timestamp;
+}
+
+export interface UserBadgeCounters {
+	userId: string;
+	pollsCreated: number;
+	storiesRead: number;
+	feedbackSubmitted: number;
+	pollVotes: number;
+	islamicStoriesRead: number;
+	consecutiveDays: number;
+	lastInteractionDate: string; // YYYY-MM-DD format
 	createdAt: Timestamp;
-	isPersistent: boolean; // Cannot be dismissed until answered
+	updatedAt: Timestamp;
 }
 
 export interface UserBadge {
@@ -630,12 +642,193 @@ export class SmartEngine {
 
 			await addDoc(collection(db, 'users', userId, 'badges'), badge);
 
-			// TODO: Add to Fun Feed
-			// TODO: Show Lottie animation
+			// Track badge earning in analytics
+			await this.trackUserAnalytics(userId, 'badge_earned');
 
 			console.log(`[SmartEngine] Awarded badge ${badgeTemplate.name} to user ${userId}: ${reason}`);
 		} catch (error) {
 			console.error('[SmartEngine] Failed to award badge:', error);
+		}
+	}
+
+	/**
+	 * Milestone Badge System - Track and award progression badges
+	 */
+	
+	// Milestone badge definitions
+	static MILESTONE_BADGES = {
+		explorer_10: { name: "Explorer", icon: "🧭", threshold: 10, counter: "pollsCreated" },
+		storyteller_10: { name: "Storyteller", icon: "📖", threshold: 10, counter: "storiesRead" },
+		feedback_hero_5: { name: "Feedback Hero", icon: "💡", threshold: 5, counter: "feedbackSubmitted" },
+		helper_20: { name: "Family Helper", icon: "🤝", threshold: 20, counter: "pollVotes" },
+		seeker_10: { name: "Knowledge Seeker", icon: "🌙", threshold: 10, counter: "islamicStoriesRead" },
+		streak_7: { name: "Streak Master", icon: "🔥", threshold: 7, counter: "consecutiveDays" }
+	} as const;
+
+	/**
+	 * Update user milestone counters and check for badge awards
+	 */
+	static async updateMilestoneProgress(
+		userId: string, 
+		action: 'poll_created' | 'story_read' | 'feedback_submitted' | 'poll_voted' | 'islamic_story_read' | 'daily_interaction'
+	): Promise<void> {
+		try {
+			const countersRef = doc(db, 'user_badge_counters', userId);
+			const countersDoc = await getDoc(countersRef);
+			
+			let counters: UserBadgeCounters;
+			
+			if (!countersDoc.exists()) {
+				// Initialize counters for new user
+				counters = {
+					userId,
+					pollsCreated: 0,
+					storiesRead: 0,
+					feedbackSubmitted: 0,
+					pollVotes: 0,
+					islamicStoriesRead: 0,
+					consecutiveDays: 0,
+					lastInteractionDate: '',
+					createdAt: serverTimestamp() as Timestamp,
+					updatedAt: serverTimestamp() as Timestamp
+				};
+			} else {
+				counters = countersDoc.data() as UserBadgeCounters;
+			}
+
+			// Update counters based on action
+			const today = new Date().toISOString().split('T')[0];
+			
+			switch (action) {
+				case 'poll_created':
+					counters.pollsCreated++;
+					break;
+				case 'story_read':
+					counters.storiesRead++;
+					break;
+				case 'feedback_submitted':
+					counters.feedbackSubmitted++;
+					break;
+				case 'poll_voted':
+					counters.pollVotes++;
+					break;
+				case 'islamic_story_read':
+					counters.islamicStoriesRead++;
+					break;
+				case 'daily_interaction':
+					// Handle streak tracking
+					if (counters.lastInteractionDate === today) {
+						// Already interacted today, no change
+						break;
+					}
+					
+					const yesterday = new Date();
+					yesterday.setDate(yesterday.getDate() - 1);
+					const yesterdayStr = yesterday.toISOString().split('T')[0];
+					
+					if (counters.lastInteractionDate === yesterdayStr) {
+						// Consecutive day
+						counters.consecutiveDays++;
+					} else if (counters.lastInteractionDate !== today) {
+						// Reset streak (missed days)
+						counters.consecutiveDays = 1;
+					}
+					
+					counters.lastInteractionDate = today;
+					break;
+			}
+
+			counters.updatedAt = serverTimestamp() as Timestamp;
+
+			// Save updated counters
+			await setDoc(countersRef, counters);
+
+			// Check for milestone badge awards
+			await this.checkMilestoneBadges(userId, counters);
+
+		} catch (error) {
+			console.error('[SmartEngine] Failed to update milestone progress:', error);
+		}
+	}
+
+	/**
+	 * Check and award milestone badges based on current counters
+	 */
+	static async checkMilestoneBadges(userId: string, counters: UserBadgeCounters): Promise<void> {
+		try {
+			for (const [badgeId, badgeInfo] of Object.entries(this.MILESTONE_BADGES)) {
+				const counterValue = counters[badgeInfo.counter as keyof UserBadgeCounters] as number;
+				
+				if (counterValue >= badgeInfo.threshold) {
+					// Check if badge already earned
+					const existingBadgeQuery = query(
+						collection(db, 'users', userId, 'badges'),
+						where('badgeId', '==', badgeId),
+						limit(1)
+					);
+
+					const existingBadges = await getDocs(existingBadgeQuery);
+					if (!existingBadges.empty) {
+						continue; // Already earned
+					}
+
+					// Award the badge
+					const badge = {
+						userId,
+						badgeId,
+						name: badgeInfo.name,
+						description: `${badgeInfo.icon} Earned by reaching ${badgeInfo.threshold} ${this.getCounterDisplayName(badgeInfo.counter)}`,
+						category: this.getBadgeCategory(badgeId),
+						earnedAt: serverTimestamp() as Timestamp,
+						notificationSent: false,
+						reason: `Reached ${badgeInfo.threshold} ${this.getCounterDisplayName(badgeInfo.counter)}`
+					};
+
+					await addDoc(collection(db, 'users', userId, 'badges'), badge);
+
+					// Track in analytics
+					await this.trackUserAnalytics(userId, 'badge_earned');
+
+					console.log(`[SmartEngine] Awarded milestone badge ${badgeInfo.name} to user ${userId}!`);
+				}
+			}
+		} catch (error) {
+			console.error('[SmartEngine] Failed to check milestone badges:', error);
+		}
+	}
+
+	/**
+	 * Get display name for counter types
+	 */
+	static getCounterDisplayName(counter: string): string {
+		switch (counter) {
+			case 'pollsCreated': return 'polls created';
+			case 'storiesRead': return 'stories read';
+			case 'feedbackSubmitted': return 'feedback submissions';
+			case 'pollVotes': return 'poll votes';
+			case 'islamicStoriesRead': return 'Islamic stories read';
+			case 'consecutiveDays': return 'consecutive days';
+			default: return counter;
+		}
+	}
+
+	/**
+	 * Get badge category for milestone badges
+	 */
+	static getBadgeCategory(badgeId: string): 'social' | 'learning' | 'consistency' | 'special' {
+		switch (badgeId) {
+			case 'explorer_10':
+			case 'helper_20':
+				return 'social';
+			case 'storyteller_10':
+			case 'seeker_10':
+				return 'learning';
+			case 'streak_7':
+				return 'consistency';
+			case 'feedback_hero_5':
+				return 'special';
+			default:
+				return 'special';
 		}
 	}
 
@@ -1247,7 +1440,9 @@ export async function getBotTurnStats(): Promise<BotTurnTracker | null> {
 export async function createPoll({ question, options }: { question: string; options: string[] }) {
 	const familyId = getFamilyId();
 	const ref = collection(db, "daily_polls");
-	await addDoc(ref, {
+	
+	// Create the poll
+	const pollDoc = await addDoc(ref, {
 		question,
 		options: options.map(text => ({ text, votes: [] })),
 		familyId,
@@ -1255,6 +1450,15 @@ export async function createPoll({ question, options }: { question: string; opti
 		expiresAt: Date.now() + 24 * 60 * 60 * 1000,
 		totalVotes: 0
 	});
+
+	// Track milestone progress for poll creation
+	const currentUser = auth.currentUser;
+	if (currentUser?.uid) {
+		await SmartEngine.updateMilestoneProgress(currentUser.uid, 'poll_created');
+		await SmartEngine.updateMilestoneProgress(currentUser.uid, 'daily_interaction');
+	}
+
+	return pollDoc;
 }
 
 /**
@@ -1269,6 +1473,10 @@ export async function sendFeedback(uid: string, message: string, topic: string =
 		userId: uid,
 		createdAt: serverTimestamp()
 	});
+
+	// Track milestone progress for feedback submission
+	await SmartEngine.updateMilestoneProgress(uid, 'feedback_submitted');
+	await SmartEngine.updateMilestoneProgress(uid, 'daily_interaction');
 }
 
 // Fallback stories for when Firestore is unavailable
@@ -1388,6 +1596,14 @@ export async function getPersonalizedStoryTemplate(
 		
 		// Clean up any remaining placeholders
 		story = story.replace(/\{[^}]+\}/g, '✨');
+		
+		// Track milestone progress for story reading
+		const isIslamicStory = story.includes('Allah') || story.includes('mosque') || story.includes('Quran') || story.includes('islamic');
+		await SmartEngine.updateMilestoneProgress(uid, 'story_read');
+		if (isIslamicStory) {
+			await SmartEngine.updateMilestoneProgress(uid, 'islamic_story_read');
+		}
+		await SmartEngine.updateMilestoneProgress(uid, 'daily_interaction');
 		
 		return story;
 		
@@ -2082,5 +2298,17 @@ export async function addToFunFeed(
 	} catch (error) {
 		console.error('[FunFeed] Failed to add entry:', error);
 		throw error;
+	}
+}
+
+/**
+ * Track poll vote for milestone system
+ */
+export async function trackPollVote(uid: string): Promise<void> {
+	try {
+		await SmartEngine.updateMilestoneProgress(uid, 'poll_voted');
+		await SmartEngine.updateMilestoneProgress(uid, 'daily_interaction');
+	} catch (error) {
+		console.error('[SmartEngine] Failed to track poll vote:', error);
 	}
 }

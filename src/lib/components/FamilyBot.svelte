@@ -7,7 +7,8 @@
 		assignBotTurn,
 		getAdaptiveEngagementBias,
 		getSeasonalSuggestion,
-		addToFunFeed
+		addToFunFeed,
+		trackPollVote
 	} from "$lib/smartEngine";
 	import { 
 		getPreferences, 
@@ -17,7 +18,7 @@
 		hasStrongPreference,
 		type UserPreferences 
 	} from "$lib/preferences";
-	import { getFirestore, doc, getDoc } from "firebase/firestore";
+	import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 	import { auth } from '$lib/firebase';
 	import { getDisplayName } from '$lib/getDisplayName';
 
@@ -42,6 +43,9 @@
 	
 	// Feedback wizard state
 	let feedbackTopic = $state("");
+	let feedbackStep: "topic" | "input" | "confirm" | null = $state(null);
+	let feedbackMessage = $state("");
+	let feedbackInputType: "text" | "emoji" = $state("text");
 
 	const db = getFirestore();
 
@@ -69,6 +73,32 @@
 			console.log('[FamilyBot] Loaded user preferences:', userPreferences);
 		} catch (error) {
 			console.error('[FamilyBot] Failed to load preferences:', error);
+		}
+	}
+
+	async function checkForNewBadges() {
+		try {
+			if (!uid) return;
+			
+			// Check for badges earned in the last hour
+			const recentBadgesQuery = query(
+				collection(db, 'users', uid, 'badges'),
+				where('notificationSent', '==', false),
+				orderBy('earnedAt', 'desc'),
+				limit(3)
+			);
+			
+			const recentBadges = await getDocs(recentBadgesQuery);
+			
+			if (!recentBadges.empty) {
+				const badges = recentBadges.docs.map(doc => doc.data());
+				
+				// Show badge notification
+				const badgeNames = badges.map(b => `${b.name} ${b.description.split(' ')[0]}`).join(', ');
+				await showFollowUp(`🎉 Congratulations! You earned new badges: ${badgeNames}! Keep up the amazing work!`);
+			}
+		} catch (error) {
+			console.error('[FamilyBot] Failed to check for new badges:', error);
 		}
 	}
 
@@ -203,6 +233,14 @@
 			label: "💬 Share feedback",
 			action: async () => {
 				startFeedbackWizard();
+			}
+		});
+
+		// Progress tracking suggestion
+		baseSuggestions.push({
+			label: "🏆 Check my progress",
+			action: async () => {
+				await showUserProgress();
 			}
 		});
 
@@ -433,59 +471,172 @@
 
 	// Feedback Wizard Functions
 	function startFeedbackWizard() {
+		feedbackStep = "topic";
 		state = "suggest";
-		suggestionMessage = "What topic is your feedback about?";
+		suggestionMessage = "What is your feedback about?";
 		suggestions = [
 			{
 				label: "🏠 Family Hub",
 				action: async () => {
 					feedbackTopic = "Family Hub Experience";
-					await submitFeedback("Thanks for the great family experience!");
+					showFeedbackInput();
 				}
 			},
 			{
 				label: "🤖 FamilyBot",
 				action: async () => {
 					feedbackTopic = "FamilyBot Interaction";
-					await submitFeedback("I enjoyed talking with the bot!");
+					showFeedbackInput();
 				}
 			},
 			{
 				label: "📖 Stories",
 				action: async () => {
 					feedbackTopic = "Story & Content";
-					await submitFeedback("The stories are wonderful!");
+					showFeedbackInput();
 				}
 			},
 			{
 				label: "💡 General",
 				action: async () => {
 					feedbackTopic = "General Suggestion";
-					await submitFeedback("Keep up the great work!");
+					showFeedbackInput();
 				}
 			}
 		];
 	}
 
-	async function submitFeedback(message: string) {
+	function showFeedbackInput() {
+		feedbackStep = "input";
+		state = "suggest";
+		suggestionMessage = `Great! What would you like to share about ${feedbackTopic}?`;
+		suggestions = [
+			{
+				label: "✍️ Type my message",
+				action: async () => {
+					feedbackInputType = "text";
+					showFeedbackTextInput();
+				}
+			},
+			{
+				label: "👍 It's great!",
+				action: async () => {
+					feedbackMessage = "👍 It's great!";
+					showFeedbackConfirmation();
+				}
+			},
+			{
+				label: "❤️ I love it!",
+				action: async () => {
+					feedbackMessage = "❤️ I love it!";
+					showFeedbackConfirmation();
+				}
+			},
+			{
+				label: "😄 It's fun!",
+				action: async () => {
+					feedbackMessage = "😄 It's fun!";
+					showFeedbackConfirmation();
+				}
+			},
+			{
+				label: "🤔 Could be better",
+				action: async () => {
+					feedbackMessage = "🤔 Could be better";
+					showFeedbackConfirmation();
+				}
+			}
+		];
+	}
+
+	function showFeedbackTextInput() {
+		// For now, use a simple prompt - in a real implementation this would be a textarea
+		const userInput = prompt("Please type your feedback:");
+		if (userInput && userInput.trim()) {
+			feedbackMessage = userInput.trim();
+			showFeedbackConfirmation();
+		} else {
+			// Go back to input selection
+			showFeedbackInput();
+		}
+	}
+
+	function showFeedbackConfirmation() {
+		feedbackStep = "confirm";
+		state = "suggest";
+		suggestionMessage = `Perfect! Your feedback: "${feedbackMessage}"`;
+		suggestions = [
+			{
+				label: "✅ Send feedback",
+				action: async () => {
+					await submitFeedback();
+				}
+			},
+			{
+				label: "✏️ Edit message",
+				action: async () => {
+					showFeedbackInput();
+				}
+			},
+			{
+				label: "🔄 Change topic",
+				action: async () => {
+					startFeedbackWizard();
+				}
+			}
+		];
+	}
+
+	async function submitFeedback() {
 		try {
-			const feedbackMessage = `${feedbackTopic} feedback from ${nickname}: ${message}`;
 			await sendFeedback(uid, feedbackMessage, feedbackTopic);
 			await updatePreference(uid, 'feedback');
 			
 			// Add to Fun Feed
 			await addToFunFeed(
 				'feedback',
-				`💡 Feedback submitted by ${nickname}`,
+				`💡 Feedback from ${nickname}: ${feedbackMessage}`,
 				uid
 			);
 			
+			// Reset feedback state
 			feedbackTopic = "";
-			await showFollowUp("Thanks! Your feedback has been sent ✅");
+			feedbackMessage = "";
+			feedbackStep = null;
+			feedbackInputType = "text";
+			
+			await showFollowUp(`Thanks ${nickname}! Your feedback has been sent ✅`);
 			
 		} catch (error) {
 			console.error('[FamilyBot] Failed to send feedback:', error);
 			await showFollowUp("Sorry, I couldn't send your feedback. Please try again! 😅");
+		}
+	}
+
+	async function showUserProgress() {
+		try {
+			// Get user's badge counters
+			const countersDoc = await getDoc(doc(db, 'user_badge_counters', uid));
+			
+			if (!countersDoc.exists()) {
+				await showFollowUp("🌟 You're just getting started! Create polls, read stories, and share feedback to earn badges! Keep exploring!");
+				return;
+			}
+			
+			const counters = countersDoc.data();
+			const progressText = `📊 Your Progress:
+🧭 Polls Created: ${counters.pollsCreated}/10
+📖 Stories Read: ${counters.storiesRead}/10  
+💡 Feedback Sent: ${counters.feedbackSubmitted}/5
+🤝 Poll Votes: ${counters.pollVotes}/20
+🌙 Islamic Stories: ${counters.islamicStoriesRead}/10
+🔥 Current Streak: ${counters.consecutiveDays} days`;
+			
+			await showFollowUp(progressText);
+			
+		} catch (error) {
+			console.error('[FamilyBot] Failed to show user progress:', error);
+			await showFollowUp("Sorry, I couldn't load your progress right now. Please try again! 😅");
 		}
 	}
 
@@ -498,6 +649,9 @@
 		currentStory = "";
 		storyTheme = "";
 		feedbackTopic = "";
+		feedbackMessage = "";
+		feedbackStep = null;
+		feedbackInputType = "text";
 		
 		state = "idle";
 	}
@@ -513,6 +667,7 @@
 		if (currentUser) {
 			loadNickname();
 			loadUserPreferences();
+			checkForNewBadges();
 		}
 	});
 
