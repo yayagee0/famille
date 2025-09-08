@@ -74,10 +74,8 @@
 					return 'border-slate-400/30 bg-slate-500/10';
 				case 'rare':
 					return 'border-blue-400/30 bg-blue-500/10';
-				case 'epic':
-					return 'border-purple-400/30 bg-purple-500/10';
 				case 'legendary':
-					return 'border-yellow-400/30 bg-yellow-500/10';
+					return 'border-yellow-400/50 bg-yellow-500/20 shadow-yellow-400/25 shadow-lg'; // Phase 6: Enhanced legendary styling
 				default:
 					return 'border-slate-400/30 bg-slate-500/10';
 			}
@@ -87,10 +85,8 @@
 					return 'border-gray-200 bg-gray-50';
 				case 'rare':
 					return 'border-blue-200 bg-blue-50';
-				case 'epic':
-					return 'border-purple-200 bg-purple-50';
 				case 'legendary':
-					return 'border-yellow-200 bg-yellow-50';
+					return 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-amber-100 shadow-lg shadow-yellow-200/50'; // Phase 6: Enhanced legendary styling
 				default:
 					return 'border-gray-200 bg-gray-50';
 			}
@@ -104,10 +100,8 @@
 				return Award;
 			case 'rare':
 				return Star;
-			case 'epic':
-				return Crown;
 			case 'legendary':
-				return Sparkles;
+				return Sparkles; // Phase 6: Use sparkles for legendary
 			default:
 				return Award;
 		}
@@ -121,10 +115,8 @@
 					return 'text-slate-400';
 				case 'rare':
 					return 'text-blue-400';
-				case 'epic':
-					return 'text-purple-400';
 				case 'legendary':
-					return 'text-yellow-400';
+					return 'text-yellow-400'; // Phase 6: Gold for legendary
 				default:
 					return 'text-slate-400';
 			}
@@ -134,10 +126,8 @@
 					return 'text-gray-600';
 				case 'rare':
 					return 'text-blue-600';
-				case 'epic':
-					return 'text-purple-600';
 				case 'legendary':
-					return 'text-yellow-600';
+					return 'text-yellow-600'; // Phase 6: Gold for legendary
 				default:
 					return 'text-gray-600';
 			}
@@ -190,12 +180,14 @@
 			{:else}
 				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
 					{#each userBadges as badge (badge.id)}
-						{@const RarityIcon = getRarityIcon(badge.template.rarity)}
+						{@const badgeRarity = badge.rarity || badge.template?.rarity || 'common'}
+						{@const badgeName = badge.name || badge.template?.name || 'Unknown Badge'}
+						{@const RarityIcon = getRarityIcon(badgeRarity)}
 
 						<button
-							onclick={() => showBadgeAnimation(badge.template.lottieUrl)}
+							onclick={() => showBadgeAnimation(badge.template?.lottieUrl || 'default')}
 							class="group rounded-xl border p-3 transition-all hover:scale-105 {getRarityStyles(
-								badge.template.rarity
+								badgeRarity
 							)}"
 						>
 							<div class="space-y-2">
@@ -203,16 +195,16 @@
 								<div
 									class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-500/20"
 								>
-									<RarityIcon class="h-6 w-6 {getRarityColor(badge.template.rarity)}" />
+									<RarityIcon class="h-6 w-6 {getRarityColor(badgeRarity)}" />
 								</div>
 
 								<!-- Badge Name -->
 								<div class="text-center">
 									<h3 class="text-sm font-medium text-slate-200 group-hover:text-lime-400">
-										{badge.template.name}
+										{badgeName}
 									</h3>
 									<p class="text-xs text-slate-400 capitalize">
-										{badge.template.rarity}
+										{badgeRarity}
 									</p>
 									<p class="text-xs text-slate-500 mt-1">
 										{getBadgeReason(badge)}
@@ -245,12 +237,14 @@
 		{:else}
 			<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
 				{#each userBadges as badge (badge.id)}
-					{@const RarityIcon = getRarityIcon(badge.template.rarity)}
+					{@const badgeRarity = badge.rarity || badge.template?.rarity || 'common'}
+					{@const badgeName = badge.name || badge.template?.name || 'Unknown Badge'}
+					{@const RarityIcon = getRarityIcon(badgeRarity)}
 
 					<button
-						onclick={() => showBadgeAnimation(badge.template.lottieUrl)}
+						onclick={() => showBadgeAnimation(badge.template?.lottieUrl || 'default')}
 						class="group rounded-xl border p-3 transition-all hover:scale-105 hover:shadow-md {getRarityStyles(
-							badge.template.rarity
+							badgeRarity
 						)}"
 					>
 						<div class="space-y-2">
@@ -258,16 +252,16 @@
 							<div
 								class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/50"
 							>
-								<RarityIcon class="h-6 w-6 {getRarityColor(badge.template.rarity)}" />
+								<RarityIcon class="h-6 w-6 {getRarityColor(badgeRarity)}" />
 							</div>
 
 							<!-- Badge Name -->
 							<div class="text-center">
 								<h3 class="text-sm font-medium text-gray-800 group-hover:text-indigo-600">
-									{badge.template.name}
+									{badgeName}
 								</h3>
 								<p class="text-xs text-gray-500 capitalize">
-									{badge.template.rarity}
+									{badgeRarity}
 								</p>
 								<p class="text-xs text-gray-600 mt-1">
 									{getBadgeReason(badge)}

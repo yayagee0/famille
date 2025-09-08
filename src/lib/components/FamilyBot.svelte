@@ -387,11 +387,12 @@
 				await updatePreference(uid, 'poll', pollKind);
 			}
 			
-			// Add to Fun Feed
+			// Add to Fun Feed with enhanced metadata
 			await addToFunFeed(
 				'poll',
 				`📊 ${nickname} started a poll: ${pollQuestion}`,
-				uid
+				uid,
+				{ pollQuestion }
 			);
 			
 			pollWizardStep = null;
@@ -426,11 +427,13 @@
 			// Track preference
 			await updatePreference(uid, 'story', detectedTheme);
 			
-			// Add to Fun Feed
+			// Add to Fun Feed with enhanced metadata (include first sentence as preview)
+			const storyPreview = currentStory.split('.')[0] + '.' || currentStory.substring(0, 50) + '...';
 			await addToFunFeed(
 				'story',
 				`📖 FamilyBot told a story about ${detectedTheme}`,
-				uid
+				uid,
+				{ storyPreview }
 			);
 			
 			showStoryOptions();
@@ -592,11 +595,12 @@
 			await sendFeedback(uid, feedbackMessage, feedbackTopic);
 			await updatePreference(uid, 'feedback');
 			
-			// Add to Fun Feed
+			// Add to Fun Feed with enhanced metadata
 			await addToFunFeed(
 				'feedback',
 				`💡 Feedback from ${nickname}: ${feedbackMessage}`,
-				uid
+				uid,
+				{ feedbackTopic }
 			);
 			
 			// Reset feedback state
@@ -624,15 +628,28 @@
 			}
 			
 			const counters = countersDoc.data();
-			const progressText = `📊 Your Progress:
-🧭 Polls Created: ${counters.pollsCreated}/10
-📖 Stories Read: ${counters.storiesRead}/10  
-💡 Feedback Sent: ${counters.feedbackSubmitted}/5
-🤝 Poll Votes: ${counters.pollVotes}/20
-🌙 Islamic Stories: ${counters.islamicStoriesRead}/10
-🔥 Current Streak: ${counters.consecutiveDays} days`;
 			
-			await showFollowUp(progressText);
+			// Phase 6: Show both common and legendary progress
+			const progressText = `📊 Your Progress:
+
+🧭 Polls Created: ${counters.pollsCreated}/10 → 🌍 ${counters.pollsCreated}/50 (Explorer Master)
+📖 Stories Read: ${counters.storiesRead}/10 → 📚 ${counters.storiesRead}/100 (Epic Storyteller)
+💡 Feedback Sent: ${counters.feedbackSubmitted}/5 → 🏆 ${counters.feedbackSubmitted}/25 (Feedback Champion)
+🤝 Poll Votes: ${counters.pollVotes}/20 → 👑 ${counters.pollVotes}/100 (Family Leader)
+🌙 Islamic Stories: ${counters.islamicStoriesRead}/10 → 🌌 ${counters.islamicStoriesRead}/50 (Knowledge Guardian)
+🔥 Current Streak: ${counters.consecutiveDays}/7 → 🔥✨ ${counters.consecutiveDays}/30 (Eternal Flame)`;
+			
+			// Phase 6: Add analytics-based motivational nudge
+			const { SmartEngine } = await import('$lib/smartEngine');
+			const motivationalNudge = await SmartEngine.generateAnalyticsBasedNudge(uid);
+			
+			if (motivationalNudge) {
+				await showFollowUp(`${progressText}
+
+${motivationalNudge}`);
+			} else {
+				await showFollowUp(progressText);
+			}
 			
 		} catch (error) {
 			console.error('[FamilyBot] Failed to show user progress:', error);

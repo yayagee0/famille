@@ -40,14 +40,15 @@ import {
 	type BadgeTemplate
 } from '$lib/data/smartEngine';
 import { seasonalNudgeTemplates } from '$lib/data/seasonal';
-import { pollTemplates, type DailyPoll, type PollTemplate } from '$lib/data/polls';
+import { pollTemplates, type PollTemplate } from '$lib/data/polls';
+import {
 import {
 	getCurrentSeasonalConfig,
 	getCurrentSeasonalBanners,
 	type SeasonalBanner
 } from '$lib/data/seasonal';
 import { AnalyticsEngine, type DailyAnalytics, type UserDailyMetrics } from '$lib/data/analytics';
-import { type FunFeedEntry } from '$lib/schema';
+import { type FunFeedEntry, type DailyPoll } from '$lib/schema';
 
 // ============================================================================
 // INTERFACES
@@ -121,18 +122,6 @@ export interface UserBadge {
 	earnedAt: Timestamp;
 	notificationSent: boolean;
 	reason?: string; // Forward-only: short explanation of why badge was earned
-}
-
-export interface DailyPoll {
-	id?: string;
-	question: string;
-	options: string[];
-	votes: Record<string, string>; // userId -> optionIndex
-	createdAt: Timestamp;
-	closesAt: Timestamp;
-	isClosed: boolean;
-	resultsPosted: boolean;
-	familyId: string;
 }
 
 // ============================================================================
@@ -657,12 +646,21 @@ export class SmartEngine {
 	
 	// Milestone badge definitions
 	static MILESTONE_BADGES = {
-		explorer_10: { name: "Explorer", icon: "🧭", threshold: 10, counter: "pollsCreated" },
-		storyteller_10: { name: "Storyteller", icon: "📖", threshold: 10, counter: "storiesRead" },
-		feedback_hero_5: { name: "Feedback Hero", icon: "💡", threshold: 5, counter: "feedbackSubmitted" },
-		helper_20: { name: "Family Helper", icon: "🤝", threshold: 20, counter: "pollVotes" },
-		seeker_10: { name: "Knowledge Seeker", icon: "🌙", threshold: 10, counter: "islamicStoriesRead" },
-		streak_7: { name: "Streak Master", icon: "🔥", threshold: 7, counter: "consecutiveDays" }
+		// Common badges (original tier)
+		explorer_10: { name: "Explorer", icon: "🧭", threshold: 10, counter: "pollsCreated", rarity: "common" },
+		storyteller_10: { name: "Storyteller", icon: "📖", threshold: 10, counter: "storiesRead", rarity: "common" },
+		feedback_hero_5: { name: "Feedback Hero", icon: "💡", threshold: 5, counter: "feedbackSubmitted", rarity: "common" },
+		helper_20: { name: "Family Helper", icon: "🤝", threshold: 20, counter: "pollVotes", rarity: "common" },
+		seeker_10: { name: "Knowledge Seeker", icon: "🌙", threshold: 10, counter: "islamicStoriesRead", rarity: "common" },
+		streak_7: { name: "Streak Master", icon: "🔥", threshold: 7, counter: "consecutiveDays", rarity: "common" },
+		
+		// Legendary badges (Phase 6)
+		explorer_master: { name: "Explorer Master", icon: "🌍", threshold: 50, counter: "pollsCreated", rarity: "legendary" },
+		storyteller_epic: { name: "Epic Storyteller", icon: "📚", threshold: 100, counter: "storiesRead", rarity: "legendary" },
+		feedback_champion: { name: "Feedback Champion", icon: "🏆", threshold: 25, counter: "feedbackSubmitted", rarity: "legendary" },
+		family_leader: { name: "Family Leader", icon: "👑", threshold: 100, counter: "pollVotes", rarity: "legendary" },
+		knowledge_guardian: { name: "Knowledge Guardian", icon: "🌌", threshold: 50, counter: "islamicStoriesRead", rarity: "legendary" },
+		streak_30: { name: "Eternal Flame", icon: "🔥✨", threshold: 30, counter: "consecutiveDays", rarity: "legendary" }
 	} as const;
 
 	/**
@@ -779,12 +777,18 @@ export class SmartEngine {
 						name: badgeInfo.name,
 						description: `${badgeInfo.icon} Earned by reaching ${badgeInfo.threshold} ${this.getCounterDisplayName(badgeInfo.counter)}`,
 						category: this.getBadgeCategory(badgeId),
+						rarity: badgeInfo.rarity, // Phase 6: Include rarity
 						earnedAt: serverTimestamp() as Timestamp,
 						notificationSent: false,
 						reason: `Reached ${badgeInfo.threshold} ${this.getCounterDisplayName(badgeInfo.counter)}`
 					};
 
 					await addDoc(collection(db, 'users', userId, 'badges'), badge);
+
+					// Phase 6: Check if legendary badge for special handling
+					if (badgeInfo.rarity === 'legendary') {
+						await this.handleLegendaryBadgeUnlock(userId, badgeInfo, badge);
+					}
 
 					// Track in analytics
 					await this.trackUserAnalytics(userId, 'badge_earned');
@@ -819,13 +823,19 @@ export class SmartEngine {
 		switch (badgeId) {
 			case 'explorer_10':
 			case 'helper_20':
+			case 'explorer_master':
+			case 'family_leader':
 				return 'social';
 			case 'storyteller_10':
 			case 'seeker_10':
+			case 'storyteller_epic':
+			case 'knowledge_guardian':
 				return 'learning';
 			case 'streak_7':
+			case 'streak_30':
 				return 'consistency';
 			case 'feedback_hero_5':
+			case 'feedback_champion':
 				return 'special';
 			default:
 				return 'special';
@@ -1333,6 +1343,157 @@ export class SmartEngine {
 		}
 
 		return availableTemplates[0] || null;
+	}
+
+	/**
+	 * Phase 6: Handle legendary badge unlock with special effects
+	 */
+	static async handleLegendaryBadgeUnlock(userId: string, badgeInfo: any, badge: any): Promise<void> {
+		try {
+			const nickname = await this.getUserDisplayName(userId);
+			
+			// Create enhanced Fun Feed entry for legendary badge
+			await this.addEnhancedFunFeedEntry('badge', {
+				text: `🌟 ${nickname} unlocked Legendary Badge: ${badgeInfo.name} ${badgeInfo.icon} — ${badge.reason}`,
+				createdBy: userId,
+				rarity: 'legendary',
+				metadata: {
+					badgeIcon: badgeInfo.icon
+				}
+			});
+
+			console.log(`[SmartEngine] 🌟 Legendary badge ${badgeInfo.name} unlocked by ${nickname}!`);
+		} catch (error) {
+			console.error('[SmartEngine] Failed to handle legendary badge unlock:', error);
+		}
+	}
+
+	/**
+	 * Phase 6: Enhanced Fun Feed with metadata support
+	 */
+	static async addEnhancedFunFeedEntry(
+		type: 'poll' | 'story' | 'feedback' | 'badge',
+		options: {
+			text: string;
+			createdBy: string;
+			rarity?: 'common' | 'rare' | 'legendary';
+			metadata?: {
+				pollQuestion?: string;
+				storyPreview?: string;
+				feedbackTopic?: string;
+				badgeIcon?: string;
+			};
+		}
+	): Promise<void> {
+		try {
+			const familyId = getFamilyId();
+			
+			const feedEntry = {
+				type,
+				text: options.text,
+				createdBy: options.createdBy,
+				familyId,
+				createdAt: serverTimestamp(),
+				...(options.rarity && { rarity: options.rarity }),
+				...(options.metadata && { metadata: options.metadata })
+			};
+			
+			await addDoc(collection(db, 'fun_feed'), feedEntry);
+			console.log(`[FunFeed] Added enhanced ${type} entry with metadata`);
+			
+		} catch (error) {
+			console.error('[FunFeed] Failed to add enhanced entry:', error);
+		}
+	}
+
+	/**
+	 * Phase 6: Generate motivational nudges based on analytics
+	 */
+	static async generateAnalyticsBasedNudge(userId: string): Promise<string | null> {
+		try {
+			const counters = await this.getMilestoneCounters(userId);
+			
+			// Streak motivation
+			if (counters.consecutiveDays >= 5 && counters.consecutiveDays < 7) {
+				return `🔥 Keep it up, you're on a ${counters.consecutiveDays}-day streak!`;
+			}
+			
+			// Close to milestones
+			if (counters.storiesRead === 9) {
+				return "📖 Only 1 more story to unlock Storyteller badge!";
+			}
+			
+			if (counters.pollsCreated >= 8 && counters.pollsCreated < 10) {
+				return `🧭 Just ${10 - counters.pollsCreated} more poll${10 - counters.pollsCreated > 1 ? 's' : ''} to become an Explorer!`;
+			}
+			
+			if (counters.feedbackSubmitted === 4) {
+				return "💡 One more feedback to earn Feedback Hero!";
+			}
+			
+			// Legendary tier motivation
+			if (counters.pollsCreated >= 45 && counters.pollsCreated < 50) {
+				return `🌍 Amazing! Only ${50 - counters.pollsCreated} more polls for Explorer Master!`;
+			}
+			
+			if (counters.storiesRead >= 95 && counters.storiesRead < 100) {
+				return `📚 Incredible! ${100 - counters.storiesRead} more stories for Epic Storyteller!`;
+			}
+			
+			return null;
+		} catch (error) {
+			console.error('[SmartEngine] Failed to generate analytics nudge:', error);
+			return null;
+		}
+	}
+
+	/**
+	 * Get user display name for messages
+	 */
+	static async getUserDisplayName(userId: string): Promise<string> {
+		try {
+			const userDoc = await getDoc(doc(db, 'users', userId));
+			if (userDoc.exists()) {
+				const userData = userDoc.data();
+				// Use same logic as getDisplayName helper
+				return userData.nickname || userData.displayName || userData.email?.split('@')[0] || 'Friend';
+			}
+			return 'Friend';
+		} catch (error) {
+			console.error('[SmartEngine] Failed to get user display name:', error);
+			return 'Friend';
+		}
+	}
+
+	/**
+	 * Get milestone counters for a user
+	 */
+	static async getMilestoneCounters(userId: string): Promise<UserBadgeCounters> {
+		try {
+			const countersRef = doc(db, 'user_badge_counters', userId);
+			const countersDoc = await getDoc(countersRef);
+			
+			if (countersDoc.exists()) {
+				return countersDoc.data() as UserBadgeCounters;
+			}
+			
+			// Return default counters
+			return {
+				userId,
+				pollsCreated: 0,
+				storiesRead: 0,
+				feedbackSubmitted: 0,
+				pollVotes: 0,
+				islamicStoriesRead: 0,
+				consecutiveDays: 0,
+				lastInteractionDate: new Date().toISOString().split('T')[0],
+				createdAt: serverTimestamp() as Timestamp,
+				updatedAt: serverTimestamp() as Timestamp
+			};
+		} catch (error) {
+			console.error('[SmartEngine] Failed to get milestone counters:', error);
+			throw error;
+		}
 	}
 }
 
@@ -2271,15 +2432,21 @@ export async function seedStoryTemplates(): Promise<void> {
 }
 
 /**
- * Add an entry to the Fun Feed collection
+ * Add an entry to the Fun Feed collection (Phase 6: Enhanced with metadata)
  * @param type Type of activity (poll, story, feedback)
  * @param text Description text for the feed
  * @param createdBy User ID who performed the action
+ * @param metadata Optional metadata for enriched display
  */
 export async function addToFunFeed(
 	type: 'poll' | 'story' | 'feedback',
 	text: string,
-	createdBy: string
+	createdBy: string,
+	metadata?: {
+		pollQuestion?: string;
+		storyPreview?: string;
+		feedbackTopic?: string;
+	}
 ): Promise<void> {
 	try {
 		const familyId = getFamilyId();
@@ -2289,7 +2456,8 @@ export async function addToFunFeed(
 			text,
 			createdBy,
 			familyId,
-			createdAt: serverTimestamp()
+			createdAt: serverTimestamp(),
+			...(metadata && { metadata })
 		};
 		
 		await addDoc(collection(db, 'fun_feed'), feedEntry);

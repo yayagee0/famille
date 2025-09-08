@@ -56,6 +56,7 @@ export interface UserBadge {
 	name: string;
 	description: string;
 	category: 'social' | 'learning' | 'consistency' | 'special';
+	rarity: 'common' | 'rare' | 'legendary'; // New field for Phase 6
 	earnedAt: Timestamp;
 	notificationSent: boolean;
 	reason: string; // Short explanation why badge was earned
@@ -198,11 +199,19 @@ export interface DailyAnalytics {
 
 export interface FunFeedEntry {
 	id?: string;
-	type: 'poll' | 'story' | 'feedback';
+	type: 'poll' | 'story' | 'feedback' | 'badge'; // Added badge for Phase 6
 	text: string;
 	createdBy: string; // uid
 	familyId: string;
 	createdAt: Timestamp;
+	// Phase 6 enrichment fields
+	rarity?: 'common' | 'rare' | 'legendary'; // For badge entries
+	metadata?: {
+		pollQuestion?: string; // For poll entries
+		storyPreview?: string; // For story entries  
+		feedbackTopic?: string; // For feedback entries
+		badgeIcon?: string; // For badge entries
+	};
 }
 
 // ============================================================================
@@ -250,6 +259,7 @@ export const userBadgeSchema = z.object({
 	name: z.string().min(1),
 	description: z.string().min(1),
 	category: z.enum(['social', 'learning', 'consistency', 'special']),
+	rarity: z.enum(['common', 'rare', 'legendary']), // Added for Phase 6
 	earnedAt: z.any(), // Timestamp
 	notificationSent: z.boolean(),
 	reason: z.string().min(1)
@@ -284,15 +294,15 @@ export const dailyPollSchema = z.object({
 
 export const userPreferencesSchema = z.object({
 	uid: z.string().min(1),
-	pollChoices: z.record(z.number().min(0)),
-	storyThemes: z.record(z.number().min(0)),
+	pollChoices: z.record(z.string(), z.number().min(0)),
+	storyThemes: z.record(z.string(), z.number().min(0)),
 	feedbackSent: z.number().min(0),
 	lastUpdated: z.any(), // Timestamp
 	createdAt: z.any() // Timestamp
 });
 
 export const botTurnTrackerSchema = z.object({
-	global: z.record(z.number().min(0)),
+	global: z.record(z.string(), z.number().min(0)),
 	lastAssigned: z.string().nullable(),
 	totalTurns: z.number().min(0),
 	lastUpdated: z.any() // Timestamp
@@ -363,7 +373,7 @@ export const dailyAnalyticsSchema = z.object({
 		commentsPosted: z.number().min(0),
 		likesGiven: z.number().min(0)
 	}),
-	userMetrics: z.record(userDailyMetricsSchema),
+	userMetrics: z.record(z.string(), userDailyMetricsSchema),
 	createdAt: z.any(), // Timestamp
 	updatedAt: z.date()
 });
@@ -507,18 +517,4 @@ export const DOCUMENT_IDS = {
 // TYPE EXPORTS
 // ============================================================================
 
-export type {
-	UserProfile,
-	UserFeedback,
-	UserNudge,
-	UserBadge,
-	UserBadgeCounters,
-	DailyPoll,
-	UserPreferences,
-	BotTurnTracker,
-	StoryTemplate,
-	SeasonalContent,
-	UserDailyMetrics,
-	DailyAnalytics,
-	FunFeedEntry
-};
+// All types are exported via the interface declarations above
