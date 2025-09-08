@@ -54,19 +54,30 @@ describe('FamilyBot Phase 8: Memory Nudges', () => {
 	it('should generate memory-based nudge for story preferences', async () => {
 		const { getDoc } = await import('firebase/firestore');
 		
-		// Mock preferences with story activity
-		(getDoc as any).mockResolvedValueOnce({
-			exists: () => true,
-			data: () => ({
-				lastStoryRead: '2024-01-01',
-				lastSuggestedTheme: 'adventure',
-				storyThemes: { adventure: 5, fantasy: 2 }
-			})
-		});
-
-		// Mock no existing nudge today
+		// Mock no existing nudge today (first call)
 		(getDoc as any).mockResolvedValueOnce({
 			exists: () => false
+		});
+
+		// Mock preferences with story activity (second call)
+		(getDoc as any).mockResolvedValueOnce({
+			exists: () => true,
+			data: () => {
+				// Calculate a date that's 5 days ago (within the 3-7 day sweet spot)
+				const fiveDaysAgo = new Date();
+				fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+				
+				return {
+					uid: 'test-user',
+					pollChoices: {},
+					storyThemes: { adventure: 5, fantasy: 2 },
+					feedbackSent: 0,
+					lastStoryRead: fiveDaysAgo.toISOString().split('T')[0],
+					lastSuggestedTheme: 'adventure',
+					lastUpdated: new Date(),
+					createdAt: new Date()
+				};
+			}
 		});
 
 		const { setDoc } = await import('firebase/firestore');
@@ -83,18 +94,30 @@ describe('FamilyBot Phase 8: Memory Nudges', () => {
 	it('should generate memory-based nudge for feedback patterns', async () => {
 		const { getDoc } = await import('firebase/firestore');
 		
-		// Mock preferences with old feedback
-		(getDoc as any).mockResolvedValueOnce({
-			exists: () => true,
-			data: () => ({
-				lastFeedbackGiven: '2024-01-01',
-				lastStoryRead: null
-			})
-		});
-
-		// Mock no existing nudge
+		// Mock no existing nudge today (first call)
 		(getDoc as any).mockResolvedValueOnce({
 			exists: () => false
+		});
+		
+		// Mock preferences with old feedback (second call)
+		(getDoc as any).mockResolvedValueOnce({
+			exists: () => true,
+			data: () => {
+				// Calculate a date that's 6 days ago (more than 5 days for feedback)
+				const sixDaysAgo = new Date();
+				sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
+				
+				return {
+					uid: 'test-user',
+					pollChoices: {},
+					storyThemes: {},
+					feedbackSent: 2,
+					lastFeedbackGiven: sixDaysAgo.toISOString().split('T')[0],
+					lastStoryRead: null,
+					lastUpdated: new Date(),
+					createdAt: new Date()
+				};
+			}
 		});
 
 		const { setDoc } = await import('firebase/firestore');
@@ -123,15 +146,22 @@ describe('FamilyBot Phase 8: Memory Nudges', () => {
 	it('should generate gentle fallback nudge when no specific memories', async () => {
 		const { getDoc } = await import('firebase/firestore');
 		
-		// Mock preferences with no strong patterns
-		(getDoc as any).mockResolvedValueOnce({
-			exists: () => true,
-			data: () => ({})
-		});
-
-		// Mock no existing nudge
+		// Mock no existing nudge today (first call)
 		(getDoc as any).mockResolvedValueOnce({
 			exists: () => false
+		});
+
+		// Mock preferences with no strong patterns (second call)
+		(getDoc as any).mockResolvedValueOnce({
+			exists: () => true,
+			data: () => ({
+				uid: 'test-user',
+				pollChoices: {},
+				storyThemes: {},
+				feedbackSent: 0,
+				lastUpdated: new Date(),
+				createdAt: new Date()
+			})
 		});
 
 		const { setDoc } = await import('firebase/firestore');
@@ -376,23 +406,23 @@ describe('FamilyBot Phase 8: Custom Polls with Psychology Guardrails', () => {
 		const validation = await createCustomPollWizard('test-user', 'What is the worst thing about school?', []);
 		
 		expect(validation.validated).toBe(false);
-		expect(validation.guidance).toContain('Try reframing positively!');
+		expect(validation.guidance.join(' ')).toContain('Try reframing positively!');
 	});
 
 	it('should provide guidance for different question types', async () => {
 		// Activity question
 		const activityValidation = await createCustomPollWizard('test-user', 'What should we do this weekend?', []);
-		expect(activityValidation.guidance).toContain('Activity polls help families spend quality time together!');
+		expect(activityValidation.guidance.join(' ')).toContain('Activity polls help families spend quality time together!');
 		expect(activityValidation.suggestedOptions).toContain('Board games 🎲');
 
 		// Learning question
 		const learningValidation = await createCustomPollWizard('test-user', 'What should we learn about today?', []);
-		expect(learningValidation.guidance).toContain('Learning polls are wonderful for family growth!');
+		expect(learningValidation.guidance.join(' ')).toContain('Learning polls are wonderful for family growth!');
 		expect(learningValidation.suggestedOptions).toContain('Reading stories 📖');
 
 		// Games question
 		const gamesValidation = await createCustomPollWizard('test-user', 'Which game should we play?', []);
-		expect(gamesValidation.guidance).toContain('Games bring families together with joy and laughter!');
+		expect(gamesValidation.guidance.join(' ')).toContain('Games bring families together with joy and laughter!');
 		expect(gamesValidation.suggestedOptions).toContain('Hide and seek 👀');
 	});
 
@@ -400,7 +430,7 @@ describe('FamilyBot Phase 8: Custom Polls with Psychology Guardrails', () => {
 		const manyOptions = ['Option 1', 'Option 2', 'Option 3', 'Option 4', 'Option 5', 'Option 6'];
 		const validation = await createCustomPollWizard('test-user', 'Test question?', manyOptions);
 		
-		expect(validation.guidance).toContain('Consider limiting to 2-4 options');
+		expect(validation.guidance.join(' ')).toContain('Consider limiting to 2-4 options');
 	});
 
 	it('should successfully create custom poll with valid input', async () => {
@@ -435,7 +465,7 @@ describe('FamilyBot Phase 8: Custom Polls with Psychology Guardrails', () => {
 		
 		expect(result.success).toBe(true);
 		expect(result.pollId).toBe('poll-id');
-		expect(result.guidance).toContain('Great poll!');
+		expect(result.guidance?.join(' ')).toContain('Great poll!');
 		expect(addDoc).toHaveBeenCalled();
 	});
 

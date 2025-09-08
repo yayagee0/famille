@@ -420,8 +420,8 @@ export class SmartEngine {
 	/**
 	 * Get current trait for rotation (weekly round-robin)
 	 */
-	static getCurrentTrait(userTraits: UserTraits): string | null {
-		if (userTraits.traits.length === 0) return null;
+	static getCurrentTrait(userTraits: UserTraits | null): string | null {
+		if (!userTraits || !userTraits.traits || userTraits.traits.length === 0) return null;
 
 		// Check if we need to rotate (weekly)
 		const now = new Date();
@@ -2836,7 +2836,7 @@ async function replaceStoryPlaceholders(content: string, userId: string): Promis
 		// Get user traits
 		const userTraits = await SmartEngine.getUserTraits(userId);
 		const currentTrait = SmartEngine.getCurrentTrait(userTraits);
-		const traits = identityTraits.filter(t => userTraits.traits.includes(t.id));
+		const traits = userTraits ? identityTraits.filter(t => userTraits.traits.includes(t.id)) : [];
 
 		// Get Islamic context
 		const islamicProgress = await SmartEngine.getIslamicProgress(userId);
@@ -3603,11 +3603,6 @@ function detectQuestionType(question: string): 'food' | 'activity' | 'learning' 
 		return 'food';
 	}
 	
-	if (lowerQuestion.includes('do') || lowerQuestion.includes('activity') || lowerQuestion.includes('weekend') ||
-		lowerQuestion.includes('play') || lowerQuestion.includes('together')) {
-		return 'activity';
-	}
-	
 	if (lowerQuestion.includes('learn') || lowerQuestion.includes('study') || lowerQuestion.includes('read') ||
 		lowerQuestion.includes('book') || lowerQuestion.includes('education')) {
 		return 'learning';
@@ -3616,6 +3611,11 @@ function detectQuestionType(question: string): 'food' | 'activity' | 'learning' 
 	if (lowerQuestion.includes('game') || lowerQuestion.includes('sport') || lowerQuestion.includes('fun') ||
 		lowerQuestion.includes('entertainment')) {
 		return 'games';
+	}
+	
+	if (lowerQuestion.includes('do') || lowerQuestion.includes('activity') || lowerQuestion.includes('weekend') ||
+		lowerQuestion.includes('play') || lowerQuestion.includes('together')) {
+		return 'activity';
 	}
 	
 	return 'general';
