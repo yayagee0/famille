@@ -1371,7 +1371,7 @@ export class SmartEngine {
 	 * Phase 6: Enhanced Fun Feed with metadata support
 	 */
 	static async addEnhancedFunFeedEntry(
-		type: 'poll' | 'story' | 'feedback' | 'badge',
+		type: 'poll' | 'story' | 'feedback' | 'badge' | 'pollSuggestion' | 'feedbackSuggestion',
 		options: {
 			text: string;
 			createdBy: string;
@@ -1381,6 +1381,9 @@ export class SmartEngine {
 				storyPreview?: string;
 				feedbackTopic?: string;
 				badgeIcon?: string;
+				suggestedBy?: string;
+				suggestedAt?: string;
+				content?: string;
 			};
 		}
 	): Promise<void> {
@@ -2477,5 +2480,156 @@ export async function trackPollVote(uid: string): Promise<void> {
 		await SmartEngine.updateMilestoneProgress(uid, 'daily_interaction');
 	} catch (error) {
 		console.error('[SmartEngine] Failed to track poll vote:', error);
+	}
+}
+
+// Throttling state to prevent spam suggestions
+const suggestionThrottle = new Map<string, Set<string>>(); // sessionId -> Set of suggestion types
+
+/**
+ * Check if a suggestion type can be added (throttling)
+ * @param sessionId Session identifier (could be uid + date)
+ * @param suggestionType Type of suggestion ('poll' | 'feedback')
+ */
+function canAddSuggestion(sessionId: string, suggestionType: string): boolean {
+	if (!suggestionThrottle.has(sessionId)) {
+		suggestionThrottle.set(sessionId, new Set());
+	}
+	
+	const sessionSuggestions = suggestionThrottle.get(sessionId)!;
+	return !sessionSuggestions.has(suggestionType);
+}
+
+/**
+ * Mark a suggestion type as added for this session
+ * @param sessionId Session identifier
+ * @param suggestionType Type of suggestion
+ */
+function markSuggestionAdded(sessionId: string, suggestionType: string): void {
+	if (!suggestionThrottle.has(sessionId)) {
+		suggestionThrottle.set(sessionId, new Set());
+	}
+	suggestionThrottle.get(sessionId)!.add(suggestionType);
+}
+
+/**
+ * Add a poll suggestion to Fun Feed (throttled)
+ * @param uid User ID who initiated the suggestion
+ * @param pollQuestion Suggested poll question
+ */
+export async function addPollSuggestion(uid: string, pollQuestion: string): Promise<void> {
+	try {
+		const sessionId = `${uid}-${new Date().toISOString().split('T')[0]}`;
+		
+		if (!canAddSuggestion(sessionId, 'poll')) {
+			console.log('[FamilyBot] Poll suggestion throttled for this session');
+			return;
+		}
+
+		await SmartEngine.addEnhancedFunFeedEntry('pollSuggestion', {
+			text: `📊 FamilyBot suggested a poll: ${pollQuestion}`,
+			createdBy: 'bot',
+			rarity: 'common',
+			metadata: {
+				suggestedBy: uid,
+				suggestedAt: new Date().toISOString(),
+				pollQuestion,
+				content: pollQuestion
+			}
+		});
+
+		markSuggestionAdded(sessionId, 'poll');
+		console.log(`[FamilyBot] Added poll suggestion: ${pollQuestion}`);
+		
+	} catch (error) {
+		console.error('[FamilyBot] Failed to add poll suggestion:', error);
+	}
+}
+
+/**
+ * Add a feedback suggestion to Fun Feed (throttled)
+ * @param uid User ID who initiated the suggestion
+ * @param topic Suggested feedback topic
+ */
+export async function addFeedbackSuggestion(uid: string, topic: string): Promise<void> {
+	try {
+		const sessionId = `${uid}-${new Date().toISOString().split('T')[0]}`;
+		
+		if (!canAddSuggestion(sessionId, 'feedback')) {
+			console.log('[FamilyBot] Feedback suggestion throttled for this session');
+			return;
+		}
+
+		await SmartEngine.addEnhancedFunFeedEntry('feedbackSuggestion', {
+			text: `💡 FamilyBot suggested giving feedback about: ${topic}`,
+			createdBy: 'bot', 
+			rarity: 'common',
+			metadata: {
+				suggestedBy: uid,
+				suggestedAt: new Date().toISOString(),
+				feedbackTopic: topic,
+				content: `Share your thoughts about ${topic}`
+			}
+		});
+
+		markSuggestionAdded(sessionId, 'feedback');
+		console.log(`[FamilyBot] Added feedback suggestion: ${topic}`);
+		
+	} catch (error) {
+		console.error('[FamilyBot] Failed to add feedback suggestion:', error);
+	}
+}
+
+/**
+ * Create a poll from a FamilyBot suggestion
+ * @param question Suggested poll question
+ * @param uid User who is converting the suggestion
+ */
+export async function createPollFromSuggestion(question: string, uid: string): Promise<void> {
+	try {
+		const familyId = getFamilyId();
+		
+		// Generate default options based on the question type
+		let options: string[];
+		if (question.toLowerCase().includes('meal') || question.toLowerCase().includes('food') || question.toLowerCase().includes('dinner') || question.toLowerCase().includes('lunch')) {
+			options = ['Pasta 🍝', 'Pizza 🍕', 'Rice 🍚'];
+		} else if (question.toLowerCase().includes('activity') || question.toLowerCase().includes('weekend')) {
+			options = ['Board games 🎲', 'Watch a movie 🎬', 'Go for a walk 🚶'];
+		} else {
+			// Generic options
+			options = ['Option A 🅰️', 'Option B 🅱️', 'Option C 🅲'];
+		}
+
+		// Create the poll document
+		const pollDoc = await addDoc(collection(db, 'daily_polls'), {
+			question,
+			options: options.map(text => ({ text, votes: [] })),
+			familyId,
+			createdAt: serverTimestamp(),
+			expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+			totalVotes: 0,
+			isClosed: false,
+			resultsPosted: false
+		});
+
+		// Add a real poll entry to Fun Feed (not a suggestion)
+		await SmartEngine.addEnhancedFunFeedEntry('poll', {
+			text: `📊 ${await SmartEngine.getUserDisplayName(uid)} created a poll: ${question}`,
+			createdBy: uid,
+			rarity: 'common',
+			metadata: {
+				pollQuestion: question
+			}
+		});
+
+		// Track milestone progress
+		await SmartEngine.updateMilestoneProgress(uid, 'poll_created');
+		await SmartEngine.updateMilestoneProgress(uid, 'daily_interaction');
+
+		console.log(`[FamilyBot] Created poll from suggestion: ${pollDoc.id}`);
+		
+	} catch (error) {
+		console.error('[FamilyBot] Failed to create poll from suggestion:', error);
+		throw error;
 	}
 }

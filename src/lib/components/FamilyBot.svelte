@@ -8,7 +8,9 @@
 		getAdaptiveEngagementBias,
 		getSeasonalSuggestion,
 		addToFunFeed,
-		trackPollVote
+		trackPollVote,
+		addPollSuggestion,
+		addFeedbackSuggestion
 	} from "$lib/smartEngine";
 	import { 
 		getPreferences, 
@@ -209,6 +211,15 @@
 		baseSuggestions.push({
 			label: "📊 Create a poll",
 			action: async () => {
+				// Add poll suggestion to Fun Feed
+				const preferredOption = userPreferences ? getMostPreferredPollOption(userPreferences) : null;
+				let suggestionQuestion = "What should we have for dinner tonight?";
+				
+				if (preferredOption && hasStrongPreference(userPreferences!, 'poll')) {
+					suggestionQuestion = `Should we have ${preferredOption} for our next meal?`;
+				}
+				
+				await addPollSuggestion(uid, suggestionQuestion);
 				startPollWizard();
 			}
 		});
@@ -232,6 +243,8 @@
 		baseSuggestions.push({
 			label: "💬 Share feedback",
 			action: async () => {
+				// Add feedback suggestion to Fun Feed
+				await addFeedbackSuggestion(uid, "Family Hub Experience");
 				startFeedbackWizard();
 			}
 		});

@@ -199,7 +199,7 @@ export interface DailyAnalytics {
 
 export interface FunFeedEntry {
 	id?: string;
-	type: 'poll' | 'story' | 'feedback' | 'badge'; // Added badge for Phase 6
+	type: 'poll' | 'story' | 'feedback' | 'badge' | 'pollSuggestion' | 'feedbackSuggestion'; // Added suggestion types
 	text: string;
 	createdBy: string; // uid
 	familyId: string;
@@ -207,10 +207,13 @@ export interface FunFeedEntry {
 	// Phase 6 enrichment fields
 	rarity?: 'common' | 'rare' | 'legendary'; // For badge entries
 	metadata?: {
-		pollQuestion?: string; // For poll entries
+		pollQuestion?: string; // For poll entries and suggestions
 		storyPreview?: string; // For story entries  
-		feedbackTopic?: string; // For feedback entries
+		feedbackTopic?: string; // For feedback entries and suggestions
 		badgeIcon?: string; // For badge entries
+		suggestedBy?: string; // For suggestion entries
+		suggestedAt?: string; // For suggestion entries
+		content?: string; // General content for suggestions
 	};
 }
 
@@ -380,11 +383,21 @@ export const dailyAnalyticsSchema = z.object({
 
 export const funFeedEntrySchema = z.object({
 	id: z.string().optional(),
-	type: z.enum(['poll', 'story', 'feedback']),
+	type: z.enum(['poll', 'story', 'feedback', 'badge', 'pollSuggestion', 'feedbackSuggestion']), // Added suggestion types
 	text: z.string().min(1),
 	createdBy: z.string().min(1),
 	familyId: z.string().min(1),
-	createdAt: z.any() // Timestamp
+	createdAt: z.any(), // Timestamp
+	rarity: z.enum(['common', 'rare', 'legendary']).optional(),
+	metadata: z.object({
+		pollQuestion: z.string().optional(),
+		storyPreview: z.string().optional(),
+		feedbackTopic: z.string().optional(),
+		badgeIcon: z.string().optional(),
+		suggestedBy: z.string().optional(),
+		suggestedAt: z.string().optional(),
+		content: z.string().optional()
+	}).optional()
 });
 
 // ============================================================================
