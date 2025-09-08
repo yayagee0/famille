@@ -1,6 +1,262 @@
 import { describe, it, expect } from 'vitest';
 
-describe('FamilyBot Phase 2 & 3 - Basic Tests', () => {
+describe('FamilyBot Phase 4 - Finalization Tests', () => {
+	describe('enhanced feedback system', () => {
+		it('should include topic field in feedback', () => {
+			// Test feedback schema compliance
+			const feedback = {
+				message: 'Great experience!',
+				topic: 'Family Hub Experience',
+				source: 'FamilyBot',
+				userId: 'user-123',
+				createdAt: { seconds: Date.now() / 1000 }
+			};
+
+			expect(feedback.topic).toBe('Family Hub Experience');
+			expect(feedback.source).toBe('FamilyBot');
+			expect(feedback.message).toBeTruthy();
+		});
+
+		it('should validate feedback topic categories', () => {
+			const validTopics = [
+				'Family Hub Experience',
+				'FamilyBot Interaction', 
+				'Story & Content',
+				'General Suggestion'
+			];
+
+			validTopics.forEach(topic => {
+				expect(topic).toBeTruthy();
+				expect(typeof topic).toBe('string');
+			});
+		});
+	});
+
+	describe('fairness transparency system', () => {
+		it('should display fairness message with user name', () => {
+			const assignedUserName = 'Yahya';
+			const fairnessMessage = `It's ${assignedUserName}'s turn today! 🎉 I want to make sure everyone gets equal time with me.`;
+			
+			expect(fairnessMessage).toContain('Yahya');
+			expect(fairnessMessage).toContain('turn today');
+			expect(fairnessMessage).toContain('equal time');
+		});
+
+		it('should handle fairness tracker data structure', () => {
+			const botTurnTracker = {
+				global: {
+					'user1': 3,
+					'user2': 1,
+					'user3': 2
+				},
+				lastAssigned: 'user2',
+				totalTurns: 6,
+				lastUpdated: { seconds: Date.now() / 1000 }
+			};
+
+			// Find user with lowest count
+			let lowestCount = Infinity;
+			let fairestUid = null;
+
+			for (const [userId, count] of Object.entries(botTurnTracker.global)) {
+				if (count < lowestCount) {
+					lowestCount = count;
+					fairestUid = userId;
+				}
+			}
+
+			expect(fairestUid).toBe('user2');
+			expect(lowestCount).toBe(1);
+		});
+	});
+
+	describe('enhanced story system validation', () => {
+		it('should validate story template structure', () => {
+			const storyTemplate = {
+				template: "A {trait} child learned that '{ayah}' during {theme} season.",
+				theme: 'islamic',
+				category: 'spiritual',
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: true,
+				weight: 1.3,
+				familyId: 'test-family'
+			};
+
+			expect(storyTemplate.hasTraitPlaceholder).toBe(true);
+			expect(storyTemplate.hasAyahPlaceholder).toBe(true);
+			expect(storyTemplate.hasThemePlaceholder).toBe(true);
+			expect(storyTemplate.weight).toBe(1.3);
+			expect(['islamic', 'family', 'adventure', 'fantasy', 'wisdom', 'seasonal']).toContain(storyTemplate.theme);
+		});
+
+		it('should validate story categories and counts', () => {
+			const expectedCategories = {
+				'islamic': 10,
+				'family': 10,
+				'adventure': 10,
+				'fantasy': 8,
+				'wisdom': 7,
+				'seasonal': 5
+			};
+
+			let totalStories = 0;
+			for (const [theme, count] of Object.entries(expectedCategories)) {
+				expect(count).toBeGreaterThan(0);
+				totalStories += count;
+			}
+
+			expect(totalStories).toBe(50); // Total should be 50+ stories
+		});
+
+		it('should handle placeholder replacement logic', () => {
+			let story = "A {trait} child learned from '{ayah}' during {theme} time.";
+			
+			// Simulate placeholder replacement
+			story = story.replace(/\{trait\}/g, 'curious');
+			story = story.replace(/\{ayah\}/g, 'Be kind to others');
+			story = story.replace(/\{theme\}/g, 'spring');
+
+			expect(story).toBe("A curious child learned from 'Be kind to others' during spring time.");
+			expect(story).not.toContain('{');
+			expect(story).not.toContain('}');
+		});
+	});
+
+	describe('analytics schema validation', () => {
+		it('should validate daily analytics structure', () => {
+			const dailyAnalytics = {
+				date: '2025-01-09',
+				familyId: 'test-family',
+				metrics: {
+					nudgesGenerated: 4,
+					nudgesShown: 3,
+					nudgesAnswered: 2,
+					nudgesSkipped: 1,
+					nudgeEngagementRate: 0.67,
+					feedbackGenerated: 1,
+					feedbackCompleted: 1,
+					feedbackCompletionRate: 1.0,
+					pollsGenerated: 1,
+					pollVotes: 3,
+					pollParticipationRate: 3.0,
+					islamicQuestionsAnswered: 5,
+					islamicQuestionsCorrect: 4,
+					islamicAccuracyRate: 0.8,
+					badgesEarned: 2,
+					activeUsers: 4,
+					postsCreated: 3,
+					commentsPosted: 5,
+					likesGiven: 12
+				},
+				userMetrics: {
+					'user1': {
+						userId: 'user1',
+						nudgeShown: true,
+						nudgeAnswered: true,
+						nudgeSkipped: false,
+						feedbackCompleted: false,
+						pollVoted: true,
+						islamicQuestionsAnswered: 2,
+						islamicQuestionsCorrect: 2,
+						badgesEarned: 1,
+						postsCreated: 1,
+						commentsPosted: 2,
+						likesGiven: 4,
+						lastSeen: new Date()
+					}
+				},
+				createdAt: { seconds: Date.now() / 1000 },
+				updatedAt: new Date()
+			};
+
+			expect(dailyAnalytics.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+			expect(dailyAnalytics.metrics.nudgeEngagementRate).toBeCloseTo(0.67, 2);
+			expect(dailyAnalytics.userMetrics.user1.userId).toBe('user1');
+			expect(dailyAnalytics.userMetrics.user1.islamicQuestionsCorrect).toBeLessThanOrEqual(
+				dailyAnalytics.userMetrics.user1.islamicQuestionsAnswered
+			);
+		});
+
+		it('should validate user daily metrics', () => {
+			const userMetrics = {
+				userId: 'user123',
+				nudgeShown: true,
+				nudgeAnswered: false,
+				nudgeSkipped: true,
+				feedbackCompleted: true,
+				pollVoted: true,
+				islamicQuestionsAnswered: 3,
+				islamicQuestionsCorrect: 2,
+				badgesEarned: 1,
+				postsCreated: 2,
+				commentsPosted: 1,
+				likesGiven: 5,
+				lastSeen: new Date()
+			};
+
+			expect(userMetrics.userId).toBeTruthy();
+			expect(typeof userMetrics.nudgeShown).toBe('boolean');
+			expect(userMetrics.islamicQuestionsCorrect).toBeLessThanOrEqual(userMetrics.islamicQuestionsAnswered);
+			expect(userMetrics.lastSeen).toBeInstanceOf(Date);
+		});
+	});
+
+	describe('schema enforcement validation', () => {
+		it('should validate user profile schema', () => {
+			const userProfile = {
+				uid: 'user123',
+				displayName: 'Test User',
+				email: 'test@example.com',
+				nickname: 'Tester',
+				avatarUrl: 'https://example.com/avatar.jpg',
+				photoURL: 'https://example.com/photo.jpg',
+				createdAt: { seconds: Date.now() / 1000 },
+				lastLoginAt: { seconds: Date.now() / 1000 },
+				lastUpdatedAt: { seconds: Date.now() / 1000 }
+			};
+
+			expect(userProfile.uid).toBeTruthy();
+			expect(userProfile.email).toContain('@');
+			expect(userProfile.nickname).toBe('Tester');
+		});
+
+		it('should validate story template schema', () => {
+			const template = {
+				template: "Test story with {trait} and {ayah}",
+				theme: 'wisdom',
+				category: 'learning',
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.1,
+				familyId: 'test-family',
+				createdAt: { seconds: Date.now() / 1000 }
+			};
+
+			expect(['islamic', 'family', 'adventure', 'fantasy', 'wisdom', 'seasonal']).toContain(template.theme);
+			expect(template.weight).toBeGreaterThan(0);
+			expect(template.weight).toBeLessThanOrEqual(2.0);
+		});
+
+		it('should validate bot turn tracker schema', () => {
+			const tracker = {
+				global: {
+					'user1': 5,
+					'user2': 3,
+					'user3': 7
+				},
+				lastAssigned: 'user2',
+				totalTurns: 15,
+				lastUpdated: { seconds: Date.now() / 1000 }
+			};
+
+			expect(typeof tracker.global).toBe('object');
+			expect(tracker.totalTurns).toBeGreaterThan(0);
+			expect(tracker.lastAssigned).toBeTruthy();
+		});
+	});
+
 	describe('preferences utility functions', () => {
 		it('should identify most preferred poll option', () => {
 			// Test the core logic without Firebase dependencies

@@ -1257,13 +1257,15 @@ export async function createPoll({ question, options }: { question: string; opti
 }
 
 /**
- * Send feedback from FamilyBot
+ * Send feedback from FamilyBot with topic categorization
  */
-export async function sendFeedback(uid: string, message: string) {
+export async function sendFeedback(uid: string, message: string, topic: string = 'General') {
 	const ref = collection(db, `users/${uid}/feedback`);
 	await addDoc(ref, {
 		message,
+		topic,
 		source: 'FamilyBot',
+		userId: uid,
 		createdAt: serverTimestamp()
 	});
 }
@@ -1509,198 +1511,18 @@ export async function seedStoryTemplates(): Promise<void> {
 		
 		const familyId = getFamilyId();
 		
-		// 50+ story templates with various themes and placeholders
+		// 50+ story templates by category as requested:
+		// Islamic Wisdom: 10, Family Bonding: 10, Adventure: 10, Fantasy: 8, Wisdom & Reflection: 7, Seasonal Specials: 5
 		const storyTemplates = [
-			// Adventure themes
-			{
-				template: "Once upon a time, a brave explorer discovered that being {trait} was the key to unlocking ancient wisdom. As the Quran says: '{ayah}' 🌍",
-				theme: "adventure",
-				category: "exploration",
-				hasTraitPlaceholder: true,
-				hasAyahPlaceholder: true,
-				weight: 1.0,
-				familyId
-			},
-			{
-				template: "A curious cat 🐱 learned that {trait} hearts always find hidden treasures in the enchanted forest during {theme} time.",
-				theme: "adventure", 
-				category: "animals",
-				hasTraitPlaceholder: true,
-				hasThemePlaceholder: true,
-				weight: 1.0,
-				familyId
-			},
-			{
-				template: "The mountain guide knew that {trait} travelers always discover the most amazing views. '{ayah}' reminded them why the journey matters. ⛰️",
-				theme: "adventure",
-				category: "nature",
-				hasTraitPlaceholder: true,
-				hasAyahPlaceholder: true,
-				weight: 1.0,
-				familyId
-			},
-			{
-				template: "A young sailor learned that being {trait} helps navigate both stormy seas and calm waters. The lighthouse keeper shared: '{ayah}' ⛵",
-				theme: "adventure",
-				category: "journey",
-				hasTraitPlaceholder: true,
-				hasAyahPlaceholder: true,
-				weight: 1.0,
-				familyId
-			},
-			{
-				template: "In the deep forest, a {trait} ranger discovered that every creature has its own special wisdom to share. 🌲",
-				theme: "adventure",
-				category: "nature",
-				hasTraitPlaceholder: true,
-				weight: 1.0,
-				familyId
-			},
 			
-			// Family themes
-			{
-				template: "Two siblings worked together, using their {trait} nature to solve puzzles and help their community during {theme} season. ✨",
-				theme: "family",
-				category: "cooperation",
-				hasTraitPlaceholder: true,
-				hasThemePlaceholder: true,
-				weight: 1.2,
-				familyId
-			},
-			{
-				template: "A grandmother shared with her grandchildren: 'Being {trait} is what makes our family special.' They remembered '{ayah}' together. 👵",
-				theme: "family",
-				category: "wisdom",
-				hasTraitPlaceholder: true,
-				hasAyahPlaceholder: true,
-				weight: 1.2,
-				familyId
-			},
-			{
-				template: "During family dinner, everyone shared why being {trait} helps them care for each other better. 🍽️",
-				theme: "family",
-				category: "bonding",
-				hasTraitPlaceholder: true,
-				weight: 1.2,
-				familyId
-			},
-			{
-				template: "The family photo showed everyone's {trait} smiles, especially during {theme} celebrations. 📸",
-				theme: "family",
-				category: "memories",
-				hasTraitPlaceholder: true,
-				hasThemePlaceholder: true,
-				weight: 1.2,
-				familyId
-			},
-			{
-				template: "A parent taught their child: '{ayah}' - and they both understood why {trait} hearts make the strongest families. 💕",
-				theme: "family",
-				category: "teaching",
-				hasTraitPlaceholder: true,
-				hasAyahPlaceholder: true,
-				weight: 1.2,
-				familyId
-			},
-			
-			// Wisdom themes
-			{
-				template: "A wise owl 🦉 shared that {trait} is the secret ingredient in all the best adventures and kindest deeds.",
-				theme: "wisdom",
-				category: "learning",
-				hasTraitPlaceholder: true,
-				weight: 1.1,
-				familyId
-			},
-			{
-				template: "The village storyteller said: '{ayah}' - and everyone understood why being {trait} matters most in life. 📚",
-				theme: "wisdom",
-				category: "teaching",
-				hasTraitPlaceholder: true,
-				hasAyahPlaceholder: true,
-				weight: 1.1,
-				familyId
-			},
-			{
-				template: "An old tree whispered to a young child: 'Growing {trait} roots helps you reach for the highest dreams.' 🌳",
-				theme: "wisdom",
-				category: "growth",
-				hasTraitPlaceholder: true,
-				weight: 1.1,
-				familyId
-			},
-			{
-				template: "In the library, a {trait} scholar discovered that the most valuable treasures are found in helping others during {theme} time. 📖",
-				theme: "wisdom",
-				category: "learning",
-				hasTraitPlaceholder: true,
-				hasThemePlaceholder: true,
-				weight: 1.1,
-				familyId
-			},
-			{
-				template: "The wise gardener knew that {trait} seeds grow into the most beautiful flowers. '{ayah}' reminded them of patience. 🌺",
-				theme: "wisdom",
-				category: "patience",
-				hasTraitPlaceholder: true,
-				hasAyahPlaceholder: true,
-				weight: 1.1,
-				familyId
-			},
-			
-			// Fantasy themes
-			{
-				template: "In a magical garden, flowers taught a young child that {trait} hearts bloom the brightest during {theme} season. 🌸",
-				theme: "fantasy",
-				category: "magic",
-				hasTraitPlaceholder: true,
-				hasThemePlaceholder: true,
-				weight: 0.9,
-				familyId
-			},
-			{
-				template: "A friendly dragon learned that being {trait} makes the best magic of all. The ancient scroll read: '{ayah}' 🐉",
-				theme: "fantasy",
-				category: "magic",
-				hasTraitPlaceholder: true,
-				hasAyahPlaceholder: true,
-				weight: 0.9,
-				familyId
-			},
-			{
-				template: "The magical paintbrush only worked for {trait} artists who painted with love in their hearts. 🎨",
-				theme: "fantasy",
-				category: "creativity",
-				hasTraitPlaceholder: true,
-				weight: 0.9,
-				familyId
-			},
-			{
-				template: "In the enchanted forest, all the animals gathered around the {trait} fairy who shared stories during {theme} nights. 🧚‍♀️",
-				theme: "fantasy",
-				category: "magic",
-				hasTraitPlaceholder: true,
-				hasThemePlaceholder: true,
-				weight: 0.9,
-				familyId
-			},
-			{
-				template: "The crystal castle appeared only to {trait} visitors who understood the meaning of '{ayah}' ✨",
-				theme: "fantasy",
-				category: "magic",
-				hasTraitPlaceholder: true,
-				hasAyahPlaceholder: true,
-				weight: 0.9,
-				familyId
-			},
-			
-			// Islamic themes
+			// ======= ISLAMIC WISDOM (10) =======
 			{
 				template: "The mosque garden taught everyone that {trait} worship brings the sweetest peace. '{ayah}' echoed in their hearts. 🕌",
 				theme: "islamic",
 				category: "spiritual",
 				hasTraitPlaceholder: true,
 				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
 				weight: 1.3,
 				familyId
 			},
@@ -1709,6 +1531,7 @@ export async function seedStoryTemplates(): Promise<void> {
 				theme: "islamic",
 				category: "spiritual",
 				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
 				hasThemePlaceholder: true,
 				weight: 1.3,
 				familyId
@@ -1719,6 +1542,7 @@ export async function seedStoryTemplates(): Promise<void> {
 				category: "learning",
 				hasTraitPlaceholder: true,
 				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
 				weight: 1.3,
 				familyId
 			},
@@ -1727,6 +1551,7 @@ export async function seedStoryTemplates(): Promise<void> {
 				theme: "islamic",
 				category: "daily",
 				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
 				hasThemePlaceholder: true,
 				weight: 1.3,
 				familyId
@@ -1737,12 +1562,470 @@ export async function seedStoryTemplates(): Promise<void> {
 				category: "character",
 				hasTraitPlaceholder: true,
 				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
 				weight: 1.3,
 				familyId
-			}
+			},
+			{
+				template: "At the Islamic center, children discovered that {trait} hearts understand the Quran's wisdom better. '{ayah}' 📖",
+				theme: "islamic",
+				category: "learning",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.3,
+				familyId
+			},
+			{
+				template: "The call to prayer reminded everyone that {trait} believers find peace in Allah's guidance. 🎵",
+				theme: "islamic",
+				category: "spiritual",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: false,
+				weight: 1.3,
+				familyId
+			},
+			{
+				template: "During Ramadan, the {trait} family learned that patience and kindness bring the greatest rewards. '{ayah}' 🌙",
+				theme: "islamic",
+				category: "seasonal",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.3,
+				familyId
+			},
+			{
+				template: "The mosque library showed that {trait} students love learning about Prophet Muhammad's (PBUH) teachings. 📚",
+				theme: "islamic",
+				category: "learning",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: false,
+				weight: 1.3,
+				familyId
+			},
+			{
+				template: "When making dua, the {trait} child remembered that Allah always listens to sincere hearts. '{ayah}' gave them comfort. 🤲",
+				theme: "islamic",
+				category: "spiritual",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.3,
+				familyId
+			},
 			
-			// Add 25 more varied templates to reach 50+
-			// ... (continuing with more diverse themes, but keeping this example manageable)
+			// ======= FAMILY BONDING (10) =======
+			{
+				template: "Two siblings worked together, using their {trait} nature to solve puzzles and help their community during {theme} season. ✨",
+				theme: "family",
+				category: "cooperation",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 1.2,
+				familyId
+			},
+			{
+				template: "A grandmother shared with her grandchildren: 'Being {trait} is what makes our family special.' They remembered '{ayah}' together. 👵",
+				theme: "family",
+				category: "wisdom",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.2,
+				familyId
+			},
+			{
+				template: "During family dinner, everyone shared why being {trait} helps them care for each other better. 🍽️",
+				theme: "family",
+				category: "bonding",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: false,
+				weight: 1.2,
+				familyId
+			},
+			{
+				template: "The family photo showed everyone's {trait} smiles, especially during {theme} celebrations. 📸",
+				theme: "family",
+				category: "memories",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 1.2,
+				familyId
+			},
+			{
+				template: "A parent taught their child: '{ayah}' - and they both understood why {trait} hearts make the strongest families. 💕",
+				theme: "family",
+				category: "teaching",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.2,
+				familyId
+			},
+			{
+				template: "The family game night was extra fun because everyone used their {trait} skills to help each other win. 🎲",
+				theme: "family",
+				category: "fun",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: false,
+				weight: 1.2,
+				familyId
+			},
+			{
+				template: "When grandpa told stories, his {trait} voice made every tale feel magical during {theme} evenings. 🌟",
+				theme: "family",
+				category: "storytelling",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 1.2,
+				familyId
+			},
+			{
+				template: "The family garden flourished because everyone contributed their {trait} efforts. '{ayah}' reminded them of working together. 🌱",
+				theme: "family",
+				category: "cooperation",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.2,
+				familyId
+			},
+			{
+				template: "At the family reunion, cousins discovered they all shared the same {trait} nature from their grandparents. 👨‍👩‍👧‍👦",
+				theme: "family",
+				category: "heritage",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: false,
+				weight: 1.2,
+				familyId
+			},
+			{
+				template: "The bedtime story tradition continued because {trait} parents know stories bring families closer during {theme} nights. 🌙",
+				theme: "family",
+				category: "traditions",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 1.2,
+				familyId
+			},
+			
+			// ======= ADVENTURE (10) =======
+			{
+				template: "Once upon a time, a brave explorer discovered that being {trait} was the key to unlocking ancient wisdom. As the Quran says: '{ayah}' 🌍",
+				theme: "adventure",
+				category: "exploration",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.0,
+				familyId
+			},
+			{
+				template: "A curious cat 🐱 learned that {trait} hearts always find hidden treasures in the enchanted forest during {theme} time.",
+				theme: "adventure", 
+				category: "animals",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 1.0,
+				familyId
+			},
+			{
+				template: "The mountain guide knew that {trait} travelers always discover the most amazing views. '{ayah}' reminded them why the journey matters. ⛰️",
+				theme: "adventure",
+				category: "nature",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.0,
+				familyId
+			},
+			{
+				template: "A young sailor learned that being {trait} helps navigate both stormy seas and calm waters. The lighthouse keeper shared: '{ayah}' ⛵",
+				theme: "adventure",
+				category: "journey",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.0,
+				familyId
+			},
+			{
+				template: "In the deep forest, a {trait} ranger discovered that every creature has its own special wisdom to share. 🌲",
+				theme: "adventure",
+				category: "nature",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: false,
+				weight: 1.0,
+				familyId
+			},
+			{
+				template: "The treasure map led to a cave where {trait} explorers found the greatest treasure: friendship during {theme} adventures. 🗺️",
+				theme: "adventure",
+				category: "treasure",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 1.0,
+				familyId
+			},
+			{
+				template: "A brave knight learned that {trait} courage comes from helping others, not from fighting. '{ayah}' guided their quest. ⚔️",
+				theme: "adventure",
+				category: "heroism",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.0,
+				familyId
+			},
+			{
+				template: "The desert caravan discovered that {trait} travelers always find oases when they help each other. 🐪",
+				theme: "adventure",
+				category: "journey",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: false,
+				weight: 1.0,
+				familyId
+			},
+			{
+				template: "In the ancient ruins, archaeologists found that {trait} researchers uncover the most amazing discoveries during {theme} expeditions. 🏛️",
+				theme: "adventure",
+				category: "discovery",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 1.0,
+				familyId
+			},
+			{
+				template: "The space explorer realized that being {trait} helps you make friends even among the stars. '{ayah}' echoed through the cosmos. 🚀",
+				theme: "adventure",
+				category: "exploration",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.0,
+				familyId
+			},
+			
+			// ======= FANTASY (8) =======
+			{
+				template: "In a magical garden, flowers taught a young child that {trait} hearts bloom the brightest during {theme} season. 🌸",
+				theme: "fantasy",
+				category: "magic",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 0.9,
+				familyId
+			},
+			{
+				template: "A friendly dragon learned that being {trait} makes the best magic of all. The ancient scroll read: '{ayah}' 🐉",
+				theme: "fantasy",
+				category: "magic",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 0.9,
+				familyId
+			},
+			{
+				template: "The magical paintbrush only worked for {trait} artists who painted with love in their hearts. 🎨",
+				theme: "fantasy",
+				category: "creativity",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: false,
+				weight: 0.9,
+				familyId
+			},
+			{
+				template: "In the enchanted forest, all the animals gathered around the {trait} fairy who shared stories during {theme} nights. 🧚‍♀️",
+				theme: "fantasy",
+				category: "magic",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 0.9,
+				familyId
+			},
+			{
+				template: "The crystal castle appeared only to {trait} visitors who understood the meaning of '{ayah}' ✨",
+				theme: "fantasy",
+				category: "magic",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 0.9,
+				familyId
+			},
+			{
+				template: "The wizard's apprentice discovered that {trait} magic users always create the most helpful spells during {theme} seasons. 🧙‍♂️",
+				theme: "fantasy",
+				category: "magic",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 0.9,
+				familyId
+			},
+			{
+				template: "A talking unicorn taught a young rider that {trait} hearts can heal any wound. '{ayah}' sparkled in the moonlight. 🦄",
+				theme: "fantasy",
+				category: "healing",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 0.9,
+				familyId
+			},
+			{
+				template: "The enchanted library revealed its secrets only to {trait} readers who sought wisdom to help others. 📚✨",
+				theme: "fantasy",
+				category: "knowledge",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: false,
+				weight: 0.9,
+				familyId
+			},
+			
+			// ======= WISDOM & REFLECTION (7) =======
+			{
+				template: "A wise owl 🦉 shared that {trait} is the secret ingredient in all the best adventures and kindest deeds.",
+				theme: "wisdom",
+				category: "learning",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: false,
+				weight: 1.1,
+				familyId
+			},
+			{
+				template: "The village storyteller said: '{ayah}' - and everyone understood why being {trait} matters most in life. 📚",
+				theme: "wisdom",
+				category: "teaching",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.1,
+				familyId
+			},
+			{
+				template: "An old tree whispered to a young child: 'Growing {trait} roots helps you reach for the highest dreams.' 🌳",
+				theme: "wisdom",
+				category: "growth",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: false,
+				weight: 1.1,
+				familyId
+			},
+			{
+				template: "In the library, a {trait} scholar discovered that the most valuable treasures are found in helping others during {theme} time. 📖",
+				theme: "wisdom",
+				category: "learning",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 1.1,
+				familyId
+			},
+			{
+				template: "The wise gardener knew that {trait} seeds grow into the most beautiful flowers. '{ayah}' reminded them of patience. 🌺",
+				theme: "wisdom",
+				category: "patience",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.1,
+				familyId
+			},
+			{
+				template: "The lighthouse keeper understood that {trait} guidance helps ships find safe harbor during {theme} storms. 🗼",
+				theme: "wisdom",
+				category: "guidance",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 1.1,
+				familyId
+			},
+			{
+				template: "The master craftsman taught that {trait} hands create the most lasting beauty. '{ayah}' inspired every creation. 🔨",
+				theme: "wisdom",
+				category: "skill",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: false,
+				weight: 1.1,
+				familyId
+			},
+			
+			// ======= SEASONAL SPECIALS (5) =======
+			{
+				template: "During {theme} celebrations, the {trait} family found that giving brings more joy than receiving. 🎁",
+				theme: "seasonal",
+				category: "celebration",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 1.4,
+				familyId
+			},
+			{
+				template: "The {theme} festival taught everyone that {trait} hearts make the best decorations. '{ayah}' lit up the celebration. 🎊",
+				theme: "seasonal",
+				category: "festival",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: true,
+				weight: 1.4,
+				familyId
+			},
+			{
+				template: "When {theme} snow fell, children learned that {trait} friends make the warmest memories together. ❄️",
+				theme: "seasonal",
+				category: "winter",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 1.4,
+				familyId
+			},
+			{
+				template: "The {theme} garden showed that {trait} gardeners grow the most colorful flowers. '{ayah}' bloomed in every petal. 🌷",
+				theme: "seasonal",
+				category: "spring",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: true,
+				hasThemePlaceholder: true,
+				weight: 1.4,
+				familyId
+			},
+			{
+				template: "During {theme} vacation, the family discovered that {trait} adventures create the best stories to share. 🏖️",
+				theme: "seasonal",
+				category: "summer",
+				hasTraitPlaceholder: true,
+				hasAyahPlaceholder: false,
+				hasThemePlaceholder: true,
+				weight: 1.4,
+				familyId
+			}
 		];
 		
 		// Seed the collection
@@ -1757,7 +2040,13 @@ export async function seedStoryTemplates(): Promise<void> {
 		}
 		
 		await Promise.all(batch);
-		console.log(`[Stories] Seeded ${storyTemplates.length} story templates`);
+		console.log(`[Stories] Seeded ${storyTemplates.length} story templates with categories:
+		- Islamic Wisdom: 10
+		- Family Bonding: 10  
+		- Adventure: 10
+		- Fantasy: 8
+		- Wisdom & Reflection: 7
+		- Seasonal Specials: 5`);
 		
 	} catch (error) {
 		console.error('[Stories] Failed to seed story templates:', error);

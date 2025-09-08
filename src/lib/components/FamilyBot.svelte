@@ -63,11 +63,28 @@
 		const assignedUid = await assignBotTurn(uid);
 		
 		if (assignedUid !== uid) {
-			// Another user should get priority - show brief message
-			state = "close";
-			suggestionMessage = `It's ${getDisplayName(assignedUid)}'s turn to interact with me! 😊`;
-			setTimeout(() => (state = "idle"), 2500);
-			return;
+			// Another user should get priority - show fairness transparency message
+			try {
+				// Get assigned user's display name for transparency
+				const assignedUserDoc = await getDoc(doc(db, 'users', assignedUid));
+				let assignedUserName = 'Someone else';
+				
+				if (assignedUserDoc.exists()) {
+					const userData = assignedUserDoc.data();
+					assignedUserName = getDisplayName(userData.email, { nickname: userData.nickname });
+				}
+				
+				state = "close";
+				suggestionMessage = `It's ${assignedUserName}'s turn today! 🎉 I want to make sure everyone gets equal time with me.`;
+				setTimeout(() => (state = "idle"), 3000);
+				return;
+			} catch (error) {
+				console.error('[FamilyBot] Failed to get assigned user info:', error);
+				state = "close";
+				suggestionMessage = `It's someone else's turn today! 🎉 I want to make sure everyone gets equal time with me.`;
+				setTimeout(() => (state = "idle"), 3000);
+				return;
+			}
 		}
 
 		state = "greeting";
@@ -207,13 +224,49 @@
 		baseSuggestions.push({
 			label: "💬 Share feedback",
 			action: async () => {
-				const feedbackMessage = `Family Hub feedback from ${nickname}: Thanks for the great family experience!`;
-				await sendFeedback(uid, feedbackMessage);
+				// Ask user for feedback topic first
+				state = "suggest";
+				suggestionMessage = "What would you like to share feedback about?";
 				
-				// Track feedback sent
-				await updatePreference(uid, 'feedback');
-				
-				finish("Thank you for your feedback! It helps make our family hub better. 🙏");
+				// Show topic options
+				suggestions = [
+					{
+						label: "🏠 Family Hub Experience",
+						action: async () => {
+							const feedbackMessage = `Family Hub feedback from ${nickname}: Thanks for the great family experience!`;
+							await sendFeedback(uid, feedbackMessage, 'Family Hub Experience');
+							await updatePreference(uid, 'feedback');
+							finish("Thank you for your Family Hub feedback! It helps make our platform better. 🙏");
+						}
+					},
+					{
+						label: "🤖 FamilyBot Interaction",
+						action: async () => {
+							const feedbackMessage = `FamilyBot feedback from ${nickname}: I enjoyed talking with the bot!`;
+							await sendFeedback(uid, feedbackMessage, 'FamilyBot Interaction');
+							await updatePreference(uid, 'feedback');
+							finish("Thank you for your FamilyBot feedback! I'll keep learning to help better. 🤖💙");
+						}
+					},
+					{
+						label: "📖 Story & Content",
+						action: async () => {
+							const feedbackMessage = `Content feedback from ${nickname}: The stories are wonderful!`;
+							await sendFeedback(uid, feedbackMessage, 'Story & Content');
+							await updatePreference(uid, 'feedback');
+							finish("Thank you for your content feedback! I'll share more great stories. 📚✨");
+						}
+					},
+					{
+						label: "💡 General Suggestion",
+						action: async () => {
+							const feedbackMessage = `General suggestion from ${nickname}: Keep up the great work!`;
+							await sendFeedback(uid, feedbackMessage, 'General Suggestion');
+							await updatePreference(uid, 'feedback');
+							finish("Thank you for your suggestion! Every idea helps us improve. 💡");
+						}
+					}
+				];
 			}
 		});
 
