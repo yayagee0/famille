@@ -2864,8 +2864,10 @@ async function replaceStoryPlaceholders(content: string, userId: string): Promis
 
 		// Get user traits
 		const userTraits = await SmartEngine.getUserTraits(userId);
-		const currentTrait = SmartEngine.getCurrentTrait(userTraits);
-		const traits = userTraits ? identityTraits.filter(t => userTraits.traits.includes(t.id)) : [];
+		const currentTrait = userTraits ? SmartEngine.getCurrentTrait(userTraits) : null;
+		const traits = userTraits?.traits 
+			? identityTraits.filter(t => userTraits.traits.includes(t.id)) 
+			: [];
 
 		// Get Islamic context
 		const islamicProgress = await SmartEngine.getIslamicProgress(userId);
@@ -2877,17 +2879,23 @@ async function replaceStoryPlaceholders(content: string, userId: string): Promis
 		// Replace placeholders
 		content = content.replace(/\{nickname\}/g, nickname);
 		
-		if (content.includes('{trait1}') && traits[0]) {
-			content = content.replace(/\{trait1\}/g, traits[0].name.toLowerCase());
+		if (content.includes('{trait1}')) {
+			const traitName = traits[0]?.name.toLowerCase() || 'kind';
+			content = content.replace(/\{trait1\}/g, traitName);
 		}
 		
-		if (content.includes('{trait2}') && traits[1]) {
-			content = content.replace(/\{trait2\}/g, traits[1].name.toLowerCase());
+		if (content.includes('{trait2}')) {
+			const traitName = traits[1]?.name.toLowerCase() || 'brave';
+			content = content.replace(/\{trait2\}/g, traitName);
 		}
 		
-		if (content.includes('{ayah}') && currentQuestion) {
-			const ayahSnippet = currentQuestion.feedback_en.substring(0, 80) + "...";
-			content = content.replace(/\{ayah\}/g, ayahSnippet);
+		if (content.includes('{ayah}')) {
+			if (currentQuestion) {
+				const ayahSnippet = currentQuestion.feedback_en.substring(0, 80) + "...";
+				content = content.replace(/\{ayah\}/g, ayahSnippet);
+			} else {
+				content = content.replace(/\{ayah\}/g, "a beautiful verse from the Quran");
+			}
 		}
 		
 		if (content.includes('{theme}')) {

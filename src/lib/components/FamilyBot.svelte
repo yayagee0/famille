@@ -28,7 +28,7 @@
 		hasStrongPreference,
 		type UserPreferences 
 	} from "$lib/preferences";
-	import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
+	import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, getDocs, setDoc, serverTimestamp } from "firebase/firestore";
 	import { auth } from '$lib/firebase';
 	import { getDisplayName } from '$lib/getDisplayName';
 
@@ -175,6 +175,63 @@
 			}
 		}
 
+		// Check for daily nudge on first interaction of the day
+		await checkDailyNudge();
+	}
+
+	async function checkDailyNudge() {
+		try {
+			// Check if user already acknowledged today's nudge
+			const today = new Date().toISOString().split('T')[0];
+			const nudgeDoc = await getDoc(doc(db, 'users', uid, 'nudges', today));
+			
+			if (!nudgeDoc.exists() || !nudgeDoc.data()?.acknowledged) {
+				// Generate and show daily nudge
+				const nudge = await generateMemoryNudge(uid);
+				if (nudge && nudge.trim()) {
+					state = "suggest";
+					suggestionMessage = `${nudge}`;
+					suggestions = [
+						{
+							label: "Thanks! ✨",
+							action: async () => {
+								await acknowledgeDailyNudge(today, nudge);
+								showNormalGreeting();
+							}
+						},
+						{
+							label: "Tell me more",
+							action: async () => {
+								await acknowledgeDailyNudge(today, nudge);
+								showSuggestions();
+							}
+						}
+					];
+					return;
+				}
+			}
+		} catch (error) {
+			console.error('[FamilyBot] Failed to check daily nudge:', error);
+		}
+		
+		// No nudge or error - show normal greeting
+		showNormalGreeting();
+	}
+
+	async function acknowledgeDailyNudge(today: string, nudgeText: string) {
+		try {
+			const nudgeRef = doc(db, 'users', uid, 'nudges', today);
+			await setDoc(nudgeRef, {
+				acknowledged: true,
+				acknowledgedAt: serverTimestamp(),
+				nudgeText
+			});
+		} catch (error) {
+			console.error('[FamilyBot] Failed to acknowledge nudge:', error);
+		}
+	}
+
+	function showNormalGreeting() {
 		state = "greeting";
 		suggestionMessage = `Hello ${nickname}! 👋 I can help you today.`;
 		setTimeout(() => showSuggestions(), 1200);
@@ -570,45 +627,9 @@
 
 	function showFeedbackInput() {
 		feedbackStep = "input";
-		state = "suggest";
-		suggestionMessage = `Great! What would you like to share about ${feedbackTopic}?`;
-		suggestions = [
-			{
-				label: "✍️ Type my message",
-				action: async () => {
-					feedbackInputType = "text";
-					showFeedbackTextInput();
-				}
-			},
-			{
-				label: "👍 It's great!",
-				action: async () => {
-					feedbackMessage = "👍 It's great!";
-					showFeedbackConfirmation();
-				}
-			},
-			{
-				label: "❤️ I love it!",
-				action: async () => {
-					feedbackMessage = "❤️ I love it!";
-					showFeedbackConfirmation();
-				}
-			},
-			{
-				label: "😄 It's fun!",
-				action: async () => {
-					feedbackMessage = "😄 It's fun!";
-					showFeedbackConfirmation();
-				}
-			},
-			{
-				label: "🤔 Could be better",
-				action: async () => {
-					feedbackMessage = "🤔 Could be better";
-					showFeedbackConfirmation();
-				}
-			}
-		];
+		feedbackMessage = "";
+		state = "action";
+		suggestionMessage = `Great! Share your thoughts about ${feedbackTopic}:`;
 	}
 
 	function showFeedbackTextInput() {
@@ -649,32 +670,7 @@
 		];
 	}
 
-	async function submitFeedback() {
-		try {
-			await sendFeedback(uid, feedbackMessage, feedbackTopic);
-			await updatePreference(uid, 'feedback');
-			
-			// Add to Fun Feed with enhanced metadata
-			await addToFunFeed(
-				'feedback',
-				`💡 Feedback from ${nickname}: ${feedbackMessage}`,
-				uid,
-				{ feedbackTopic }
-			);
-			
-			// Reset feedback state
-			feedbackTopic = "";
-			feedbackMessage = "";
-			feedbackStep = null;
-			feedbackInputType = "text";
-			
-			await showFollowUp(`Thanks ${nickname}! Your feedback has been sent ✅`);
-			
-		} catch (error) {
-			console.error('[FamilyBot] Failed to send feedback:', error);
-			await showFollowUp("Sorry, I couldn't send your feedback. Please try again! 😅");
-		}
-	}
+
 
 	async function showUserProgress() {
 		try {
@@ -840,41 +836,12 @@ ${motivationalNudge}`);
 	async function startCustomPollWizard() {
 		customPollStep = "question";
 		customPollQuestion = "";
-		customPollOptions = [];
+		customPollOptions = ["", ""]; // Start with 2 empty options
 		customPollGuidance = [];
 		customPollValidated = false;
 
 		state = "action";
-		suggestionMessage = "Let's create a custom poll! What question would you like to ask your family? 📊";
-		suggestions = [
-			{
-				label: "🍽️ Food question",
-				action: async () => {
-					customPollQuestion = "What should we have for dinner tonight?";
-					await validateCustomPoll();
-				}
-			},
-			{
-				label: "🎉 Activity question", 
-				action: async () => {
-					customPollQuestion = "What should we do this weekend?";
-					await validateCustomPoll();
-				}
-			},
-			{
-				label: "🎮 Game question",
-				action: async () => {
-					customPollQuestion = "Which game should we play together?";
-					await validateCustomPoll();
-				}
-			},
-			{
-				label: "✏️ Write my own",
-				action: async () => {
-					await promptCustomQuestion();
-				}
-			}
-		];
+		suggestionMessage = "Let's create a custom poll! 📊\n\nTips for great polls:\n✅ Keep it family-friendly and positive\n✅ Ask about fun choices everyone can participate in\n✅ Avoid negative words like 'worst' or 'hate'";
 	}
 
 	async function promptCustomQuestion() {
@@ -897,48 +864,38 @@ Try asking me with one of the suggested categories! 😊`);
 
 	async function validateCustomPoll() {
 		try {
-			const validation = await createCustomPollWizard(uid, customPollQuestion, customPollOptions);
+			if (!customPollQuestion.trim()) {
+				suggestionMessage = "Please enter a question for your poll! 📝";
+				return;
+			}
+
+			const validation = await createCustomPollWizard(uid, customPollQuestion, []);
 			
 			customPollGuidance = validation.guidance;
 			customPollValidated = validation.validated && validation.childFriendly;
 
 			if (customPollValidated) {
-				// Show suggested options
+				// Proceed to options step
 				customPollStep = "options";
-				state = "action";
-				suggestionMessage = `Great question! "${customPollQuestion}"
-
-Here are some suggested options:`;
 				
-				suggestions = validation.suggestedOptions.slice(0, 4).map(option => ({
-					label: option,
-					action: async () => {
-						if (customPollOptions.length < 4) {
-							customPollOptions.push(option);
-							await updatePollOptions();
-						}
-					}
-				}));
-
-				suggestions.push({
-					label: "✅ Create poll",
-					action: async () => {
-						await finalizeCustomPoll();
-					}
-				});
-
+				// Suggest default options based on question type
+				const suggestedOptions = validation.suggestedOptions.slice(0, 4);
+				if (suggestedOptions.length >= 2) {
+					customPollOptions = suggestedOptions.slice(0, 2);
+				} else {
+					customPollOptions = ["Option A", "Option B"];
+				}
+				
+				suggestionMessage = `Great question! Now add your poll options:`;
+				
 			} else {
 				// Show guidance for improvement
-				await showFollowUp(`Let's make that question even better! 
-
-${customPollGuidance.join('\n')}
-
-Would you like to try a different question? 😊`);
+				suggestionMessage = `Let's make that question even better!\n\n${customPollGuidance.join('\n')}\n\nPlease try a different question! 😊`;
 			}
 
 		} catch (error) {
 			console.error('[FamilyBot] Failed to validate custom poll:', error);
-			await showFollowUp("Let's try a simpler poll question! 😊");
+			suggestionMessage = "Let's try a simpler poll question! 😊";
 		}
 	}
 
@@ -980,7 +937,12 @@ ${customPollOptions.length >= 2 ? 'You can create the poll now or add more optio
 			const result = await createCustomPoll(uid, customPollQuestion, customPollOptions);
 			
 			if (result.success) {
-				await showFollowUp(`🎉 Amazing! Your poll "${customPollQuestion}" has been created! Your family can now vote on it. Thanks for being creative! 📊✨`);
+				// Reset wizard state
+				customPollStep = null;
+				customPollQuestion = "";
+				customPollOptions = [];
+				
+				await showFollowUp(`🎉 Amazing! Your poll "${customPollQuestion}" has been created! Your family can now vote on it in the Fun Feed. Thanks for being creative! 📊✨`);
 				
 				// Award seasonal badge if appropriate
 				await awardSeasonalBadge(uid, 'celebrate_birthday'); // Example action
@@ -991,6 +953,36 @@ ${customPollOptions.length >= 2 ? 'You can create the poll now or add more optio
 		} catch (error) {
 			console.error('[FamilyBot] Failed to finalize custom poll:', error);
 			await showFollowUp("Something went wrong creating your poll. Let's try again! 😊");
+		}
+	}
+
+	function addOption() {
+		if (customPollOptions.length < 4) {
+			customPollOptions.push("");
+		}
+	}
+
+	function removeOption(index: number) {
+		customPollOptions.splice(index, 1);
+	}
+
+	async function submitFeedback() {
+		try {
+			if (!feedbackMessage.trim()) return;
+
+			// Call the sendFeedback function from smartEngine
+			await sendFeedback(uid, feedbackMessage, feedbackTopic);
+			
+			// Reset feedback state
+			feedbackStep = null;
+			feedbackTopic = "";
+			feedbackMessage = "";
+			
+			await showFollowUp(`💡 Perfect! Your feedback about "${feedbackTopic}" has been saved and shared in the Fun Feed. Your thoughts help make Family Hub even better! ✨`);
+			
+		} catch (error) {
+			console.error('[FamilyBot] Failed to submit feedback:', error);
+			await showFollowUp("Sorry, I couldn't save your feedback. Please try again! 😅");
 		}
 	}
 
@@ -1163,6 +1155,179 @@ ${customPollOptions.length >= 2 ? 'You can create the poll now or add more optio
 			transform: rotate(360deg); 
 		}
 	}
+
+	/* Wizard Styles */
+	.wizard-step {
+		padding: 0.5rem 0;
+	}
+
+	.input-group {
+		margin-bottom: 1rem;
+	}
+
+	.input-group label {
+		display: block;
+		margin-bottom: 0.5rem;
+		font-weight: 500;
+		color: #374151;
+		font-size: 0.9rem;
+	}
+
+	.option-label {
+		display: block;
+		margin-bottom: 0.5rem;
+		font-weight: 500;
+		color: #374151;
+		font-size: 0.9rem;
+	}
+
+	.poll-input {
+		width: 100%;
+		padding: 0.75rem;
+		border: 2px solid #e5e7eb;
+		border-radius: 0.5rem;
+		font-size: 0.9rem;
+		transition: border-color 0.2s ease;
+	}
+
+	.poll-input:focus {
+		outline: none;
+		border-color: #4f46e5;
+	}
+
+	.poll-input.small {
+		padding: 0.5rem;
+		flex: 1;
+	}
+
+	.feedback-textarea {
+		width: 100%;
+		padding: 0.75rem;
+		border: 2px solid #e5e7eb;
+		border-radius: 0.5rem;
+		font-size: 0.9rem;
+		min-height: 4rem;
+		resize: vertical;
+		font-family: inherit;
+		transition: border-color 0.2s ease;
+	}
+
+	.feedback-textarea:focus {
+		outline: none;
+		border-color: #4f46e5;
+	}
+
+	.char-count {
+		text-align: right;
+		font-size: 0.75rem;
+		color: #6b7280;
+		margin-top: 0.25rem;
+	}
+
+	.emoji-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 0.75rem 0;
+		flex-wrap: wrap;
+	}
+
+	.emoji-bar span {
+		font-size: 0.8rem;
+		color: #6b7280;
+	}
+
+	.emoji-btn {
+		background: #f3f4f6;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.375rem;
+		padding: 0.25rem 0.5rem;
+		font-size: 1rem;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.emoji-btn:hover {
+		background: #e5e7eb;
+		transform: scale(1.1);
+	}
+
+	.option-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.remove-btn {
+		background: #ef4444;
+		color: white;
+		border: none;
+		border-radius: 50%;
+		width: 2rem;
+		height: 2rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		font-size: 1.2rem;
+		font-weight: bold;
+		transition: background-color 0.2s ease;
+	}
+
+	.remove-btn:hover {
+		background: #dc2626;
+	}
+
+	.add-option {
+		background: #10b981;
+		color: white;
+		border: none;
+		border-radius: 0.5rem;
+		padding: 0.5rem 1rem;
+		font-size: 0.9rem;
+		cursor: pointer;
+		transition: background-color 0.2s ease;
+		margin-top: 0.5rem;
+	}
+
+	.add-option:hover {
+		background: #059669;
+	}
+
+	.wizard-buttons {
+		display: flex;
+		gap: 0.5rem;
+		margin-top: 1rem;
+		flex-wrap: wrap;
+	}
+
+	.wizard-buttons button {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.wizard-buttons button.secondary {
+		background: #6b7280;
+		color: white;
+	}
+
+	.wizard-buttons button.secondary:hover {
+		background: #4b5563;
+	}
+
+	.poll-preview {
+		background: #f9fafb;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.5rem;
+		padding: 0.75rem;
+		margin-bottom: 1rem;
+		font-size: 0.9rem;
+	}
+
+	.poll-preview strong {
+		color: #374151;
+	}
 </style>
 
 <!-- Floating Bot Button -->
@@ -1190,7 +1355,92 @@ ${customPollOptions.length >= 2 ? 'You can create the poll now or add more optio
 		{:else}
 			<div class="message">{suggestionMessage}</div>
 			
-			{#if state === "suggest"}
+			<!-- Custom Poll Wizard UI -->
+			{#if customPollStep === "question"}
+				<div class="wizard-step">
+					<div class="input-group">
+						<label for="poll-question">Your poll question:</label>
+						<input 
+							id="poll-question"
+							type="text" 
+							bind:value={customPollQuestion}
+							placeholder="What should we have for dinner?"
+							class="poll-input"
+							maxlength="100"
+						/>
+					</div>
+					<div class="wizard-buttons">
+						<button onclick={validateCustomPoll} disabled={!customPollQuestion.trim()}>
+							Next Step ➡️
+						</button>
+						<button onclick={() => { customPollStep = null; state = "suggest"; }} class="secondary">
+							Cancel
+						</button>
+					</div>
+				</div>
+			{:else if customPollStep === "options"}
+				<div class="wizard-step">
+					<div class="poll-preview">
+						<strong>Question:</strong> {customPollQuestion}
+					</div>
+					<div class="input-group">
+						<div class="option-label">Poll options ({customPollOptions.length}/4):</div>
+						{#each customPollOptions as option, i}
+							<div class="option-row">
+								<input 
+									type="text" 
+									bind:value={customPollOptions[i]}
+									placeholder="Poll option..."
+									class="poll-input small"
+									maxlength="50"
+								/>
+								<button onclick={() => removeOption(i)} class="remove-btn">×</button>
+							</div>
+						{/each}
+						{#if customPollOptions.length < 4}
+							<button onclick={addOption} class="add-option">+ Add Option</button>
+						{/if}
+					</div>
+					<div class="wizard-buttons">
+						<button onclick={finalizeCustomPoll} disabled={customPollOptions.length < 2}>
+							✅ Create Poll
+						</button>
+						<button onclick={() => { customPollStep = "question"; }} class="secondary">
+							← Back
+						</button>
+					</div>
+				</div>
+			{:else if feedbackStep === "input"}
+				<div class="wizard-step">
+					<div class="input-group">
+						<label for="feedback-text">Share your thoughts about {feedbackTopic}:</label>
+						<textarea 
+							id="feedback-text"
+							bind:value={feedbackMessage}
+							placeholder="Type your feedback here..."
+							class="feedback-textarea"
+							maxlength="300"
+						></textarea>
+						<div class="char-count">{feedbackMessage.length}/300</div>
+					</div>
+					<div class="emoji-bar">
+						<span>Quick reactions:</span>
+						{#each ["👍", "❤️", "😄", "🤔", "😊", "🌟"] as emoji}
+							<button onclick={() => feedbackMessage += ` ${emoji}`} class="emoji-btn">
+								{emoji}
+							</button>
+						{/each}
+					</div>
+					<div class="wizard-buttons">
+						<button onclick={submitFeedback} disabled={!feedbackMessage.trim()}>
+							Send Feedback 📤
+						</button>
+						<button onclick={() => { feedbackStep = "topic"; }} class="secondary">
+							← Back
+						</button>
+					</div>
+				</div>
+			{:else if state === "suggest"}
 				{#each suggestions as s}
 					<button onclick={() => handleAction(s.action)} disabled={isLoading}>
 						{s.label}
@@ -1209,7 +1459,7 @@ ${customPollOptions.length >= 2 ? 'You can create the poll now or add more optio
 				{/each}
 			{/if}
 			
-			{#if state === "suggest" || state === "followUp" || state === "goodbye"}
+			{#if (state === "suggest" || state === "followUp" || state === "goodbye") && !customPollStep && !feedbackStep}
 				<button class="close-button" onclick={closeBot}>
 					{state === "goodbye" ? "Thanks!" : "Close"}
 				</button>

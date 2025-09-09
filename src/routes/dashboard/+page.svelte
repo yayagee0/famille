@@ -16,7 +16,7 @@
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import DailyAyah from '$lib/DailyAyah.svelte';
-	import DailyNudge from '$lib/DailyNudge.svelte';
+
 	import WeeklyFeedback from '$lib/WeeklyFeedback.svelte';
 	import BadgeDisplay from '$lib/BadgeDisplay.svelte';
 	import DailyPoll from '$lib/DailyPoll.svelte';
@@ -170,20 +170,7 @@
 		<WeeklyFeedback />
 	</section>
 
-	<!-- AI-Powered Section -->
-	<section>
-		<div class="mb-4 flex items-center gap-2">
-			<span class="text-2xl">🤖</span>
-			<h2
-				class="{currentTheme === 'neo'
-					? 'neo-gradient-text'
-					: ''} text-xl font-semibold {currentTheme === 'neo' ? '' : 'text-gray-800'}"
-			>
-				AI-Powered
-			</h2>
-		</div>
-		<DailyNudge />
-	</section>
+
 
 	<!-- Spiritual Section -->
 	<section>
