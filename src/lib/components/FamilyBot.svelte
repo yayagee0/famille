@@ -381,17 +381,17 @@
 	}
 
 	async function showFollowUp(message: string) {
-		suggestionMessage = message;
+		suggestionMessage = message + "\n\n🤖 Would you like me to help with something else?";
 		state = "followUp";
 		suggestions = [
 			{
-				label: "Yes",
+				label: "Yes, let's continue! ✨",
 				action: async () => {
 					await showSuggestions();
 				}
 			},
 			{
-				label: "No",
+				label: "No, thanks! 👋",
 				action: async () => {
 					showGoodbye();
 				}
@@ -746,8 +746,8 @@ ${motivationalNudge}`);
 		let storyMessage = currentStory;
 
 		if (storyChoices) {
-			// Add choice options
-			storyMessage += `\n\n${storyChoices.question}`;
+			// Add choice options with clear separator
+			storyMessage += `\n\n🤔 ${storyChoices.question}`;
 			
 			// Show story with choices
 			state = "action";
@@ -759,13 +759,13 @@ ${motivationalNudge}`);
 				}
 			}));
 		} else if (storyComplete && storyReflection) {
-			// Show reflection
-			storyMessage += `\n\n✨ Reflection: ${storyReflection.question}\n\n"${storyReflection.ayah}" - ${storyReflection.reference}`;
+			// Show reflection with clear formatting
+			storyMessage += `\n\n✨ **Story Complete!**\n\n💭 Reflection: ${storyReflection.question}\n\n"${storyReflection.ayah}" - ${storyReflection.reference}`;
 			await showFollowUp(storyMessage);
 		} else if (!storyComplete) {
-			// Continue story
+			// Continue story with enhanced navigation
 			state = "action";
-			suggestionMessage = storyMessage;
+			suggestionMessage = storyMessage + `\n\n📖 **Story continues...**\n\nWhat would you like to do next?`;
 			suggestions = [
 				{
 					label: "➡️ Continue story",
@@ -787,8 +787,8 @@ ${motivationalNudge}`);
 				}
 			];
 		} else {
-			// Story complete
-			await showFollowUp(storyMessage);
+			// Story complete without reflection
+			await showFollowUp(storyMessage + "\n\n✨ **The End!** 📚");
 		}
 	}
 
@@ -878,13 +878,8 @@ Try asking me with one of the suggested categories! 😊`);
 				// Proceed to options step
 				customPollStep = "options";
 				
-				// Suggest default options based on question type
-				const suggestedOptions = validation.suggestedOptions.slice(0, 4);
-				if (suggestedOptions.length >= 2) {
-					customPollOptions = suggestedOptions.slice(0, 2);
-				} else {
-					customPollOptions = ["Option A", "Option B"];
-				}
+				// Initialize with empty options for user input
+				customPollOptions = ["", ""];
 				
 				suggestionMessage = `Great question! Now add your poll options:`;
 				
@@ -929,20 +924,25 @@ ${customPollOptions.length >= 2 ? 'You can create the poll now or add more optio
 
 	async function finalizeCustomPoll() {
 		try {
-			if (customPollOptions.length < 2) {
-				// Add default options if needed
-				customPollOptions = ["Option A 🅰️", "Option B 🅱️"];
+			// Filter out empty options and validate
+			const validOptions = customPollOptions.filter(opt => opt.trim()).slice(0, 4);
+			
+			if (validOptions.length < 2) {
+				await showFollowUp("Please add at least 2 poll options before creating your poll! 📝");
+				return;
 			}
 
-			const result = await createCustomPoll(uid, customPollQuestion, customPollOptions);
+			const result = await createCustomPoll(uid, customPollQuestion, validOptions);
 			
 			if (result.success) {
+				const createdPollQuestion = customPollQuestion; // Store before reset
+				
 				// Reset wizard state
 				customPollStep = null;
 				customPollQuestion = "";
 				customPollOptions = [];
 				
-				await showFollowUp(`🎉 Amazing! Your poll "${customPollQuestion}" has been created! Your family can now vote on it in the Fun Feed. Thanks for being creative! 📊✨`);
+				await showFollowUp(`🎉 Amazing! Your poll "${createdPollQuestion}" has been created! Your family can now vote on it in the Fun Feed. Thanks for being creative! 📊✨`);
 				
 				// Award seasonal badge if appropriate
 				await awardSeasonalBadge(uid, 'celebrate_birthday'); // Example action
@@ -958,12 +958,12 @@ ${customPollOptions.length >= 2 ? 'You can create the poll now or add more optio
 
 	function addOption() {
 		if (customPollOptions.length < 4) {
-			customPollOptions.push("");
+			customPollOptions = [...customPollOptions, ""];
 		}
 	}
 
 	function removeOption(index: number) {
-		customPollOptions.splice(index, 1);
+		customPollOptions = customPollOptions.filter((_, i) => i !== index);
 	}
 
 	async function submitFeedback() {
@@ -1402,7 +1402,7 @@ ${customPollOptions.length >= 2 ? 'You can create the poll now or add more optio
 						{/if}
 					</div>
 					<div class="wizard-buttons">
-						<button onclick={finalizeCustomPoll} disabled={customPollOptions.length < 2}>
+						<button onclick={finalizeCustomPoll} disabled={customPollOptions.filter(opt => opt.trim()).length < 2}>
 							✅ Create Poll
 						</button>
 						<button onclick={() => { customPollStep = "question"; }} class="secondary">
