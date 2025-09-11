@@ -24,3 +24,6 @@ vite.config.ts.timestamp-*
 
 # Testing
 /test-results/
+
+# Generated exports
+identity-traits.md
